@@ -20,6 +20,7 @@
     "strictBindCallApply": false,
     "noFallthroughCasesInSwitch": false
   },
+  // Thêm đoạn này vào để mà nó check cái đường dẫn nó chặt chẽ hơn
   "ts-node": {
     "require": ["tsconfig-paths/register"]
   }
