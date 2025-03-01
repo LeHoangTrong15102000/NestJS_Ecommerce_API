@@ -1,0 +1,26 @@
+import { createZodDto } from 'nestjs-zod'
+import { z } from 'zod'
+
+// Sẽ có cái strict nếu mà người dùng gửi lên dữ liệu bị thừa thì mình sẽ báo lỗi với người ta
+// Để mà xem được là cái confirmPassword nó có match với cái password hay không thì sử dụng superRefine
+const RegisterBodySchema = z
+  .object({
+    email: z.string().email(),
+    password: z.string().min(6).max(100),
+    name: z.string().min(1).max(100),
+    confirmPassword: z.string().min(6).max(100),
+    phoneNumber: z.string().min(10).max(15),
+  })
+  .strict()
+  .superRefine(({ confirmPassword, password }, ctx) => {
+    if (confirmPassword !== password) {
+      ctx.addIssue({
+        code: 'custom',
+        message: 'Password and confirm password must match.',
+        path: ['confirmPassword'], // path chỉ ra là thằng nào là thằng bị lỗi ở đây, là một cái array
+      })
+    }
+  })
+
+// Extends createZodDto để mà tạo ra RegisterBodyDto từ RegisterBodySchema
+export class RegisterBodyDTO extends createZodDto(RegisterBodySchema) {}
