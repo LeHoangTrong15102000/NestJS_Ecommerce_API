@@ -13,3 +13,7 @@
 - Khi mà dự liệu mà chúng ta trả về cho ng dừng mà ko có `strict()` thì khi dự liệu gửi về từ người dùng mà nó có dư hay gì đó thì nó vẫn không gây ra lỗi.
 
 - Khi mà có lỗi(sử dụng method strict() trong zod) mà chúng ta đang muốn biết là lỗi gì khi mà kết quả trả về từ việc `Serialization output` bị lỗi -> Vẫn có cách để mà xử lý cái vấn đề bị lỗi đó -> Thì chúng ta sẽ tạo ra một cái `exceptionFilter` để mà xem kết quả trả về bị lỗi thì cụ thể sẽ là bị lỗi gì. -> Nên là khi muốn thêm `strict()` hay không thì cũng cần phải cân nhắc rất là kĩ
+
+## Bài 44 Hạn chế Try-Catch với CatchEverythingFilter
+
+- Thì chúng ta có thẻ sử dụng cái func built-in có sẵn của NestJS đó là `CatchEverythingFilter`
