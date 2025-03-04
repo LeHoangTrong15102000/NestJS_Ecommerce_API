@@ -17,3 +17,25 @@
 ## Bài 44 Hạn chế Try-Catch với CatchEverythingFilter
 
 - Thì chúng ta có thẻ sử dụng cái func built-in có sẵn của NestJS đó là `CatchEverythingFilter`
+
+## Bài 45 Áp dụng Repository Pattern
+
+## Bài 46 Phân tích flow OTP code và khai báo endpoint
+
+## Bài 47 Code logic tạo OTP khi đăng ký
+
+## Bài 48 Cập nhật xác thực OTP cho chức năng đăng ký
+
+## Bài 49 Gửi OTP đến email bằng Resend
+
+## Bài 50 Xác thực domain trên Resend
+
+## Bài 51 Gửi email bằng template HTML
+
+## Bài 52 Giới thiệu về React email
+
+## Bài 53 Sử dụng React email làm email template
+
+## Bài 54 Tư duy về thiết kế Authentication và Authorization cho website
+
+## Bài 55 Thêm model Device và hướng dẫn migrate
