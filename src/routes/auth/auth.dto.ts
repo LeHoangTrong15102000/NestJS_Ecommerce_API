@@ -2,21 +2,6 @@ import { UserStatus } from '@prisma/client'
 import { createZodDto } from 'nestjs-zod'
 import { z } from 'zod'
 
-const UserSchema = z.object({
-  id: z.number(),
-  email: z.string(),
-  name: z.string(),
-  phoneNumber: z.string(),
-  avatar: z.string().nullable(),
-  status: z.enum([UserStatus.ACTIVE, UserStatus.INACTIVE, UserStatus.BLOCKED]),
-  roleId: z.number(),
-  createdById: z.number().nullable(),
-  updatedById: z.number().nullable(),
-  createdAt: z.date(),
-  updatedAt: z.date(),
-  deletedAt: z.date().nullable(),
-})
-
 // Sẽ có cái strict nếu mà người dùng gửi lên dữ liệu bị thừa thì mình sẽ báo lỗi với người ta
 // Để mà xem được là cái confirmPassword nó có match với cái password hay không thì sử dụng superRefine
 const RegisterBodySchema = z
