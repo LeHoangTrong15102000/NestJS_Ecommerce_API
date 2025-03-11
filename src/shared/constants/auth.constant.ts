@@ -14,3 +14,10 @@ export const ConditionGuard = {
 } as const
 
 export type ConditionGuardType = (typeof ConditionGuard)[keyof typeof ConditionGuard]
+
+// Nên chuyển cái UserStatus lại thành const vì enum nó bị lỗi về mặt typescript gì đó
+export const UserStatus = {
+  ACTIVE: 'ACTIVE',
+  INACTIVE: 'INACTIVE',
+  BLOCKED: 'BLOCKED',
+} as const

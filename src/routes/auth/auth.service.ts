@@ -5,35 +5,31 @@ import { HashingService } from 'src/shared/services/hashing.service'
 import { PrismaService } from 'src/shared/services/prisma.service'
 import { TokenService } from 'src/shared/services/token.service'
 import { RegisterBodyDTO } from './auth.dto'
+import { RegisterBodyType } from 'src/routes/auth/auth.model'
+import { AuthRepository } from 'src/routes/auth/auth.repo'
 
 @Injectable()
 export class AuthService {
   constructor(
     private readonly hashingService: HashingService,
+    private readonly authRepository: AuthRepository,
     private readonly prismaService: PrismaService,
     private readonly tokenService: TokenService,
     private readonly rolesService: RolesService,
   ) {}
 
-  async register(body: RegisterBodyDTO) {
+  async register(body: RegisterBodyType) {
     try {
       const clientRoleId = await this.rolesService.getClientRoleId()
       const hashedPassword = await this.hashingService.hash(body.password)
-      const user = await this.prismaService.user.create({
-        data: {
-          email: body.email,
-          password: hashedPassword,
-          name: body.name,
-          phoneNumber: body.phoneNumber,
-          roleId: clientRoleId,
-        },
-        omit: {
-          password: true,
-          totpSecret: true,
-        },
+      return await this.authRepository.createUser({
+        email: body.email,
+        name: body.name,
+        phoneNumber: body.phoneNumber,
+        password: hashedPassword,
+        // TypeScript không coi việc truyền thêm các thuộc tính dư thừa (excess properties) là lỗi trong trường hợp này khi sử dụng spread operator (...body). Đây là một hành vi được thiết kế để linh hoạt, nhưng nó có thể dẫn đến rủi ro nếu bạn không kiểm soát chặt chẽ dữ liệu đầu vào.
+        roleId: clientRoleId,
       })
-
-      return user
     } catch (error) {
       if (isUniqueConstraintPrismaError(error)) {
         throw new ConflictException('Email đã tồn tại')

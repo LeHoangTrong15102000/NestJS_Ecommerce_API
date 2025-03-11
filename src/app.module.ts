@@ -26,10 +26,11 @@ import { CatchEverythingFilter } from 'src/shared/filters/catch-everything.filte
       provide: APP_FILTER,
       useClass: HttpExceptionFilter,
     },
-    {
-      provide: APP_FILTER,
-      useClass: CatchEverythingFilter,
-    },
+    // Thằng CatchEverythingFilter này sẽ trả về format lỗi cho chúng ta khi mà bị lỗi
+    // {
+    //   provide: APP_FILTER,
+    //   useClass: CatchEverythingFilter,
+    // },
   ],
 })
 export class AppModule {}

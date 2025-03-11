@@ -11,6 +11,7 @@ export class AuthController {
   // Nếu mà sử dụng cái RegisterBodyDTO như thế kia thì cần phải vào cái AppModule khai báo thêm thằng APP_PIPE vào để mà sử dụng global -> Cách mà team Zod recommend
   @Post('register')
   @ZodSerializerDto(RegisterResDTO)
+  // Ở controller này thì chúng ta cần phải khai báo DTO nhưng bên service thì cần phải dùng @type để mà biểu thị cái params
   async register(@Body() body: RegisterBodyDTO) {
     return await this.authService.register(body)
   }
