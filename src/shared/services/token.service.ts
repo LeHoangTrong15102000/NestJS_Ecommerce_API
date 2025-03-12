@@ -15,10 +15,10 @@ export class TokenService {
     })
   }
 
-  signRefreshToken(payload: { userId: number }) {
+  signRefreshToken(payload: { userId: number }, expiresAt?: number) {
     return this.jwtService.sign(payload, {
       secret: envConfig.REFRESH_TOKEN_SECRET,
-      expiresIn: envConfig.REFRESH_TOKEN_EXPIRES_IN,
+      expiresIn: expiresAt ? expiresAt : envConfig.REFRESH_TOKEN_EXPIRES_IN,
       algorithm: 'HS256',
     })
   }

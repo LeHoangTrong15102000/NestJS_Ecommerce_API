@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common'
-import { RegisterBodyType, UserType } from 'src/routes/auth/auth.model'
+import { RegisterBodyType } from 'src/routes/auth/auth.model'
+import { UserType } from 'src/shared/models/shared-user.model'
 import { PrismaService } from 'src/shared/services/prisma.service'
 
 @Injectable()

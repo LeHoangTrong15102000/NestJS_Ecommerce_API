@@ -1,4 +1,10 @@
-import { ConflictException, Injectable, UnauthorizedException, UnprocessableEntityException } from '@nestjs/common'
+import {
+  ConflictException,
+  HttpVersionNotSupportedException,
+  Injectable,
+  UnauthorizedException,
+  UnprocessableEntityException,
+} from '@nestjs/common'
 import { RolesService } from 'src/routes/auth/roles.service'
 import { isNotFoundPrismaError, isUniqueConstraintPrismaError } from 'src/shared/helpers'
 import { HashingService } from 'src/shared/services/hashing.service'
@@ -7,6 +13,8 @@ import { TokenService } from 'src/shared/services/token.service'
 import { RegisterBodyDTO } from './auth.dto'
 import { RegisterBodyType, SendOTPBodyType } from 'src/routes/auth/auth.model'
 import { AuthRepository } from 'src/routes/auth/auth.repo'
+import { isThisSecond } from 'date-fns'
+import { SharedUserRepository } from 'src/shared/repositories/shared-user.repo'
 
 @Injectable()
 export class AuthService {
@@ -14,6 +22,7 @@ export class AuthService {
     private readonly hashingService: HashingService,
     private readonly authRepository: AuthRepository,
     private readonly prismaService: PrismaService,
+    private readonly sharedUserRepository: SharedUserRepository,
     private readonly tokenService: TokenService,
     private readonly rolesService: RolesService,
   ) {}
@@ -38,9 +47,13 @@ export class AuthService {
     }
   }
 
-  sendOTP(body: SendOTPBodyType) {
+  async sendOTP(body: SendOTPBodyType) {
     try {
-      // 1. Kiểm tra email đã tồn tại hay chưa
+      // 1. Kiểm tra email đã tồn tại trong database hay chưa
+      const user = await this.sharedUserRepository.findUnique({
+        email: body.email,
+      })
+      // 2. Tạo mã OTP
       return body
     } catch (error) {
       if (isUniqueConstraintPrismaError(error)) {
@@ -99,21 +112,39 @@ export class AuthService {
       // 1. Kiểm tra refreshToken có hợp lệ không
       const { userId } = await this.tokenService.verifyRefreshToken(refreshToken)
       // 2. Kiểm trả refreshToken có tồn tại trong database không
-      await this.prismaService.refreshToken.findUniqueOrThrow({
+      // Lấy ra exp của refreshToken cũ
+      const refreshTokenDoc = await this.prismaService.refreshToken.findUniqueOrThrow({
         where: {
           token: refreshToken,
         },
       })
+      const decodedRefreshToken = await this.tokenService.verifyRefreshToken(refreshToken)
+
+      // Tạo mới accessToken và refreshToken
+      // const createdTokens = await this.generateTokens({ userId })
+      const newAccessToken = this.tokenService.signAccessToken({ userId })
+      const newRefreshToken = this.tokenService.signRefreshToken({ userId }, decodedRefreshToken.exp)
+
       // 3. Xoá refreshToken cũ
       await this.prismaService.refreshToken.delete({
         where: {
           token: refreshToken,
         },
       })
-      // 4. Tạo mới accessToken và refreshToken
-      const createdTokens = await this.generateTokens({ userId })
 
-      return createdTokens
+      // 4. Thêm refreshToken mới vào database
+      await this.prismaService.refreshToken.create({
+        data: {
+          token: newRefreshToken,
+          userId,
+          expiresAt: new Date(decodedRefreshToken.exp * 1000),
+        },
+      })
+
+      return {
+        accessToken: newAccessToken,
+        refreshToken: newRefreshToken,
+      }
     } catch (error) {
       // Trường hợp đã refresh token rồi, hãy thông báo cho user biết
       // refresh token của họ đã bị đánh cắp

@@ -1,6 +1,6 @@
 import { UserStatus } from '@prisma/client'
 import { createZodDto } from 'nestjs-zod'
-import { RegisterBodySchema, RegisterResSchema, SendOTPBodySchema, UserSchema } from 'src/routes/auth/auth.model'
+import { RegisterBodySchema, RegisterResSchema, SendOTPBodySchema } from 'src/routes/auth/auth.model'
 import { z } from 'zod'
 
 // Sẽ có cái strict nếu mà người dùng gửi lên dữ liệu bị thừa thì mình sẽ báo lỗi với người ta
