@@ -5,7 +5,7 @@ import { HashingService } from 'src/shared/services/hashing.service'
 import { PrismaService } from 'src/shared/services/prisma.service'
 import { TokenService } from 'src/shared/services/token.service'
 import { RegisterBodyDTO } from './auth.dto'
-import { RegisterBodyType } from 'src/routes/auth/auth.model'
+import { RegisterBodyType, SendOTPBodyType } from 'src/routes/auth/auth.model'
 import { AuthRepository } from 'src/routes/auth/auth.repo'
 
 @Injectable()
@@ -30,6 +30,18 @@ export class AuthService {
         // TypeScript không coi việc truyền thêm các thuộc tính dư thừa (excess properties) là lỗi trong trường hợp này khi sử dụng spread operator (...body). Đây là một hành vi được thiết kế để linh hoạt, nhưng nó có thể dẫn đến rủi ro nếu bạn không kiểm soát chặt chẽ dữ liệu đầu vào.
         roleId: clientRoleId,
       })
+    } catch (error) {
+      if (isUniqueConstraintPrismaError(error)) {
+        throw new ConflictException('Email đã tồn tại')
+      }
+      throw error
+    }
+  }
+
+  sendOTP(body: SendOTPBodyType) {
+    try {
+      // 1. Kiểm tra email đã tồn tại hay chưa
+      return body
     } catch (error) {
       if (isUniqueConstraintPrismaError(error)) {
         throw new ConflictException('Email đã tồn tại')

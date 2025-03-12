@@ -20,21 +20,59 @@
 
 ## Bài 45 Áp dụng Repository Pattern
 
+- Đã thực hiện việc áp dụng Repository Pattern vào trong dự án rồi
+
 ## Bài 46 Phân tích flow OTP code và khai báo endpoint
+
+- Phân tích cái flow OTP code và triển khai nó thôi
+
+- Để tránh trường hợp mà người dùng spam email giả hoặc là tài khoản không đúng, nên là chúng ta sẽ xác thực email trước khi mà người dùng đăng ký để mà tiết kiệm được tài nguyên.
+
+- Nên là cái chỗ nhập mã OTP code để mà xác thực email sẽ có một cái button nhập vào để mà send OTP code qua email của người dùng luôn(tránh email rác từ người dùng quá nhiều), Với trước khi mà nhấn đăng ký thì cần phải check cái mã code để mà xem cái mã đó có đúng hay không hay là có còn hạn sử dụng hay không
+
+- Phân tích một tí xíu về cái `VerificationCode` Schema
+
+- Để mà migration không bị vấn đề gì thì chúng ta cần phải xóa hết dự liệu của `VerificationCode` đi thì nó sẽ không có bị xóa hết dữ liệu của database khi mà chúng ta `migration` đi, trong trường hợp mà chúng ta không có item nào cả thì `migration` nó bình thường
+
+- `expiresAt` chúng ta muốn là sau bao nhiêu phút đó thì cái OTP nó sẽ hết hạn nên là chúng ta cần khai báo thêm env nữa
+
+- Để mà xử lý mấy cái giây giờ cho nó tiện thì chúng ta sẽ cài đặt thư viện là `ms` để mà xử lý cho nó tiện, thì cái thằng thư viện này nó sẽ `convert string` thời gian ra thành `milisecond`
+
+- Qua `AuthModel` khai báo `Schema VerificationCode`.
+
+- Thì bây giờ chúng ta sẽ khai báo cái `Endpoint` cho cái VerificationCode như thế nào -> Ví dụ như bây giờ ta khai báo 2 cái endpoint `sendOtpRegister` và `sendOtpForgotPassword` thì nó lại không hay cho lắm, vì 2 cái này làm cùng nhiệm vụ mà chúng ta làm thành 2 cái `Endpoint` thì nó không hay cho lắm -> Thì chỉ thiết kế một cái `OTPendpoint` có URL là `/auth/otp` và body của nó là người dùng sẽ gửi lên cái `email` và `type`.
+
+- Nếu email đã tồn tại rồi thì thông báo là email đã tồn tại còn nếu email chưa tồn tại thì mới send OTP đến cho người dùng. -> Chúng ta có thể viết một cái hàm là `findUserByEmail` nhưng mà chúng ta suy nghĩ thêm là cái func này sẽ được sử dụng ở khá nhiều nơi -> Nên là không nên khai báo nó ở trong cái `AuthRepo`, nếu muốn import chéo hay gì đấy thì chúng ta khai báo nó ở trong `SharedModule` rồi từ đó import vào
+
+- Thằng `Shared` chỉ nên import quanh quanh của cái thằng `SharedModule` mà thôi không nên import từ một module khác ở bên ngoài để khi mà thằng module đó bị xóa thì thằng `SharedModule` sẽ không bị ảnh hưởng -> Nên là cần phải tách biệt nó ra
 
 ## Bài 47 Code logic tạo OTP khi đăng ký
 
+- Thực hiện code logic cho tạo OTP khi mà đăng ký thành công
+
 ## Bài 48 Cập nhật xác thực OTP cho chức năng đăng ký
+
+- Cập nhật xác thực OTP cho chức năng đăng ký
 
 ## Bài 49 Gửi OTP đến email bằng Resend
 
+- Gửi OTP đến email bằng Resend
+
 ## Bài 50 Xác thực domain trên Resend
+
+- Xác thực domain trên Resend
 
 ## Bài 51 Gửi email bằng template HTML
 
+- Gửi email bằng template HTML
+
 ## Bài 52 Giới thiệu về React email
 
+- Giới thiệu về React email cho việc gửi email của người dùng
+
 ## Bài 53 Sử dụng React email làm email template
+
+- Sử dụng React email làm email template cho dự án
 
 ## Bài 54 Tư duy về thiết kế Authentication và Authorization cho website
 
