@@ -6,15 +6,17 @@ import {
   UnprocessableEntityException,
 } from '@nestjs/common'
 import { RolesService } from 'src/routes/auth/roles.service'
-import { isNotFoundPrismaError, isUniqueConstraintPrismaError } from 'src/shared/helpers'
+import { generateOTP, isNotFoundPrismaError, isUniqueConstraintPrismaError } from 'src/shared/helpers'
 import { HashingService } from 'src/shared/services/hashing.service'
 import { PrismaService } from 'src/shared/services/prisma.service'
 import { TokenService } from 'src/shared/services/token.service'
 import { RegisterBodyDTO } from './auth.dto'
 import { RegisterBodyType, SendOTPBodyType } from 'src/routes/auth/auth.model'
 import { AuthRepository } from 'src/routes/auth/auth.repo'
-import { isThisSecond } from 'date-fns'
+import { addMilliseconds, isThisSecond } from 'date-fns'
 import { SharedUserRepository } from 'src/shared/repositories/shared-user.repo'
+import ms from 'ms'
+import envConfig from 'src/shared/config'
 
 @Injectable()
 export class AuthService {
@@ -38,29 +40,47 @@ export class AuthService {
         password: hashedPassword,
         // TypeScript không coi việc truyền thêm các thuộc tính dư thừa (excess properties) là lỗi trong trường hợp này khi sử dụng spread operator (...body). Đây là một hành vi được thiết kế để linh hoạt, nhưng nó có thể dẫn đến rủi ro nếu bạn không kiểm soát chặt chẽ dữ liệu đầu vào.
         roleId: clientRoleId,
+        // Ở đây chúng ta cần phải cập nhật thêm cái trường code nữa để xem cái code chúng ta verify có đúng hay không
       })
     } catch (error) {
       if (isUniqueConstraintPrismaError(error)) {
-        throw new ConflictException('Email đã tồn tại')
+        throw new UnprocessableEntityException([
+          {
+            // Cấu trúc của nó nên giống với Zod khi mà nó validate
+            message: 'Email đã tồn tại',
+            path: 'email',
+          },
+        ])
       }
       throw error
     }
   }
 
   async sendOTP(body: SendOTPBodyType) {
-    try {
-      // 1. Kiểm tra email đã tồn tại trong database hay chưa
-      const user = await this.sharedUserRepository.findUnique({
-        email: body.email,
-      })
-      // 2. Tạo mã OTP
-      return body
-    } catch (error) {
-      if (isUniqueConstraintPrismaError(error)) {
-        throw new ConflictException('Email đã tồn tại')
-      }
-      throw error
+    // 1. Kiểm tra email đã tồn tại trong database hay chưa
+    const user = await this.sharedUserRepository.findUnique({
+      email: body.email,
+    })
+    if (user) {
+      throw new UnprocessableEntityException([
+        {
+          // Cấu trúc của nó nên giống với Zod khi mà nó validate
+          message: 'Email đã tồn tại',
+          path: 'email',
+        },
+      ])
     }
+    // 2. Tạo mã OTP
+    const otpCode = generateOTP()
+    const verificationCode = this.authRepository.createVerificationCode({
+      email: body.email,
+      code: otpCode,
+      type: body.type,
+      // addMiliseconds nó cung cấp cho chúng ta một cái Date object phù hợp với đầu vào của thằng expiresAt truyền vào mốc thời gian hiện tại cộng với bao nhiêu thì chúng ta sử dụng thư viện `ms` thì nó sẽ tự động convert ra miliseconds.
+      expiresAt: addMilliseconds(new Date(), ms(envConfig.OTP_EXPIRES_IN)),
+    })
+    // 3. Gửi mã OTP đến email của người dùng
+    return verificationCode
   }
 
   async login(body: any) {

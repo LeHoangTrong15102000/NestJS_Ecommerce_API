@@ -50,6 +50,16 @@
 
 - Thực hiện code logic cho tạo OTP khi mà đăng ký thành công
 
+- Chúng ta không muốn throw ra một `UnprocessableEntity` hơn là `ConflictException` để mà chỉ ra cái field nào là cái field lỗi trong quá trình gửi `OTP`
+
+- Sau này mấy cái lỗi chung chung như thế này sẽ gom lại để mà tái sử dụng được
+
+- Bởi vì cái `VerificationCodeRepo` chúng ta chỉ có thực hiện vài bước thôi đó là tạo và xóa thôi nên là chúng ta sẽ đưa nó vào `AuthRepo` luôn.
+
+- Khi mà người ta nhấn gửi lại cái code chúng ta cần cập nhật lại cái code chứ không phải là tạo mới cái code đó -> Nên là cần phải chỉnh sửa lại ở trong cái `AuthRepo` của chúng ta `(thì lúc này cái code cũ nó sẽ bị vô hiệu hóa đi)`
+
+- Tạm thời đã hoàn thành được việc đăng kí OTP -> Còn logic verifyOTP sẽ để ở những lần sau
+
 ## Bài 48 Cập nhật xác thực OTP cho chức năng đăng ký
 
 - Cập nhật xác thực OTP cho chức năng đăng ký
