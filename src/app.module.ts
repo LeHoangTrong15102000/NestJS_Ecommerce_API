@@ -14,6 +14,7 @@ import { CatchEverythingFilter } from 'src/shared/filters/catch-everything.filte
   controllers: [AppController],
   providers: [
     AppService,
+    // Khi mà có lỗi liên quan đến validate thì nó sẽ chạy vào thằng Pipe custom này của Zod và quăng ra lỗi
     {
       provide: APP_PIPE,
       useClass: CustomZodValidationPipe,

@@ -1,22 +1,16 @@
-import {
-  ConflictException,
-  HttpVersionNotSupportedException,
-  Injectable,
-  UnauthorizedException,
-  UnprocessableEntityException,
-} from '@nestjs/common'
+import { Injectable, UnauthorizedException, UnprocessableEntityException } from '@nestjs/common'
 import { RolesService } from 'src/routes/auth/roles.service'
 import { generateOTP, isNotFoundPrismaError, isUniqueConstraintPrismaError } from 'src/shared/helpers'
 import { HashingService } from 'src/shared/services/hashing.service'
 import { PrismaService } from 'src/shared/services/prisma.service'
 import { TokenService } from 'src/shared/services/token.service'
-import { RegisterBodyDTO } from './auth.dto'
 import { RegisterBodyType, SendOTPBodyType } from 'src/routes/auth/auth.model'
 import { AuthRepository } from 'src/routes/auth/auth.repo'
 import { addMilliseconds, isThisSecond } from 'date-fns'
 import { SharedUserRepository } from 'src/shared/repositories/shared-user.repo'
 import ms from 'ms'
 import envConfig from 'src/shared/config'
+import { TypeOfVerificationCode } from 'src/shared/constants/auth.constant'
 
 @Injectable()
 export class AuthService {
@@ -31,8 +25,30 @@ export class AuthService {
 
   async register(body: RegisterBodyType) {
     try {
+      const verificationCode = await this.authRepository.findUniqueVerificationCode({
+        email: body.email,
+        code: body.code,
+        type: TypeOfVerificationCode.REGISTER,
+      })
+      if (!verificationCode) {
+        throw new UnprocessableEntityException([
+          {
+            message: 'Mã OTP không hợp lệ',
+            path: 'code',
+          },
+        ])
+      }
+      if (verificationCode.expiresAt <= new Date()) {
+        throw new UnprocessableEntityException([
+          {
+            message: 'Mã OTP đã hết hạn',
+            path: 'code',
+          },
+        ])
+      }
       const clientRoleId = await this.rolesService.getClientRoleId()
       const hashedPassword = await this.hashingService.hash(body.password)
+      // response về user thì cần phải omit `code` của người dùng
       return await this.authRepository.createUser({
         email: body.email,
         name: body.name,
@@ -40,7 +56,6 @@ export class AuthService {
         password: hashedPassword,
         // TypeScript không coi việc truyền thêm các thuộc tính dư thừa (excess properties) là lỗi trong trường hợp này khi sử dụng spread operator (...body). Đây là một hành vi được thiết kế để linh hoạt, nhưng nó có thể dẫn đến rủi ro nếu bạn không kiểm soát chặt chẽ dữ liệu đầu vào.
         roleId: clientRoleId,
-        // Ở đây chúng ta cần phải cập nhật thêm cái trường code nữa để xem cái code chúng ta verify có đúng hay không
       })
     } catch (error) {
       if (isUniqueConstraintPrismaError(error)) {

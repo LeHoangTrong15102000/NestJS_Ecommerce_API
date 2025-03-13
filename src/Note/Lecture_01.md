@@ -62,7 +62,9 @@
 
 ## Bài 48 Cập nhật xác thực OTP cho chức năng đăng ký
 
-- Cập nhật xác thực OTP cho chức năng đăng ký
+- Cập nhật xác thực OTP cho chức năng đăng ký -> Sẽ thực hiện cập nhật OTP cho API `register` của chúng ta, thiếu cái chứng năng `verify` cái mã `code` của chúng ta là nó có đúng hay không và nó đã hết hạn hay chưa -> Thì cần phải query đến với database nhưng mà để mà query đến `database` thì cần phải query những trường mà được đánh index thì nó mới nhanh được -> Do chúng ta có để index là theo cụm `([code , email, type])` thì cần phải tìm theo cái cụm này thì nó mới nhanh được.
+
+- Đã thực hiện xác thực code `VerificationCode` khi mà người dùng đăng ký thành công
 
 ## Bài 49 Gửi OTP đến email bằng Resend
 

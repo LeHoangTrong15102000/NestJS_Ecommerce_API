@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common'
 import { RegisterBodyType, VerificationCodeType } from 'src/routes/auth/auth.model'
+import { TypeOfVerificationCodeType } from 'src/shared/constants/auth.constant'
 import { UserType } from 'src/shared/models/shared-user.model'
 import { PrismaService } from 'src/shared/services/prisma.service'
 
@@ -11,9 +12,9 @@ export class AuthRepository {
   // AuthRepository này nó cũng giống như là các Service ở trong một module của chúng ta vậy đó
   // Tách ra như thế này để mà sau này khi mà có muốn thay đổi ORM hoặc thay đổi logic truy vấn và nó không ảnh hưởng đến cái logic nghiệp vụ ở bên kia
   async createUser(
-    user: Omit<RegisterBodyType, 'confirmPassword'> & Pick<UserType, 'roleId'>,
+    user: Omit<RegisterBodyType, 'confirmPassword' | 'code'> & Pick<UserType, 'roleId'>,
   ): Promise<Omit<UserType, 'password' | 'totpSecret'>> {
-    // Mục đích có kiểu trả về như vậy là bởi vì sau này chúng ta có thay thể nó thành Drizzle TypeORM hay gì đó thì chúng ta cũng cần phải về cái dữ liệu tương tư như cái chúng ta quy định thì cái service nó mới không bị lỗi được
+    // Mục đích có kiểu trả về như vậy là bởi vì sau này chúng ta có thay thể nó thành Drizzle TypeORM, Sequelize,... hay gì đó thì chúng ta cũng cần phải về cái dữ liệu tương tư như cái chúng ta quy định thì cái service nó mới không bị lỗi được
     return this.prismaService.user.create({
       data: user,
       omit: {
@@ -36,6 +37,23 @@ export class AuthRepository {
         code: payload.code,
         expiresAt: payload.expiresAt,
       },
+    })
+  }
+
+  // func tìm ra verificationCode để mà xác thực
+  // Trong đây do thằng type là enum nên là nên để cái type của VerificatioCode vào cho nó
+  async findUniqueVerificationCode(
+    uniqueValue:
+      | { email: string }
+      | { id: number }
+      | {
+          email: string
+          code: string
+          type: TypeOfVerificationCodeType
+        },
+  ): Promise<VerificationCodeType | null> {
+    return this.prismaService.verificationCode.findUnique({
+      where: uniqueValue,
     })
   }
 }
