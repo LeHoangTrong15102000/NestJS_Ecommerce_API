@@ -72,7 +72,7 @@
 
 ## Bài 50 Xác thực domain trên Resend
 
-- Xác thực domain trên Resend
+- Xác thực domain trên Resend -> Sẽ thực hiện việc xác thực domain trên `resend`
 
 ## Bài 51 Gửi email bằng template HTML
 
@@ -85,6 +85,8 @@
 ## Bài 53 Sử dụng React email làm email template
 
 - Sử dụng React email làm email template cho dự án
+
+- Sử dụng React Email để mà làm template thì nó sẽ hay hơn cái việc mà chúng ta sử dụng `handlebar`
 
 ## Bài 54 Tư duy về thiết kế Authentication và Authorization cho website
 
