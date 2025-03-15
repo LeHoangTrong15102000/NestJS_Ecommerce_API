@@ -68,7 +68,7 @@
 
 ## Bài 49 Gửi OTP đến email bằng Resend
 
-- Gửi OTP đến email bằng Resend
+- Gửi OTP đến email bằng Resend -> Trong phần này chúng ta sẽ thực hiện việc gửi email đến người dùng bằng `Resend`
 
 ## Bài 50 Xác thực domain trên Resend
 
