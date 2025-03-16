@@ -88,6 +88,12 @@
 
 - Sử dụng React Email để mà làm template thì nó sẽ hay hơn cái việc mà chúng ta sử dụng `handlebar`
 
+- Có thể render cái component mình thằng cái email string sau đó chúng ta chỉ cần sử dụng ở trong cái `EmailService` của chúng ta là được
+
+- Bên `Resend` chúng ta không cần phải chuyển đổi nó thành HTML làm gì mà chúng ta chỉ cần đưa nguyên cái component vào là được luôn
+
+- Chúng ta đã sử dụng React-Email để mà gửi email thành công rồi nên là khi mà cần chỉnh sửa một cái gì đó thì chúng ta chỉ cần vào cái `jsx` của React chỉnh sửa lại là được mà thôi. -> Quá là tiện lợi cho mọi thứ
+
 ## Bài 54 Tư duy về thiết kế Authentication và Authorization cho website
 
 ## Bài 55 Thêm model Device và hướng dẫn migrate
