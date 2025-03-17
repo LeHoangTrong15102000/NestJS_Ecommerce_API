@@ -1,7 +1,13 @@
-import { UserStatus } from '@prisma/client'
 import { createZodDto } from 'nestjs-zod'
-import { RegisterBodySchema, RegisterResSchema, SendOTPBodySchema } from 'src/routes/auth/auth.model'
-import { z } from 'zod'
+import {
+  LoginBodySchema,
+  LoginResSchema,
+  RefreshTokenBodySchema,
+  RefreshTokenResSchema,
+  RegisterBodySchema,
+  RegisterResSchema,
+  SendOTPBodySchema,
+} from 'src/routes/auth/auth.model'
 
 // Sẽ có cái strict nếu mà người dùng gửi lên dữ liệu bị thừa thì mình sẽ báo lỗi với người ta
 // Để mà xem được là cái confirmPassword nó có match với cái password hay không thì sử dụng superRefine
@@ -31,3 +37,11 @@ export class RegisterBodyDTO extends createZodDto(RegisterBodySchema) {}
 export class RegisterResDTO extends createZodDto(RegisterResSchema) {}
 
 export class SendOTPBodyDTO extends createZodDto(SendOTPBodySchema) {}
+
+export class LoginBodyDTO extends createZodDto(LoginBodySchema) {}
+
+export class LoginResDTO extends createZodDto(LoginResSchema) {}
+
+export class RefreshTokenBodyDTO extends createZodDto(RefreshTokenBodySchema) {}
+
+export class RefreshTokenResDTO extends createZodDto(RefreshTokenResSchema) {}

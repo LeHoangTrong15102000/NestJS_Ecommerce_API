@@ -10,7 +10,7 @@
 
 - Nếu mà bỏ cái `omit password` đi mà nó không trả về `password` thì có nghĩa là nó đã work rồi thì giờ chúng ta đã `Serialization` được output trả về rồi.
 
-- Khi mà dự liệu mà chúng ta trả về cho ng dừng mà ko có `strict()` thì khi dự liệu gửi về từ người dùng mà nó có dư hay gì đó thì nó vẫn không gây ra lỗi.
+- Khi mà dự liệu mà chúng ta trả về cho người dùng mà ko có `strict()` thì khi dự liệu gửi về từ người dùng mà nó có dư hay gì đó thì nó vẫn không gây ra lỗi.
 
 - Khi mà có lỗi(sử dụng method strict() trong zod) mà chúng ta đang muốn biết là lỗi gì khi mà kết quả trả về từ việc `Serialization output` bị lỗi -> Vẫn có cách để mà xử lý cái vấn đề bị lỗi đó -> Thì chúng ta sẽ tạo ra một cái `exceptionFilter` để mà xem kết quả trả về bị lỗi thì cụ thể sẽ là bị lỗi gì. -> Nên là khi muốn thêm `strict()` hay không thì cũng cần phải cân nhắc rất là kĩ
 
@@ -96,4 +96,14 @@
 
 ## Bài 54 Tư duy về thiết kế Authentication và Authorization cho website
 
+- Tiếp đến cái vấn đề tiếp theo là học cách về tư duy thiết kế `Authentication` và `Authorization` cho cái website của chúng ta
+
+- Flow `refreshToken` chúng ta sẽ kiểm tra là cái RT có hợp lệ hay không nếu mà hợp lệ thì chúng ta sẽ cập nhật `userAgent`, `ip`, `lastActive`, `isActive=true` cho Device
+
+- Chúng ta muốn cái database của chúng ta giảm gánh nặng hơn thì chúng ta chấp nhận sẽ không query xuống database để mà logout thiết bị ngay lập tức
+
 ## Bài 55 Thêm model Device và hướng dẫn migrate
+
+- Thực hiện thêm model `Device` và migrate cái Device đó vào `Prisma model`, Thì chỉ có những kiểu là `Scala Type` thì nó mới ảnh hưởng tới cái quá trình chúng ta migration dữ liệu vì những thằng này nó sẽ tạo ra `column` ở bên trong một cái table
+
+- Khi mà thêm một table mới vào thì cũng ko ảnh hưởng đến quá trình `migration` chỉ khi nào xóa hoặc cập nhật table mới thì mới ảnh hưởng đến quá trình `migration` mà thôi

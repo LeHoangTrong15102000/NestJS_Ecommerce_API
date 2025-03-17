@@ -4,7 +4,7 @@ import { generateOTP, isNotFoundPrismaError, isUniqueConstraintPrismaError } fro
 import { HashingService } from 'src/shared/services/hashing.service'
 import { PrismaService } from 'src/shared/services/prisma.service'
 import { TokenService } from 'src/shared/services/token.service'
-import { RegisterBodyType, SendOTPBodyType } from 'src/routes/auth/auth.model'
+import { LoginBodyType, RegisterBodyType, SendOTPBodyType } from 'src/routes/auth/auth.model'
 import { AuthRepository } from 'src/routes/auth/auth.repo'
 import { addMilliseconds, isThisSecond } from 'date-fns'
 import { SharedUserRepository } from 'src/shared/repositories/shared-user.repo'
@@ -12,6 +12,7 @@ import ms from 'ms'
 import envConfig from 'src/shared/config'
 import { TypeOfVerificationCode } from 'src/shared/constants/auth.constant'
 import { EmailService } from 'src/shared/services/email.service'
+import { AccessTokenPayloadCreate } from 'src/shared/types/jwt.type'
 
 @Injectable()
 export class AuthService {
@@ -109,15 +110,20 @@ export class AuthService {
     return verificationCode
   }
 
-  async login(body: any) {
-    const user = await this.prismaService.user.findUnique({
-      where: {
-        email: body.email,
-      },
+  // Xử lý logic Login cho người dùng
+  async login(body: LoginBodyType & { userAgent: string; ip: string }) {
+    // Do cái thằng user trong đây ko có trả về role nên là đây là trường hợp cá biệt không dùng chung cái thằng sharedUserRepository được
+    const user = await this.authRepository.findUniqueUserIncludeRole({
+      email: body.email,
     })
 
     if (!user) {
-      throw new UnauthorizedException('Account is not exits')
+      throw new UnprocessableEntityException([
+        {
+          message: 'Email không tồn tại',
+          path: 'email',
+        },
+      ])
     }
 
     const isPasswordMatch = await this.hashingService.compare(body.password, user.password)
@@ -125,26 +131,44 @@ export class AuthService {
       throw new UnprocessableEntityException([
         {
           field: 'password',
-          error: 'Password is incorrect',
+          error: 'Mật khẩu không đúng',
         },
       ])
     }
-    const tokens = await this.generateTokens({ userId: user.id })
+    // Tạo một cái record device mới
+    const device = await this.authRepository.createDevice({
+      userId: user.id,
+      userAgent: body.userAgent,
+      ip: body.ip,
+    })
+
+    // Sau đó mới tạo tokens trả về cho người dùng
+    const tokens = await this.generateTokens({
+      userId: user.id,
+      deviceId: device.id,
+      roleId: user.roleId,
+      roleName: user.role.name,
+    })
     return tokens
   }
 
-  async generateTokens(payload: { userId: number }) {
+  // Hàm tạo ra accessToken và refreshToken
+  async generateTokens({ userId, roleId, deviceId, roleName }: AccessTokenPayloadCreate) {
     const [accessToken, refreshToken] = await Promise.all([
-      this.tokenService.signAccessToken(payload),
-      this.tokenService.signRefreshToken(payload),
+      this.tokenService.signAccessToken({
+        userId,
+        roleId,
+        deviceId,
+        roleName,
+      }),
+      this.tokenService.signRefreshToken({ userId }),
     ])
     const decodedRefreshToken = await this.tokenService.verifyRefreshToken(refreshToken)
-    await this.prismaService.refreshToken.create({
-      data: {
-        token: refreshToken,
-        userId: payload.userId,
-        expiresAt: new Date(decodedRefreshToken.exp * 1000),
-      },
+    await this.authRepository.createRefreshToken({
+      token: refreshToken,
+      userId,
+      expiresAt: new Date(decodedRefreshToken.exp * 1000),
+      deviceId,
     })
 
     return {
@@ -153,75 +177,84 @@ export class AuthService {
     }
   }
 
-  async refreshToken(refreshToken: string) {
-    try {
-      // 1. Kiểm tra refreshToken có hợp lệ không
-      const { userId } = await this.tokenService.verifyRefreshToken(refreshToken)
-      // 2. Kiểm trả refreshToken có tồn tại trong database không
-      // Lấy ra exp của refreshToken cũ
-      const refreshTokenDoc = await this.prismaService.refreshToken.findUniqueOrThrow({
-        where: {
-          token: refreshToken,
-        },
-      })
-      const decodedRefreshToken = await this.tokenService.verifyRefreshToken(refreshToken)
+  // Xử lý Refresh Token cho người dùng
+  // async refreshToken(refreshToken: string) {
+  //   try {
+  //     // 1. Kiểm tra refreshToken có hợp lệ không
+  //     const { userId } = await this.tokenService.verifyRefreshToken(refreshToken)
+  //     // 2. Kiểm trả refreshToken có tồn tại trong database không
+  //     // Lấy ra exp của refreshToken cũ
+  //     const refreshTokenDoc = await this.prismaService.refreshToken.findUniqueOrThrow({
+  //       where: {
+  //         token: refreshToken,
+  //       },
+  //     })
+  //     const decodedRefreshToken = await this.tokenService.verifyRefreshToken(refreshToken)
 
-      // Tạo mới accessToken và refreshToken
-      // const createdTokens = await this.generateTokens({ userId })
-      const newAccessToken = this.tokenService.signAccessToken({ userId })
-      const newRefreshToken = this.tokenService.signRefreshToken({ userId }, decodedRefreshToken.exp)
+  //     // Tạo mới accessToken và refreshToken
+  //     // const createdTokens = await this.generateTokens({ userId })
+  //     const newAccessToken = this.tokenService.signAccessToken({ userId })
+  //     const newRefreshToken = this.tokenService.signRefreshToken({ userId }, decodedRefreshToken.exp)
 
-      // 3. Xoá refreshToken cũ
-      await this.prismaService.refreshToken.delete({
-        where: {
-          token: refreshToken,
-        },
-      })
+  //     // 3. Xoá refreshToken cũ
+  //     await this.prismaService.refreshToken.delete({
+  //       where: {
+  //         token: refreshToken,
+  //       },
+  //     })
 
-      // 4. Thêm refreshToken mới vào database
-      await this.prismaService.refreshToken.create({
-        data: {
-          token: newRefreshToken,
-          userId,
-          expiresAt: new Date(decodedRefreshToken.exp * 1000),
-        },
-      })
+  //     // 4. Thêm refreshToken mới vào database
+  //     await this.prismaService.refreshToken.create({
+  //       data: {
+  //         token: newRefreshToken,
+  //         userId,
+  //         expiresAt: new Date(decodedRefreshToken.exp * 1000),
+  //       },
+  //     })
 
-      return {
-        accessToken: newAccessToken,
-        refreshToken: newRefreshToken,
-      }
-    } catch (error) {
-      // Trường hợp đã refresh token rồi, hãy thông báo cho user biết
-      // refresh token của họ đã bị đánh cắp
-      if (isNotFoundPrismaError(error)) {
-        throw new UnauthorizedException('Refresh token has been revoked')
-      }
-      throw new UnauthorizedException()
-    }
-  }
+  //     return {
+  //       accessToken: newAccessToken,
+  //       refreshToken: newRefreshToken,
+  //     }
+  //   } catch (error) {
+  //     // Trường hợp đã refresh token rồi, hãy thông báo cho user biết
+  //     // refresh token của họ đã bị đánh cắp
+  //     if (isNotFoundPrismaError(error)) {
+  //       throw new UnauthorizedException('Refresh token has been revoked')
+  //     }
+  //     throw new UnauthorizedException()
+  //   }
+  // }
 
-  async logout(refreshToken: string) {
-    try {
-      // 1. Kiểm tra xem refreshToken có hợp lệ hay không
-      await this.tokenService.verifyRefreshToken(refreshToken)
-      // 2. Xoá refreshToken trong database
-      await this.prismaService.refreshToken.delete({
-        where: {
-          token: refreshToken,
-        },
-      })
+  // async logout(refreshToken: string) {
+  //   try {
+  //     // 1. Kiểm tra xem refreshToken có hợp lệ hay không
+  //     await this.tokenService.verifyRefreshToken(refreshToken)
+  //     // 2. Xoá refreshToken trong database
+  //     await this.prismaService.refreshToken.delete({
+  //       where: {
+  //         token: refreshToken,
+  //       },
+  //     })
 
-      return {
-        message: 'Logout successfully',
-      }
-    } catch (error) {
-      // Trường hợp đã refresh token rồi, hãy thông báo cho user biết
-      // refresh token của họ đã bị đánh cắp
-      if (isNotFoundPrismaError(error)) {
-        throw new UnauthorizedException('Refresh token has been revoked')
-      }
-      throw new UnauthorizedException()
-    }
-  }
+  //     return {
+  //       message: 'Logout successfully',
+  //     }
+  //   } catch (error) {
+  //     // Trường hợp đã refresh token rồi, hãy thông báo cho user biết
+  //     // refresh token của họ đã bị đánh cắp
+  //     if (isNotFoundPrismaError(error)) {
+  //       throw new UnauthorizedException('Refresh token has been revoked')
+  //     }
+  //     throw new UnauthorizedException()
+  //   }
+  // }
+
+  // async forgotPassword
+
+  // async resetPassword
+
+  // async updateProfile
+
+  // async twoFactorSetup
 }

@@ -1,8 +1,9 @@
 import { Body, Controller, HttpCode, HttpStatus, Post } from '@nestjs/common'
 
 import { AuthService } from 'src/routes/auth/auth.service'
-import { RegisterBodyDTO, RegisterResDTO, SendOTPBodyDTO } from './auth.dto'
+// import { LoginBodyDTO, RegisterBodyDTO, RegisterResDTO, SendOTPBodyDTO } from './auth.dto'
 import { ZodSerializerDto } from 'nestjs-zod'
+import { LoginBodyDTO, RegisterBodyDTO, RegisterResDTO, SendOTPBodyDTO } from 'src/routes/auth/auth.dto'
 
 @Controller('auth')
 export class AuthController {
@@ -22,18 +23,23 @@ export class AuthController {
   }
 
   @Post('login')
-  async login(@Body() body: any) {
+  async login(@Body() body: LoginBodyDTO & { userAgent: string; ip: string }) {
     return await this.authService.login(body)
   }
 
-  @Post('refresh-token')
-  @HttpCode(HttpStatus.OK)
-  async refreshToken(@Body() body: any) {
-    return await this.authService.refreshToken(body.refreshToken)
-  }
+  // @Post('refresh-token')
+  // @HttpCode(HttpStatus.OK)
+  // async refreshToken(@Body() body: any) {
+  //   return await this.authService.refreshToken(body.refreshToken)
+  // }
 
-  @Post('logout')
-  async logout(@Body() body: any) {
-    return await this.authService.logout(body.refreshToken)
-  }
+  // @Post('logout')
+  // async logout(@Body() body: any) {
+  //   return await this.authService.logout(body.refreshToken)
+  // }
+
+  // @Post('oauth/google')
+  // async googleLogin(@Body() body: any) {
+  //   return await this.authService.googleLogin(body.token)
+  // }
 }

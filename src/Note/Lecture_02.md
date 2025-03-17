@@ -2,6 +2,10 @@
 
 ## Bài 56 Logic cơ bản chức năng Login [Login part 1]
 
+- Đầu tiên cần phải tạo model Login cho chức năng login , khi mà đã tạo xong `LoginBodySchema` thì chúng ta qua `LoginBodyDTO` để mà tạo thêm cho nó nữa
+
+- Nhưng mà cái flow `Login` và `RefreshToken` thì chúng ta sẽ lấy cái `deviceId` ở đâu ra bây giờ
+
 ## Bài 57 Cách lấy IP và UserAgent của client [Login part 2]
 
 ## Bài 58 Một số cập nhật nhỏ
