@@ -8,13 +8,17 @@
 
 ## Bài 57 Cách lấy IP và UserAgent của client [Login part 2]
 
+- Lấy `IP` và `UserAgent` của người dùng khi mà đăng nhập `login` vào hệ thống
+
+- Khi mà tạo thư viện là `Request-ip` thì khi mà sau này có deploy lên VPS hay một cái server nào đó thì cần phải config thêm cái cấu hình cho nó thì nó mới nhận được cái `IP`,ví dụ như là chúng ta sử dụng `NginX` thì cần phải config thêm `X-Real-IP`
+
 ## Bài 58 Một số cập nhật nhỏ
 
 ## Bài 59 Chức năng Refresh Token
 
 ## Bài 60 Chức nắng Logout
 
-## Bài 61 Return message cho sendOTP và tạo Decorator @IsPublic
+## Bài 61 Return message cho sendOTP và tạo Decorator `@IsPublic`
 
 ## Bài 62 Bài tạp Oauth 2.0 với Google
 
