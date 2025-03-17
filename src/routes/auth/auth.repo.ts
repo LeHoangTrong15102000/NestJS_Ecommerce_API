@@ -81,4 +81,8 @@ export class AuthRepository {
       },
     })
   }
+
+  async findUniqueRefreshToken() {}
+
+  async deleteRefreshToken() {}
 }

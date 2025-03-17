@@ -166,7 +166,7 @@ export class AuthService {
     await this.authRepository.createRefreshToken({
       token: refreshToken,
       userId,
-      expiresAt: new Date(decodedRefreshToken.exp * 1000),
+      expiresAt: new Date(decodedRefreshToken.exp * 1000), // Đổi ra ms
       deviceId,
     })
 
@@ -177,53 +177,54 @@ export class AuthService {
   }
 
   // Xử lý Refresh Token cho người dùng
-  // async refreshToken(refreshToken: string) {
-  //   try {
-  //     // 1. Kiểm tra refreshToken có hợp lệ không
-  //     const { userId } = await this.tokenService.verifyRefreshToken(refreshToken)
-  //     // 2. Kiểm trả refreshToken có tồn tại trong database không
-  //     // Lấy ra exp của refreshToken cũ
-  //     const refreshTokenDoc = await this.prismaService.refreshToken.findUniqueOrThrow({
-  //       where: {
-  //         token: refreshToken,
-  //       },
-  //     })
-  //     const decodedRefreshToken = await this.tokenService.verifyRefreshToken(refreshToken)
+  async refreshToken(refreshToken: string) {
+    try {
+      const { userId } = await this.tokenService.verifyRefreshToken(refreshToken)
+      // 1. Kiểm trả refreshToken có tồn tại trong database không
+      // Lấy ra exp của refreshToken cũ
+      const refreshTokenDoc = await this.prismaService.refreshToken.findUniqueOrThrow({
+        where: {
+          token: refreshToken,
+        },
+      })
+      const decodedRefreshToken = await this.tokenService.verifyRefreshToken(refreshToken)
 
-  //     // Tạo mới accessToken và refreshToken
-  //     // const createdTokens = await this.generateTokens({ userId })
-  //     const newAccessToken = this.tokenService.signAccessToken({ userId })
-  //     const newRefreshToken = this.tokenService.signRefreshToken({ userId }, decodedRefreshToken.exp)
+      // 2. Tính toán thời gian còn lại refreshToken
 
-  //     // 3. Xoá refreshToken cũ
-  //     await this.prismaService.refreshToken.delete({
-  //       where: {
-  //         token: refreshToken,
-  //       },
-  //     })
+      // 3. Tạo mới accessToken và refreshToken
+      // const createdTokens = await this.generateTokens({ userId })
+      const newAccessToken = this.tokenService.signAccessToken({ userId })
+      const newRefreshToken = this.tokenService.signRefreshToken({ userId }, decodedRefreshToken.exp)
 
-  //     // 4. Thêm refreshToken mới vào database
-  //     await this.prismaService.refreshToken.create({
-  //       data: {
-  //         token: newRefreshToken,
-  //         userId,
-  //         expiresAt: new Date(decodedRefreshToken.exp * 1000),
-  //       },
-  //     })
+      // 4. Xoá refreshToken cũ
+      await this.prismaService.refreshToken.delete({
+        where: {
+          token: refreshToken,
+        },
+      })
 
-  //     return {
-  //       accessToken: newAccessToken,
-  //       refreshToken: newRefreshToken,
-  //     }
-  //   } catch (error) {
-  //     // Trường hợp đã refresh token rồi, hãy thông báo cho user biết
-  //     // refresh token của họ đã bị đánh cắp
-  //     if (isNotFoundPrismaError(error)) {
-  //       throw new UnauthorizedException('Refresh token has been revoked')
-  //     }
-  //     throw new UnauthorizedException()
-  //   }
-  // }
+      // 5. Thêm refreshToken mới vào database
+      await this.prismaService.refreshToken.create({
+        data: {
+          token: newRefreshToken,
+          userId,
+          expiresAt: new Date(decodedRefreshToken.exp * 1000),
+        },
+      })
+
+      return {
+        accessToken: newAccessToken,
+        refreshToken: newRefreshToken,
+      }
+    } catch (error) {
+      // Trường hợp đã refresh token rồi, hãy thông báo cho user biết
+      // refresh token của họ đã bị đánh cắp
+      if (isNotFoundPrismaError(error)) {
+        throw new UnauthorizedException('Refresh token has been revoked')
+      }
+      throw new UnauthorizedException()
+    }
+  }
 
   // async logout(refreshToken: string) {
   //   try {

@@ -29,7 +29,8 @@ export class TokenService {
       { ...payload, uuid: uuidv4() },
       {
         secret: envConfig.REFRESH_TOKEN_SECRET,
-        expiresIn: expiresAt ? expiresAt : envConfig.REFRESH_TOKEN_EXPIRES_IN,
+        // Lý do phải trừ đi Math.floor(Date.now() / 1000) đó chính là
+        expiresIn: expiresAt ? expiresAt - Math.floor(Date.now() / 1000) : envConfig.REFRESH_TOKEN_EXPIRES_IN,
         algorithm: 'HS256',
       },
     )
