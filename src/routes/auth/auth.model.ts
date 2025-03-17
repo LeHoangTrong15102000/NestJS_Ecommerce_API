@@ -1,4 +1,3 @@
-import { UserStatus } from '@prisma/client'
 import { TypeOfVerificationCode } from 'src/shared/constants/auth.constant'
 import { UserSchema } from 'src/shared/models/shared-user.model'
 import { z } from 'zod'
@@ -26,14 +25,12 @@ export const RegisterBodySchema = UserSchema.pick({
   })
 
 // Đưa cái schema vào để mà tạo ra cái type tương ứng của nó
-export type RegisterBodyType = z.infer<typeof RegisterBodySchema>
 
 // Khai báo thêm thằng này để mà chuẩn hóa dữ liệu trả về cho RegisterRes
 export const RegisterResSchema = UserSchema.omit({
   password: true,
   totpSecret: true,
 })
-export type RegisterResType = z.infer<typeof RegisterResSchema>
 
 // Khai báo Schema cho VerificationCode
 export const VerificationCodeSchema = z.object({
@@ -46,28 +43,30 @@ export const VerificationCodeSchema = z.object({
 })
 
 // Khai báo type cho VerificationCode
-export type VerificationCodeType = z.infer<typeof VerificationCodeSchema>
 
 export const SendOTPBodySchema = VerificationCodeSchema.pick({
   email: true,
   type: true,
 })
 
-export type SendOTPBodyType = z.infer<typeof SendOTPBodySchema>
-
 export const LoginBodySchema = UserSchema.pick({
   email: true,
   password: true,
 }).strict()
-
-export type LoginBodyType = z.infer<typeof LoginBodySchema>
 
 // Thì thường cái res sẽ không thêm cờ `strict()` vào cho nó để mà làm gì cả
 export const LoginResSchema = z.object({
   accessToken: z.string(),
   refreshToken: z.string(),
 })
-export type LoginResType = z.infer<typeof LoginResSchema>
+
+export const RefreshTokenSchema = z.object({
+  token: z.string(),
+  userId: z.number(),
+  deviceId: z.number(),
+  expiresAt: z.date(),
+  createdAt: z.date(),
+})
 
 export const RefreshTokenBodySchema = z
   .object({
@@ -75,9 +74,7 @@ export const RefreshTokenBodySchema = z
   })
   .strict()
 
-export type RefreshTokenBodyType = z.infer<typeof RefreshTokenBodySchema>
 export const RefreshTokenResSchema = LoginResSchema
-export type RefreshTokenResType = LoginResType // chỗ này cũng có thể ghi là z.infer đều được hết.
 
 export const DeviceSchema = z.object({
   id: z.number(),
@@ -88,7 +85,6 @@ export const DeviceSchema = z.object({
   createdAt: z.date(),
   isActive: z.boolean(),
 })
-export type DeviceType = z.infer<typeof DeviceSchema>
 
 export const RoleSchema = z.object({
   id: z.number(),
@@ -101,12 +97,24 @@ export const RoleSchema = z.object({
   updatedAt: z.date(),
   deletedAt: z.date().nullable(),
 })
-export type RoleType = z.infer<typeof RoleSchema>
 
-// export const LogoutBodySchema = z.object({
-//   refreshToken: z.string(),
-// })
-// export type LogoutBodyType = z.infer<typeof LogoutBodySchema>
+// Logout body Schema nó sẽ giống với RefreshTokenBodySchema
+export const LogoutBodySchema = RefreshTokenBodySchema
+
+export type RegisterBodyType = z.infer<typeof RegisterBodySchema>
+export type RegisterResType = z.infer<typeof RegisterResSchema>
+export type VerificationCodeType = z.infer<typeof VerificationCodeSchema>
+export type SendOTPBodyType = z.infer<typeof SendOTPBodySchema>
+export type LoginBodyType = z.infer<typeof LoginBodySchema>
+export type LoginResType = z.infer<typeof LoginResSchema>
+
+export type RefreshTokenType = z.infer<typeof RefreshTokenSchema>
+export type RefreshTokenBodyType = z.infer<typeof RefreshTokenBodySchema>
+export type RefreshTokenResType = LoginResType // chỗ này cũng có thể ghi là z.infer đều được hết.
+export type LogoutBodyType = RefreshTokenBodyType
+
+export type DeviceType = z.infer<typeof DeviceSchema>
+export type RoleType = z.infer<typeof RoleSchema>
 
 // export const ForgotPasswordBodySchema = z.object({
 //   email: z.string().email(),

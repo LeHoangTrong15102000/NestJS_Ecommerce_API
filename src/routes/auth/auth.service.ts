@@ -19,7 +19,6 @@ export class AuthService {
   constructor(
     private readonly hashingService: HashingService,
     private readonly authRepository: AuthRepository,
-    private readonly prismaService: PrismaService,
     private readonly sharedUserRepository: SharedUserRepository,
     private readonly tokenService: TokenService,
     private readonly rolesService: RolesService,
@@ -255,6 +254,10 @@ export class AuthService {
   // async resetPassword
 
   // async updateProfile
+
+  // async oauthWithGoogle
+
+  // async loginGoogle
 
   // async twoFactorSetup
 }

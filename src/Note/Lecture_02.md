@@ -14,11 +14,27 @@
 
 ## Bài 58 Một số cập nhật nhỏ
 
+- Thực hiện một số cập nhật nhỏ ở Lấy IP của người dùng
+
+- Nếu cùng một cái payload, ví dụ 2 cái yêu cầu tạo token trong cùng một dây nếu mà nó có cùng một cái payload thì có thể là nó sẽ bị trùng `Token`, để mà tránh bị trùng `token` thì chúng ta cần phải thêm một cái `ID` riêng cho nó là nó không bị trùng -> tải `UUID` để mà giải quyết cái vấn đề này
+
+- Khi mà thêm vào `payload` đó thì không cần phải khai báo lại kiểu `interface` cho cái `payload` đó, bởi vì là chúng ta không có sử dụng cái `Uuid` đó làm cái gì cả
+
+- Sẽ khai báo thêm một số `Model` và `Type` khác cho cái dự án của chúng ta để mà chúng ta làm việc nó lẹ hơn nhiều.
+
 ## Bài 59 Chức năng Refresh Token
+
+- Thực hiện chức năng `RefreshToken` cho ứng dụng của chúng ta
+
+-
 
 ## Bài 60 Chức nắng Logout
 
+- Thực hiện chức năng `Logout` cho cái ứng dụng của chúng ta
+
 ## Bài 61 Return message cho sendOTP và tạo Decorator `@IsPublic`
+
+- Tạo thêm một cái decorator là `@IsPublic`
 
 ## Bài 62 Bài tạp Oauth 2.0 với Google
 
