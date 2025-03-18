@@ -8,4 +8,4 @@
 
 ## Chương 7 Prisma Migrate
 
-## Chuong 8 Chức năng Permission
+## Chương 8 Chức năng Permission

@@ -49,8 +49,12 @@ export class AuthController {
   @Post('refresh-token')
   @ZodSerializerDto(RefreshTokenResDTO)
   @HttpCode(HttpStatus.OK)
-  refreshToken(@Body() body: RefreshTokenBodyDTO) {
-    return this.authService.refreshToken(body.refreshToken)
+  refreshToken(@Body() body: RefreshTokenBodyDTO, @UserAgent() userAgent: string, @Ip() ip: string) {
+    return this.authService.refreshToken({
+      refreshToken: body.refreshToken,
+      userAgent,
+      ip,
+    })
   }
 
   @Post('logout')
@@ -77,8 +81,11 @@ export class AuthController {
   // }
 
   // @Post('2fa/setup)
+  // async setupTwoFactor(@Body() body: any) {}
 
   // @Post('2fa/enable)
+  // async enableTwoFactor(@Body() body: any) {}
 
   // @Post('2fa/disable)
+  // async disableTwoFactor(@Body() body: any) {}
 }

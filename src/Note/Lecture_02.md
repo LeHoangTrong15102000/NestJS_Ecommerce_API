@@ -26,7 +26,17 @@
 
 - Thực hiện chức năng `RefreshToken` cho ứng dụng của chúng ta
 
--
+- Từ userId tìm ra được `User` sau đó `JOIN` với thằng `Role` để mà lấy ra được cái `roleName`.
+
+- Hoặc là cái bước tìm `RefreshToken` chúng ta thực hiện luôn câu lệnh `JOIN` để mà lấy ra được cái `roleId` `roleName` -> Thì ở đây chúng ta sẽ suy nghĩ rằng nên là sử dụng phương án nào cho nó tối ưu nhất.
+
+- `RefreshToken` `JOIN` với `User` rồi từ `User` `JOIN` tiếp với thằng `Role` -> Thì chúng ta làm theo cách nào cũng được.
+
+- 3 cái thằng `UpdateDevice` `DeleteRefreshToken` và `GenerateTokens` nó không cần phải chạy tuần tự nên là chúng ta có thể dùng `Promise.all` cho cả 3 thằng này được
+
+- Thường khi mà khai báo một cái biến má có sử dụng Promise.all thì chúng ta sẽ sử dụng dấu `$` ở đầu để phân biệt được với một cái biến thông thường
+
+- Nhưng mà lúc này thì chúng ta lại muốn là `RefreshToken new` lấy lại cái `exp` của cái `RefreshToken old` nên là ở cái phần logic này chúng ta sẽ xử lý lại cái chỗ đó
 
 ## Bài 60 Chức nắng Logout
 

@@ -55,6 +55,7 @@ export const LoginBodySchema = UserSchema.pick({
 }).strict()
 
 // Thì thường cái res sẽ không thêm cờ `strict()` vào cho nó để mà làm gì cả
+// Đó là lí do đừng nên thêm cờ strict() vào cái `ResSchema` -> Vì có thể nếu có lỗi xảy ra thì nó sẽ quăng ra lỗi đó
 // Khi mà mình không strict thì nếu dữ liệu trả về cho người dùng nó có bị dư hay cái gì đó thì nó vẫn không gây ra lỗi.
 export const LoginResSchema = z.object({
   accessToken: z.string(),

@@ -24,24 +24,27 @@ export class TokenService {
     )
   }
 
-  signRefreshToken(payload: RefreshTokenPayloadCreate, expiresAt?: number) {
+  signRefreshToken(payload: RefreshTokenPayloadCreate, expiresIn?: number) {
+    // func RefreshToken sẽ tính toán lại thời gian hết hạn của RefreshToken
     return this.jwtService.sign(
       { ...payload, uuid: uuidv4() },
       {
         secret: envConfig.REFRESH_TOKEN_SECRET,
         // Lý do phải trừ đi Math.floor(Date.now() / 1000) đó chính là
-        expiresIn: expiresAt ? expiresAt - Math.floor(Date.now() / 1000) : envConfig.REFRESH_TOKEN_EXPIRES_IN,
+        expiresIn: expiresIn ?? envConfig.REFRESH_TOKEN_EXPIRES_IN,
         algorithm: 'HS256',
       },
     )
   }
 
+  // Phải truyền vào secret của AT
   verifyAccessToken(token: string): Promise<AccessTokenPayload> {
     return this.jwtService.verifyAsync(token, {
       secret: envConfig.ACCESS_TOKEN_SECRET,
     })
   }
 
+  // Phải truyền vào secret của RT
   verifyRefreshToken(token: string): Promise<RefreshTokenPayload> {
     return this.jwtService.verifyAsync(token, {
       secret: envConfig.REFRESH_TOKEN_SECRET,

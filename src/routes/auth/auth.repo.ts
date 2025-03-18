@@ -1,5 +1,11 @@
 import { Injectable } from '@nestjs/common'
-import { DeviceType, RegisterBodyType, RoleType, VerificationCodeType } from 'src/routes/auth/auth.model'
+import {
+  DeviceType,
+  RefreshTokenType,
+  RegisterBodyType,
+  RoleType,
+  VerificationCodeType,
+} from 'src/routes/auth/auth.model'
 import { TypeOfVerificationCodeType } from 'src/shared/constants/auth.constant'
 import { UserType } from 'src/shared/models/shared-user.model'
 import { PrismaService } from 'src/shared/services/prisma.service'
@@ -57,9 +63,17 @@ export class AuthRepository {
     })
   }
 
+  //  Tạo token ko dùng transaction
   async createRefreshToken(data: { token: string; userId: number; expiresAt: Date; deviceId: number }) {
     return this.prismaService.refreshToken.create({
       data,
+    })
+  }
+
+  async deleteRefreshToken(uniqueObject: { token: string }): Promise<RefreshTokenType> {
+    // Sẽ trả về một bản ghi bị xóa dưới dạng object
+    return this.prismaService.refreshToken.delete({
+      where: uniqueObject,
     })
   }
 
@@ -67,6 +81,15 @@ export class AuthRepository {
     data: Pick<DeviceType, 'userId' | 'userAgent' | 'ip'> & Partial<Pick<DeviceType, 'lastActive' | 'isActive'>>,
   ) {
     return this.prismaService.device.create({
+      data,
+    })
+  }
+
+  async updateDevice(deviceId: number, data: Partial<DeviceType>): Promise<DeviceType> {
+    return this.prismaService.device.update({
+      where: {
+        id: deviceId,
+      },
       data,
     })
   }
@@ -82,7 +105,26 @@ export class AuthRepository {
     })
   }
 
-  async findUniqueRefreshToken() {}
+  // Thằng này nó sẽ không có throw ra lỗi vì nó tìm ko thấy thì nó sẽ trả về là null
+  async findUniqueRefreshTokenIncludeUserRole(uniqueObject: {
+    token: string
+  }): Promise<(RefreshTokenType & { user: UserType & { role: RoleType } }) | null> {
+    return this.prismaService.refreshToken.findUnique({
+      where: uniqueObject,
+      // Ở trong record refreshToken lấy ra user và sau đó lấy ra role, thì câu lệnh include chính là cái việc chúng ta JOIN bảng với nhau
+      include: {
+        user: {
+          include: {
+            role: true,
+          },
+        },
+      },
+    })
+  }
 
-  async deleteRefreshToken() {}
+  // Tạo refreshToken có sử dụng transaction
+  // async createRefreshTokenWithTransaction(data: { token: string; userId: number; expiresAt: Date; deviceId: number }) {
+
+  // Xóa refreshToken có sử dụng transaction
+  // async deleteRefreshTokenWithTransaction(token: string) {}
 }

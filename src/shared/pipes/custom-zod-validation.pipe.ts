@@ -6,6 +6,7 @@ const CustomZodValidationPipe = createZodValidationPipe({
   // Provide custom validation exception factory
   createValidationException: (error: ZodError) => {
     console.log('Checkkkk error', error.errors)
+    // Nếu mà cái path trả về là một cái  Array thì chúng ta sẽ join các giá trị bên trong `path` thành một cái chuỗi string
     return new UnprocessableEntityException(
       error.errors.map((error) => {
         return {
