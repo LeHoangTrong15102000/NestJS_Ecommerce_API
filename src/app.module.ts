@@ -15,10 +15,12 @@ import { CatchEverythingFilter } from 'src/shared/filters/catch-everything.filte
   providers: [
     AppService,
     // Khi mà có lỗi liên quan đến validate thì nó sẽ chạy vào thằng Pipe custom này của Zod và quăng ra lỗi
+    // Khi mà validation bị lỗi thì nó sẽ chạy vào cái CustomZodValidationPipe này và nó sẽ show cái lỗi ra terminal -> Thì đây là cái công dụng của ValidationPipe
     {
       provide: APP_PIPE,
       useClass: CustomZodValidationPipe,
     },
+    // Sử dụng cho output validation. Còn cái Interceptor này dùng để mà chuẩn hóa dữ liệu trả về(theo đúng cái ResDTO mà chúng ta cung cấp ở mỗi endpoint)
     {
       provide: APP_INTERCEPTOR,
       useClass: ZodSerializerInterceptor,

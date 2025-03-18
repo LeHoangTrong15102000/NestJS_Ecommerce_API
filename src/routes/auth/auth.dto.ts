@@ -10,6 +10,7 @@ import {
   SendOTPBodySchema,
 } from 'src/routes/auth/auth.model'
 
+// Sử dụng ZodSerializerDto chỉ là lượt bỏ những cái field không cần thiết mà thôi ko cần phải validation hết từng field
 // Sẽ có cái strict nếu mà người dùng gửi lên dữ liệu bị thừa thì mình sẽ báo lỗi với người ta
 // Để mà xem được là cái confirmPassword nó có match với cái password hay không thì sử dụng superRefine
 // const RegisterBodySchema = z

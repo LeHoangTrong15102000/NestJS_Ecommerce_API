@@ -208,6 +208,7 @@ export class AuthService {
         data: {
           token: newRefreshToken,
           userId,
+          // EpochTime là tính theo dây nên là trước khi lưu xuống database thì * 1000
           expiresAt: new Date(decodedRefreshToken.exp * 1000),
         },
       })
@@ -249,6 +250,10 @@ export class AuthService {
   //     throw new UnauthorizedException()
   //   }
   // }
+
+  // async verifyEmail () {}
+
+  // async changePassword() {}
 
   // async forgotPassword
 

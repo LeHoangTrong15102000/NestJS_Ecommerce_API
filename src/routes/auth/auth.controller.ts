@@ -1,7 +1,6 @@
 import { Body, Controller, HttpCode, HttpStatus, Ip, Post, Req } from '@nestjs/common'
 
 import { AuthService } from 'src/routes/auth/auth.service'
-// import { LoginBodyDTO, RegisterBodyDTO, RegisterResDTO, SendOTPBodyDTO } from './auth.dto'
 import { ZodSerializerDto } from 'nestjs-zod'
 import {
   LoginBodyDTO,
@@ -20,8 +19,10 @@ import { MessageResDTO } from 'src/shared/dtos/response.dto'
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
-  // Nếu mà sử dụng cái RegisterBodyDTO như thế kia thì cần phải vào cái AppModule khai báo thêm thằng APP_PIPE vào để mà sử dụng global -> Cách mà team Zod recommend
+  // Nếu mà sử dụng cái ZodSerializerDto(RegisterBodyDTO) như thế kia thì cần phải vào cái AppModule khai báo thêm thằng APP_PIPE vào để mà sử dụng global -> Cách mà team Zod recommend chúng ta sử dụng theo
   @Post('register')
+  // Sử dụng ZodSerializerDto để mà validation output của APIendpoint, nó sẽ chuẩn hóa dữ liệu, ví dụ như là RegisterRes chúng ta không muốn trả về `password` mà trong res lại có password thì nó sẽ báo lỗi và xử lý chỗ này
+  // Nên là khi mà thêm ZodSerializerDto này vào thì nó sẽ chuẩn hóa dữ liệu(output) trả về cho chúng ta theo đúng cái class ví dụ `RegisterResDTO` mà chúng ta cung cấp
   @ZodSerializerDto(RegisterResDTO)
   // Ở controller này thì chúng ta cần phải khai báo DTO nhưng bên service thì cần phải dùng @type để mà biểu thị cái params
   register(@Body() body: RegisterBodyDTO) {
@@ -44,6 +45,7 @@ export class AuthController {
     })
   }
 
+  // Khi mà mình không strict thì nếu dữ liệu trả về cho người dùng nó có bị dư hay cái gì đó thì nó vẫn không gây ra lỗi.
   @Post('refresh-token')
   @ZodSerializerDto(RefreshTokenResDTO)
   @HttpCode(HttpStatus.OK)
@@ -58,16 +60,21 @@ export class AuthController {
     // return this.authService.logout(body.refreshToken)
   }
 
+  // @Post('change-password)
+  // @ZodSerializerDto(ChangePasswordBodyDTO)
+  // async changePassword(@Body() body: ChangePasswordBodyDTO) {}
+
+  // @Post('forgot-password)
+  // async forgotPassword(@Body() body: ForgotPasswordBodyDTO) {
+  //   return await this.authService.forgotPassword(body.email)}
+
+  // @Post('reset-password)
+  // async resetPassword(@Body() body: ResetPasswordBodyDTO) {}
+
   // @Post('oauth/google')
   // async googleLogin(@Body() body: any) {
   //   return await this.authService.googleLogin(body.token)
   // }
-
-  // @Post('change-password)
-
-  // @Post('forgot-password)
-
-  // @Post('reset-password)
 
   // @Post('2fa/setup)
 
