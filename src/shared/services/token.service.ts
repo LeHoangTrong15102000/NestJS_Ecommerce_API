@@ -31,6 +31,7 @@ export class TokenService {
       {
         secret: envConfig.REFRESH_TOKEN_SECRET,
         // Lý do phải trừ đi Math.floor(Date.now() / 1000) đó chính là
+        // Nếu mà không truyền vào expiresIn thì mỗi lần `refreshToken` thì nó sẽ lấy thời gian hiện tại + envConfig.REFRESH_TOKEN_EXPIRES_IN
         expiresIn: expiresIn ?? envConfig.REFRESH_TOKEN_EXPIRES_IN,
         algorithm: 'HS256',
       },

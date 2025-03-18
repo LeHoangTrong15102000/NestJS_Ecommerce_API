@@ -20,6 +20,7 @@ export class AuthService {
   constructor(
     private readonly hashingService: HashingService,
     private readonly authRepository: AuthRepository,
+    private readonly prismaService: PrismaService,
     private readonly sharedUserRepository: SharedUserRepository,
     private readonly tokenService: TokenService,
     private readonly rolesService: RolesService,
@@ -290,7 +291,31 @@ export class AuthService {
         refreshTokenExpiresIn: remainingTimeInSeconds,
       })
 
-      const [, , tokens] = await Promise.all([$updateDevice, $deleteRefreshToken, $token])
+      // const newAccessToken = this.tokenService.signAccessToken({ userId, deviceId, roleId, roleName })
+      // const newRefreshToken = this.tokenService.signRefreshToken({ userId }, remainingTimeInSeconds)
+      // // Có thể xử lý Transaction để đảm bảo toàn vẹn dữ liệu
+      // await this.prismaService.$transaction(async (prisma) => {
+      //   await this.authRepository.updateDeviceWithTransaction(
+      //     deviceId,
+      //     {
+      //       userAgent,
+      //       ip,
+      //     },
+      //     prisma,
+      //   )
+      //   await this.authRepository.deleteRefreshTokenWithTransaction(refreshToken, prisma)
+      //   await this.authRepository.createRefreshTokenWithTransaction(
+      //     {
+      //       token: newRefreshToken,
+      //       userId,
+      //       deviceId,
+      //       expiresAt: new Date(decodedRefreshToken.exp * 1000),
+      //     },
+      //     prisma,
+      //   )
+      // })
+
+      const [, , tokens] = await Promise.all([$updateDevice, $deleteRefreshToken, $tokens])
 
       return tokens
     } catch (error) {

@@ -122,9 +122,37 @@ export class AuthRepository {
     })
   }
 
+  async updateDeviceWithTransaction(
+    deviceId: number,
+    data: Partial<DeviceType>,
+    prisma?: PrismaService,
+  ): Promise<DeviceType> {
+    const db = prisma ?? this.prismaService
+
+    return db.device.update({
+      where: {
+        id: deviceId,
+      },
+      data,
+    })
+  }
+
   // Tạo refreshToken có sử dụng transaction
-  // async createRefreshTokenWithTransaction(data: { token: string; userId: number; expiresAt: Date; deviceId: number }) {
+  async createRefreshTokenWithTransaction(
+    data: { token: string; userId: number; deviceId: number; expiresAt: Date },
+    prisma?: PrismaService,
+  ): Promise<RefreshTokenType> {
+    const db = prisma ?? this.prismaService
+    return db.refreshToken.create({
+      data,
+    })
+  }
 
   // Xóa refreshToken có sử dụng transaction
-  // async deleteRefreshTokenWithTransaction(token: string) {}
+  async deleteRefreshTokenWithTransaction(token: string, prisma?: PrismaService): Promise<void> {
+    const db = prisma ?? this.prismaService
+    await db.refreshToken.delete({
+      where: { token },
+    })
+  }
 }
