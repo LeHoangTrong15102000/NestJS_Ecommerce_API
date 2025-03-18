@@ -172,7 +172,7 @@ export class AuthService {
     ])
     const decodedRefreshToken = await this.tokenService.verifyRefreshToken(refreshToken)
     const expiresAt = refreshTokenExpiresIn
-      ? new Date(refreshTokenExpiresIn * 1000)
+      ? new Date(Date.now() + refreshTokenExpiresIn * 1000)
       : new Date(decodedRefreshToken.exp * 1000)
 
     await this.authRepository.createRefreshToken({
@@ -255,7 +255,7 @@ export class AuthService {
   // Xử lý RefreshToken có hết hạn
   async refreshToken({ refreshToken, userAgent, ip }: RefreshTokenBodyType & { userAgent: string; ip: string }) {
     try {
-      // 1. Kiểm tra xem refreshToken có hợp lệ hay không
+      // 1. Kiểm tra xem refreshToken có hợp lệ hay không, nếu mà gửi
       const decodedRefreshToken = await this.tokenService.verifyRefreshToken(refreshToken)
       const { userId } = decodedRefreshToken
 
@@ -263,6 +263,7 @@ export class AuthService {
       const refreshTokenInDb = await this.authRepository.findUniqueRefreshTokenIncludeUserRole({
         token: refreshToken,
       })
+      // Do trên đây chúng ta throw cái lỗi nên là nó sẽ nhảy xuống cái catch
       if (!refreshTokenInDb) {
         throw new UnauthorizedException('Refresh token has been revoked')
       }
@@ -326,6 +327,10 @@ export class AuthService {
           throw new UnauthorizedException('Refresh token has expired')
         }
         throw new UnauthorizedException('Invalid refresh token')
+      }
+      // Nếu mà chúng ta throw những cái mã lỗi là instanceof HttpExcetion ở try thì nó sẽ nhảy vào cái dòng if ở đây và quăng ra lỗi -> Là những cái exception mà chúng ta chủ động throw thì nó đều là instanceof HttpException cả -> thì nó sẽ nhảy vào trong đây
+      if (error instanceof HttpException) {
+        throw error
       }
       throw new UnauthorizedException('An error occurred during token refresh')
     }
