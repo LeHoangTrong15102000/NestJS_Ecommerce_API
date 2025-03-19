@@ -265,7 +265,7 @@ export class AuthService {
       })
       // Do trên đây chúng ta throw cái lỗi nên là nó sẽ nhảy xuống cái catch
       if (!refreshTokenInDb) {
-        throw new UnauthorizedException('Refresh token has been revoked')
+        throw new UnauthorizedException('Refresh token has been used or revoked')
       }
 
       // 3. Cập nhật device
@@ -332,47 +332,55 @@ export class AuthService {
       if (error instanceof HttpException) {
         throw error
       }
+      // Còn không thì có cho nó throw ra UnauthorizedException như bên dưới này là được
       throw new UnauthorizedException('An error occurred during token refresh')
     }
-
-    // async logout(refreshToken: string) {
-    //   try {
-    //     // 1. Kiểm tra xem refreshToken có hợp lệ hay không
-    //     await this.tokenService.verifyRefreshToken(refreshToken)
-    //     // 2. Xoá refreshToken trong database
-    //     await this.prismaService.refreshToken.delete({
-    //       where: {
-    //         token: refreshToken,
-    //       },
-    //     })
-
-    //     return {
-    //       message: 'Logout successfully',
-    //     }
-    //   } catch (error) {
-    //     // Trường hợp đã refresh token rồi, hãy thông báo cho user biết
-    //     // refresh token của họ đã bị đánh cắp
-    //     if (isNotFoundPrismaError(error)) {
-    //       throw new UnauthorizedException('Refresh token has been revoked')
-    //     }
-    //     throw new UnauthorizedException()
-    //   }
-    // }
-
-    // async changePassword() {}
-
-    // async forgotPassword () {}
-
-    // async resetPassword () {}
-
-    // async updateProfile () {}
-
-    // async oauthGoogle () {}
-
-    // async loginWithGoogle () {}
-
-    // async setupTwoFactor () {}
-
-    // async enableTwoFactor () {}
   }
+
+  async logout(refreshToken: string) {
+    try {
+      // 1. Kiểm tra xem refreshToken có hợp lệ hay không
+      await this.tokenService.verifyRefreshToken(refreshToken)
+      // 2. Xoá refreshToken trong database
+      const deletedRefreshToken = await this.authRepository.deleteRefreshToken({ token: refreshToken })
+      // 3. Cập nhật device là đã logout ra rồi
+      await this.authRepository.updateDevice(deletedRefreshToken.deviceId, {
+        isActive: false, // cập nhật lại cái isActive của cái device đó
+      })
+
+      return {
+        message: 'Đăng xuất thành công',
+      }
+    } catch (error) {
+      if (error instanceof JsonWebTokenError) {
+        if (error.name === 'TokenExpiredError') {
+          throw new UnauthorizedException('Refresh token has expired')
+        }
+        throw new UnauthorizedException('Invalid refresh token')
+      }
+      // Trường hợp JsonWebToken
+      // Trường hợp đã refresh token rồi hoặc là cập nhật device thất bại thì nó sẽ quăng ra cái lỗi này, hãy thông báo cho user biết
+      // refresh token của họ đã bị đánh cắp
+      if (isNotFoundPrismaError(error)) {
+        throw new UnauthorizedException('Refresh token has been used or revoked')
+      }
+      throw new UnauthorizedException('An error occurred during logout device')
+    }
+  }
+
+  // async changePassword() {}
+
+  // async forgotPassword () {}
+
+  // async resetPassword () {}
+
+  // async updateProfile () {}
+
+  // async oauthGoogle () {}
+
+  // async loginWithGoogle () {}
+
+  // async setupTwoFactor () {}
+
+  // async enableTwoFactor () {}
 }

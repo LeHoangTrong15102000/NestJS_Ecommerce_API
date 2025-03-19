@@ -61,7 +61,7 @@ export class AuthController {
   // Do thằng logout chỉ trả về message mà thôi
   @ZodSerializerDto(MessageResDTO)
   logout(@Body() body: LogoutBodyDTO) {
-    // return this.authService.logout(body.refreshToken)
+    return this.authService.logout(body.refreshToken)
   }
 
   // @Post('change-password)

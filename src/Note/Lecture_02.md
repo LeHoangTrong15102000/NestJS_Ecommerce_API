@@ -42,6 +42,8 @@
 
 - Thực hiện chức năng `Logout` cho cái ứng dụng của chúng ta
 
+- Ở cái phần logout này thì chúng ta cũng cần phải check `Bearer Token` được gửi lên từ `Header Authorization` của người dùng nữa
+
 ## Bài 61 Return message cho sendOTP và tạo Decorator `@IsPublic`
 
 - Tạo thêm một cái decorator là `@IsPublic`
