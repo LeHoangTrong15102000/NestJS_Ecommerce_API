@@ -382,7 +382,7 @@ export class AuthService {
 
   // async loginWithGoogle () {}
 
-  // async setupTwoFactor () {}
+  // async setupTwoFactorAuth () {}
 
-  // async enableTwoFactor () {}
+  // async enableTwoFactorAuth () {}
 }

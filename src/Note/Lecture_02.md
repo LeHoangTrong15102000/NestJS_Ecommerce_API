@@ -48,6 +48,8 @@
 
 - Tạo thêm một cái decorator là `@IsPublic`
 
+- Xử lý về vấn đề `Public API endpoint` khi mà không cần phải xác thực quyền
+
 ## Bài 62 Bài tạp Oauth 2.0 với Google
 
 ## Bài 63 Tạo dự án trên Google Console Cloud
