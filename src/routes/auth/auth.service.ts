@@ -108,7 +108,9 @@ export class AuthService {
         },
       ])
     }
-    return verificationCode
+    return {
+      message: 'Gửi mã OTP thành công',
+    }
   }
 
   // Xử lý logic Login cho người dùng

@@ -14,6 +14,7 @@ import {
 } from 'src/routes/auth/auth.dto'
 import { UserAgent } from 'src/shared/decorators/user-agent.decorator'
 import { MessageResDTO } from 'src/shared/dtos/response.dto'
+import { IsPublic } from 'src/shared/decorators/auth.decorator'
 
 @Controller('auth')
 export class AuthController {
@@ -25,11 +26,14 @@ export class AuthController {
   // Nên là khi mà thêm ZodSerializerDto này vào thì nó sẽ chuẩn hóa dữ liệu(output) trả về cho chúng ta theo đúng cái class ví dụ `RegisterResDTO` mà chúng ta cung cấp
   @ZodSerializerDto(RegisterResDTO)
   // Ở controller này thì chúng ta cần phải khai báo DTO nhưng bên service thì cần phải dùng @type để mà biểu thị cái params
+  @IsPublic()
   register(@Body() body: RegisterBodyDTO) {
     return this.authService.register(body)
   }
 
   @Post('otp')
+  @ZodSerializerDto(MessageResDTO)
+  @IsPublic()
   sendOTP(@Body() body: SendOTPBodyDTO) {
     return this.authService.sendOTP(body)
   }
@@ -37,6 +41,7 @@ export class AuthController {
   // Dùng Decorator userAgent và IP của người dùng
   @Post('login')
   @ZodSerializerDto(LoginResDTO)
+  @IsPublic()
   login(@Body() body: LoginBodyDTO, @UserAgent() userAgent: string, @Ip() ip: string) {
     return this.authService.login({
       ...body,

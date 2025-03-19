@@ -18,11 +18,15 @@ export class AuthenticationGuard implements CanActivate {
     private readonly apiKeyGuard: APIKeyGuard,
   ) {}
   async canActivate(context: ExecutionContext): Promise<boolean> {
+    // Mặc định ở trong dự án này là mọi API đều phải có Bearer token nên mặc định sẽ để là AuthType.Bearer, nếu mà API nào mà cung cấp thì sẽ lấy còn không thì lấy mặc định
+    // reflector.getAllAndOverride
     const authTypeValue = this.reflector.getAllAndOverride<AuthTypeDecoratorPayload | undefined>(AUTH_TYPE_KEY, [
       context.getHandler(),
       context.getClass(),
-    ]) ?? { authTypes: [AuthType.None], options: { condition: ConditionGuard.And } }
+    ]) ?? { authTypes: [AuthType.Bearer], options: { condition: ConditionGuard.And } }
+
     const guards = authTypeValue.authTypes.map((authType) => this.authTypeGuardMap[authType])
+
     let error = new UnauthorizedException()
     if (authTypeValue.options.condition === ConditionGuard.Or) {
       for (const instance of guards) {

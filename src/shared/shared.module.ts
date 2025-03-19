@@ -12,12 +12,14 @@ import { EmailService } from 'src/shared/services/email.service'
 
 const sharedServices = [PrismaService, HashingService, TokenService, SharedUserRepository, EmailService]
 
+// Module này được coi là import toàn cục rồi
 @Global()
 @Module({
   providers: [
     ...sharedServices,
     AccessTokenGuard,
     APIKeyGuard,
+    // Thằng AuthenticationGuard được khai báo toàn cục rồi nên là đã được sử dụng toàn App
     {
       provide: APP_GUARD,
       useClass: AuthenticationGuard,
