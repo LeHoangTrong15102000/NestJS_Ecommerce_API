@@ -1,4 +1,4 @@
-import { Body, Controller, HttpCode, HttpStatus, Ip, Post, Req } from '@nestjs/common'
+import { Body, Controller, Get, HttpCode, HttpStatus, Ip, Post, Req } from '@nestjs/common'
 
 import { AuthService } from 'src/routes/auth/auth.service'
 import { ZodSerializerDto } from 'nestjs-zod'
@@ -15,10 +15,14 @@ import {
 import { UserAgent } from 'src/shared/decorators/user-agent.decorator'
 import { MessageResDTO } from 'src/shared/dtos/response.dto'
 import { IsPublic } from 'src/shared/decorators/auth.decorator'
+import { GoogleService } from 'src/routes/auth/google.service'
 
 @Controller('auth')
 export class AuthController {
-  constructor(private readonly authService: AuthService) {}
+  constructor(
+    private readonly authService: AuthService,
+    private readonly googleService: GoogleService,
+  ) {}
 
   // Nếu mà sử dụng cái ZodSerializerDto(RegisterBodyDTO) như thế kia thì cần phải vào cái AppModule khai báo thêm thằng APP_PIPE vào để mà sử dụng global -> Cách mà team Zod recommend chúng ta sử dụng theo
   @Post('register')
@@ -67,6 +71,14 @@ export class AuthController {
   @ZodSerializerDto(MessageResDTO)
   logout(@Body() body: LogoutBodyDTO) {
     return this.authService.logout(body.refreshToken)
+  }
+
+  // Khai báo method GET để mà lấy về cái google link
+  @Get('google-link')
+  @IsPublic()
+  // Lấy vào cái userAgent và ip của người dùng
+  getAuthorizationUrl(@UserAgent() userAgent: string, @Ip() ip: string) {
+    return this.googleService.getAuthorizationUrl({ userAgent, ip })
   }
 
   // @Post('change-password)

@@ -56,10 +56,22 @@
 
 - `Authorized redirect URIs` là cái URL mà google nó `redirect` về cái server của chúng ta -> `http://localhost:3000/auth/google/callback`
 
--
-
 ## Bài 64 Tạo Google Authorized Url bằng googleapis
 
 - Sẽ thực hiện tạo `Google Authorized Url` bằng `googleapis`
+
+- Từ server của chúng ta redirect về `URL FE` trả về cho phía FE là `AT` và `RT` thì 2 cái thằng này thì FE nó sẽ nhận thông qua cái `query params` và nó sẽ lưu vào `localStorage` ở bên phía client của nó, lưu vào cookies hay localStorage thì tùy thằng FE nó sẽ xử lý cái việc đấy.
+
+- Thì ở trong đây cái `URL` khi mà người dùng nhấn vào cái button sẽ được `Server-BE` của chúng ta tạo ra
+
+  - Vì nếu browser không req đến server ở ở server ko lấy được `IP` và `UserAgent` của browser được mà method Login của chúng ta lại yêu cầu `IP` và `UserAgent` cho nên là
+
+  - Do cái thằng server nó đảm nhận nhiệm vụ tạo ra cái `URL` nên là bắt buộc thằng `browser` nó gọi đến thằng `server` để mà lấy về cái `URL` này thì trong lúc gọi đấy chúng ta sẽ lấy cái `IP` và `UserAgent` của Browser, sau khi mà lấy xong rồi thì chúng ta sẽ đưa nó vào cái `URL-accounts.google` và trả về cho Browser, trong cái URL nó sẽ chứa `IP và UserAgent` sao khi mà `Browser` nó mở cái `URL` lên rồi thì nó sẽ chọn login với `Google`
+
+  - Thằng Google ngoài cái việc nó gửi thông tin của google thì nó cũng gửi lại chính cái `IP` và `UserAgent` ở trên URL về cho `server backend` -> Thì cái đó gọi là `State` -> Bây giờ chúng ta sẽ cài đặt thư viện `googleapis` để mà xử lý cái việc đăng nhập với google này
+
+  - Bây giờ chúng ta sẽ sử dụng cái thư viện `googleapis` để tìm hiểu về cái chức năng đăng nhập với `google` này
+
+  - Khi mà tạo ra một cái `string` từ cái Object bằng cú pháp `JSON.stringify({userAgent, ip})` thì rất có nhiều khả năng là chúng ta sẽ bị gặp lỗi vì nó vẫn có khả năng xuất hiện những cái kí tự `{}` xuất hiện trên URL -> Nên là vì vậy để tránh cái trường hợp đó thì chúng ta sẽ chuyển nó thành `base64` thì chúng ta sẽ sử dụng cú pháp như sau `Buffer.from(JSON.stringify({userAgent, ip})).toString('base64')` -> Thì đây là cú pháp tạo ra string trên `URL` hoặc không thì chúng ta có thể sử dụng thư viện để mà hỗ trợ
 
 ## Bài 65 Source Frontend Vite React để mà test chức năng Login với Google
