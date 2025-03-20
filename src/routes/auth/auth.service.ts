@@ -89,9 +89,9 @@ export class AuthService {
         },
       ])
     }
-    // 2. Tạo mã OTP
+    // 2. Tạo mã OTP, Do là chỉ có một mã OTP trong một record verification nên là trường hợp mà 2 người cùng email send OTP thì sẽ không được(và chỉ có một người nhập đúng mã OTP mà thôi)
     const otpCode = generateOTP()
-    const verificationCode = this.authRepository.createVerificationCode({
+    await this.authRepository.createVerificationCode({
       email: body.email,
       code: otpCode,
       type: body.type,

@@ -3,4 +3,6 @@ import { Injectable } from '@nestjs/common'
 @Injectable()
 export class GoogleService {
   constructor() {}
+
+  async googleCallback() {}
 }

@@ -54,6 +54,12 @@
 
 ## Bài 63 Tạo dự án trên Google Console Cloud
 
+- `Authorized redirect URIs` là cái URL mà google nó `redirect` về cái server của chúng ta -> `http://localhost:3000/auth/google/callback`
+
+-
+
 ## Bài 64 Tạo Google Authorized Url bằng googleapis
+
+- Sẽ thực hiện tạo `Google Authorized Url` bằng `googleapis`
 
 ## Bài 65 Source Frontend Vite React để mà test chức năng Login với Google
