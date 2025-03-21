@@ -3,6 +3,7 @@ import { Body, Controller, Get, HttpCode, HttpStatus, Ip, Post, Req } from '@nes
 import { AuthService } from 'src/routes/auth/auth.service'
 import { ZodSerializerDto } from 'nestjs-zod'
 import {
+  GetAuthorizationUrlResDTO,
   LoginBodyDTO,
   LoginResDTO,
   LogoutBodyDTO,
@@ -76,6 +77,8 @@ export class AuthController {
   // Khai báo method GET để mà lấy về cái google link
   @Get('google-link')
   @IsPublic()
+  // Thằng này trả về URL
+  @ZodSerializerDto(GetAuthorizationUrlResDTO)
   // Lấy vào cái userAgent và ip của người dùng
   getAuthorizationUrl(@UserAgent() userAgent: string, @Ip() ip: string) {
     return this.googleService.getAuthorizationUrl({ userAgent, ip })

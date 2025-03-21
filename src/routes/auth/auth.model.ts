@@ -108,6 +108,15 @@ export const RoleSchema = z.object({
 // Logout body Schema nó sẽ giống với RefreshTokenBodySchema
 export const LogoutBodySchema = RefreshTokenBodySchema
 
+export const GoogleAuthStateSchema = DeviceSchema.pick({
+  userAgent: true,
+  ip: true,
+})
+
+export const GetAuthorizationUrlResSchema = z.object({
+  url: z.string().url(),
+})
+
 export type RegisterBodyType = z.infer<typeof RegisterBodySchema>
 export type RegisterResType = z.infer<typeof RegisterResSchema>
 export type VerificationCodeType = z.infer<typeof VerificationCodeSchema>
@@ -122,6 +131,8 @@ export type LogoutBodyType = RefreshTokenBodyType
 
 export type DeviceType = z.infer<typeof DeviceSchema>
 export type RoleType = z.infer<typeof RoleSchema>
+export type GoogleAuthStateType = z.infer<typeof GoogleAuthStateSchema>
+export type GetAuthorizationUrlResType = z.infer<typeof GetAuthorizationUrlResSchema>
 
 // export const ForgotPasswordBodySchema = z.object({
 //   email: z.string().email(),

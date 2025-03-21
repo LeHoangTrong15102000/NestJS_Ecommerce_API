@@ -72,6 +72,12 @@
 
   - Bây giờ chúng ta sẽ sử dụng cái thư viện `googleapis` để tìm hiểu về cái chức năng đăng nhập với `google` này
 
-  - Khi mà tạo ra một cái `string` từ cái Object bằng cú pháp `JSON.stringify({userAgent, ip})` thì rất có nhiều khả năng là chúng ta sẽ bị gặp lỗi vì nó vẫn có khả năng xuất hiện những cái kí tự `{}` xuất hiện trên URL -> Nên là vì vậy để tránh cái trường hợp đó thì chúng ta sẽ chuyển nó thành `base64` thì chúng ta sẽ sử dụng cú pháp như sau `Buffer.from(JSON.stringify({userAgent, ip})).toString('base64')` -> Thì đây là cú pháp tạo ra string trên `URL` hoặc không thì chúng ta có thể sử dụng thư viện để mà hỗ trợ
+  - Khi mà tạo ra một cái `string` từ cái Object bằng cú pháp `JSON.stringify({userAgent, ip})` thì rất có nhiều khả năng là chúng ta sẽ bị gặp lỗi vì nó vẫn có khả năng xuất hiện những cái kí tự `{}` xuất hiện trên URL -> Nên là vì vậy để tránh cái trường hợp đó thì chúng ta sẽ chuyển nó thành `base64` thì chúng ta sẽ sử dụng cú pháp như sau `Buffer.from(JSON.stringify({userAgent, ip})).toString('base64')` -> Thì đây là cú pháp tạo ra string trên `URL` hoặc không thì chúng ta có thể sử dụng thư viện để mà hỗ trợ.
+
+  - Sau khi mà đã khai báo xong thì bây giờ chúng ta sẽ test thử cái tính năng tạo ra URL từ `googleapis`.
+
+  - Và bài sau sẽ tích hợp cái FE vite vào để mà test chức năng `Login` với `Google`
+
+  - Ok đã get đường dẫn của `googleAuth` rồi -> Bây giờ tiến hành thực hiện các logic tiếp theo của chức năng mà thôi.
 
 ## Bài 65 Source Frontend Vite React để mà test chức năng Login với Google

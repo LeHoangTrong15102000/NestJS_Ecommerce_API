@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common'
 import { OAuth2Client } from 'google-auth-library'
 import { google } from 'googleapis'
+import { GoogleAuthStateType } from 'src/routes/auth/auth.model'
 import envConfig from 'src/shared/config'
 
 @Injectable()
@@ -15,7 +16,7 @@ export class GoogleService {
     )
   }
 
-  getAuthorizationUrl({ userAgent, ip }: { userAgent: string; ip: string }) {
+  getAuthorizationUrl({ userAgent, ip }: GoogleAuthStateType) {
     // Khai báo phạm vi truy cập vào thông tin tài khoản của người dùng
     const scope = ['https://www.googleapis.com/auth/userinfo.profile', 'https://www.googleapis.com/auth/userinfo.email']
     // Sẽ tạo cái string từ userAgent và ip để đưa vào URL -> chuyển nó thành base64 để bảo mật, an toàn có thể bỏ lên URL
