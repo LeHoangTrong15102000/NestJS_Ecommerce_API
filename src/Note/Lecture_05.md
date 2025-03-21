@@ -3,3 +3,11 @@
 ## Chương 9 Chức năng profile
 
 ## Chương 10 Chức năng User: Quản lý User
+
+## Chương 11 Chức năng Product
+
+## Chương 12 Chức năng Order
+
+## Chương 13 Tìm hiểu về Redis
+
+## Chương 14 Áp dụng các design pattern vào bên trong dự án

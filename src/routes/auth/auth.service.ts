@@ -255,6 +255,7 @@ export class AuthService {
   // }
 
   // Xử lý RefreshToken có hết hạn
+
   async refreshToken({ refreshToken, userAgent, ip }: RefreshTokenBodyType & { userAgent: string; ip: string }) {
     try {
       // 1. Kiểm tra xem refreshToken có hợp lệ hay không, nếu mà gửi

@@ -1,4 +1,4 @@
-import { Body, Controller, Get, HttpCode, HttpStatus, Ip, Post, Req } from '@nestjs/common'
+import { Body, Controller, Get, HttpCode, HttpStatus, Ip, Post, Query, Req, Res } from '@nestjs/common'
 
 import { AuthService } from 'src/routes/auth/auth.service'
 import { ZodSerializerDto } from 'nestjs-zod'
@@ -17,6 +17,8 @@ import { UserAgent } from 'src/shared/decorators/user-agent.decorator'
 import { MessageResDTO } from 'src/shared/dtos/response.dto'
 import { IsPublic } from 'src/shared/decorators/auth.decorator'
 import { GoogleService } from 'src/routes/auth/google.service'
+import { Response } from 'express'
+import envConfig from 'src/shared/config'
 
 @Controller('auth')
 export class AuthController {
@@ -82,6 +84,29 @@ export class AuthController {
   // Lấy vào cái userAgent và ip của người dùng
   getAuthorizationUrl(@UserAgent() userAgent: string, @Ip() ip: string) {
     return this.googleService.getAuthorizationUrl({ userAgent, ip })
+  }
+
+  @Get('google/callback')
+  @IsPublic()
+  async googleCallback(@Query('code') code: string, @Query('state') state: string, @Res() res: Response) {
+    try {
+      const data = await this.googleService.googleCallback({ code, state })
+
+      return res.redirect(
+        `${envConfig.GOOGLE_CLIENT_REDIRECT_URI}?accessToken=${data.accessToken}&refreshToken=${data.refreshToken}`,
+      )
+    } catch (error) {
+      // Trường hợp mà googleCallback nó thất bại
+      console.error(error)
+      // Nếu nó là instanceof của một cái object Error
+      const errorMessage =
+        error instanceof Error
+          ? error.message
+          : 'Đã xảy ra lỗi khi đăng nhập bằng google, vui lòng thử lại bằng cách khác'
+
+      // Cũng redirect về client nhưng mà sẽ có thêm query params là error message
+      return res.redirect(`${envConfig.GOOGLE_CLIENT_REDIRECT_URI}?errorMessage=${errorMessage}`)
+    }
   }
 
   // @Post('change-password)
