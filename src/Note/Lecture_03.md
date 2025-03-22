@@ -18,7 +18,17 @@
 
 ## Bài 67 Publish Production Google Cloud Console
 
+- Đã hoàn thành việc Publish Production Google Cloud Console
+
 ## Bài 68 Refactor Error và vấn đề về đa ngôn ngữ
+
+- Thực hiện
+
+- Đa ngôn ngữ ở đây thì sẽ có 2 trường phái đó là người dùng ngta gửi lên header ngôn ngữ gì
+
+- Thay vì trả về tiếng Anh hay tiếng Nhật hay tiếng gì đó cố định thì chúng ta sẽ trả về cái `key` thì cái `key` này sẽ được thằng `client` nó dựa vào cái ngôn ngữ hiện tại của nó để mà nó render ra(Ví dụ như cái ngôn ngữ hiện tại của thằng client là Tiếng Anh thì nó sẽ trả về lỗi là tiếng Anh).
+
+- Khi mà tạo như thế này thì nhớ nói cho client biết là để mà tạo ra các `file JSON` có đúng các `key` lỗi mà chúng ta đã trả về
 
 ## Bài 69 Fix bug truyền sai RoleName khi mà tạo token
 
