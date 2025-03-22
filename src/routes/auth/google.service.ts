@@ -63,14 +63,15 @@ export class GoogleService {
       }
       // 2. Dùng code để mà lấy token
       const { tokens } = await this.oauth2Client.getToken(code)
+      // sau khi mà lấy ra được cái tokens rồi chúng ta authenticate cho cái oauth2Client
       this.oauth2Client.setCredentials(tokens)
 
-      // 3. Lấy thông tin google của người dùng
+      // 3. Lấy thông tin google của người dùng -> Sau khi authenticate rồi có thể lấy ra được thông tin user(dùng google oauth2 dể lấy ra được oauth2)
       const oauth2 = google.oauth2({
         auth: this.oauth2Client,
         version: 'v2',
       })
-      const { data } = await oauth2.userinfo.get()
+      const { data } = await oauth2.userinfo.get() // Lấy ra userinfo
       if (!data.email) {
         throw new Error('Không thể lấy thông tin người dùng từ google')
       }
