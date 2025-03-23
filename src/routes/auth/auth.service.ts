@@ -4,13 +4,19 @@ import { generateOTP, isNotFoundPrismaError, isUniqueConstraintPrismaError } fro
 import { HashingService } from 'src/shared/services/hashing.service'
 import { PrismaService } from 'src/shared/services/prisma.service'
 import { TokenService } from 'src/shared/services/token.service'
-import { LoginBodyType, RefreshTokenBodyType, RegisterBodyType, SendOTPBodyType } from 'src/routes/auth/auth.model'
+import {
+  ForgotPasswordBodyType,
+  LoginBodyType,
+  RefreshTokenBodyType,
+  RegisterBodyType,
+  SendOTPBodyType,
+} from 'src/routes/auth/auth.model'
 import { AuthRepository } from 'src/routes/auth/auth.repo'
 import { addMilliseconds, isThisSecond } from 'date-fns'
 import { SharedUserRepository } from 'src/shared/repositories/shared-user.repo'
 import ms from 'ms'
 import envConfig from 'src/shared/config'
-import { TypeOfVerificationCode } from 'src/shared/constants/auth.constant'
+import { TypeOfVerificationCode, TypeOfVerificationCodeType } from 'src/shared/constants/auth.constant'
 import { EmailService } from 'src/shared/services/email.service'
 import { AccessTokenPayloadCreate } from 'src/shared/types/jwt.type'
 import { JsonWebTokenError } from '@nestjs/jwt'
@@ -36,31 +42,59 @@ export class AuthService {
     private readonly emailService: EmailService,
   ) {}
 
+  async validateVerificationCode({
+    code,
+    email,
+    type,
+  }: {
+    email: string
+    code: string
+    type: TypeOfVerificationCodeType
+  }) {
+    const verificationCode = await this.authRepository.findUniqueVerificationCode({
+      email,
+      code,
+      type,
+    })
+
+    if (!verificationCode) {
+      throw InvalidOTPException
+    }
+    // Kiểm tra expiresAt của mã OTP
+    if (verificationCode.expiresAt <= new Date()) {
+      throw OTPExpiredException
+    }
+
+    //  return về verification Code phòng cái trường hợp mà chúng ta cần dùng
+    return verificationCode
+  }
+
   async register(body: RegisterBodyType) {
     try {
-      const verificationCode = await this.authRepository.findUniqueVerificationCode({
-        email: body.email,
-        code: body.code,
-        type: TypeOfVerificationCode.REGISTER,
-      })
-      if (!verificationCode) {
-        throw InvalidOTPException
-      }
-      // Kiểm tra expiresAt của mã OTP
-      if (verificationCode.expiresAt <= new Date()) {
-        throw OTPExpiredException
-      }
+      await this.validateVerificationCode({ code: body.code, email: body.email, type: TypeOfVerificationCode.REGISTER })
+
       const clientRoleId = await this.rolesService.getClientRoleId()
       const hashedPassword = await this.hashingService.hash(body.password)
+      // Sau khi mà xác thực xong rồi thì xóa code
+
       // response về user thì cần phải omit `code` của người dùng
-      return await this.authRepository.createUser({
-        email: body.email,
-        name: body.name,
-        phoneNumber: body.phoneNumber,
-        password: hashedPassword,
-        // TypeScript không coi việc truyền thêm các thuộc tính dư thừa (excess properties) là lỗi trong trường hợp này khi sử dụng spread operator (...body). Đây là một hành vi được thiết kế để linh hoạt, nhưng nó có thể dẫn đến rủi ro nếu bạn không kiểm soát chặt chẽ dữ liệu đầu vào.
-        roleId: clientRoleId,
-      })
+      const [user] = await Promise.all([
+        this.authRepository.createUser({
+          email: body.email,
+          name: body.name,
+          phoneNumber: body.phoneNumber,
+          password: hashedPassword,
+          // TypeScript không coi việc truyền thêm các thuộc tính dư thừa (excess properties) là lỗi trong trường hợp này khi sử dụng spread operator (...body). Đây là một hành vi được thiết kế để linh hoạt, nhưng nó có thể dẫn đến rủi ro nếu bạn không kiểm soát chặt chẽ dữ liệu đầu vào.
+          roleId: clientRoleId,
+        }),
+        this.authRepository.deleteVerificationCode({
+          email: body.email,
+          code: body.code,
+          type: TypeOfVerificationCode.REGISTER,
+        }),
+      ])
+
+      return user
     } catch (error) {
       if (isUniqueConstraintPrismaError(error)) {
         throw EmailAlreadyExistsException
@@ -74,8 +108,11 @@ export class AuthService {
     const user = await this.sharedUserRepository.findUnique({
       email: body.email,
     })
-    if (user) {
+    if (body.type === TypeOfVerificationCode.REGISTER && user) {
       throw EmailAlreadyExistsException
+    }
+    if (body.type === TypeOfVerificationCode.FORGOT_PASSWORD && !user) {
+      throw EmailNotFoundException
     }
     // 2. Tạo mã OTP, Do là chỉ có một mã OTP trong một record verification nên là trường hợp mà 2 người cùng email send OTP thì sẽ không được(và chỉ có một người nhập đúng mã OTP mà thôi)
     const otpCode = generateOTP()
@@ -344,17 +381,42 @@ export class AuthService {
     }
   }
 
+  async forgotPassword(body: ForgotPasswordBodyType) {
+    const { email, code, newPassword } = body
+    // 1. Kiểm tra email đã tồn tại trong database hay chưa
+    const user = await this.sharedUserRepository.findUnique({ email })
+    if (!user) {
+      throw EmailNotFoundException
+    }
+
+    // 2. Kiểm tra mã OTP có hợp lệ hay không
+    await this.validateVerificationCode({
+      email,
+      code,
+      type: TypeOfVerificationCode.FORGOT_PASSWORD,
+    })
+
+    // 3. Cập nhật lại mật khẩu và xóa đi OTP
+    const hashedPassword = await this.hashingService.hash(newPassword)
+
+    // Cả 2 thằng này nó đều không phụ thuộc lẫn nhau thì có thể dùng promise.all để mà tối ưu cái vấn đề đó được
+    await Promise.all([
+      this.authRepository.updateUser({ id: user.id }, { password: hashedPassword }),
+      this.authRepository.deleteVerificationCode({
+        email: body.email,
+        code: body.code,
+        type: TypeOfVerificationCode.FORGOT_PASSWORD,
+      }),
+    ])
+
+    return {
+      message: 'Đổi mật khẩu thành công',
+    }
+  }
+
   // async changePassword() {}
 
-  // async forgotPassword () {}
-
   // async resetPassword () {}
-
-  // async updateProfile () {}
-
-  // async oauthGoogle () {}
-
-  // async loginWithGoogle () {}
 
   // async setupTwoFactorAuth () {}
 

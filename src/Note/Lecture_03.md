@@ -22,7 +22,7 @@
 
 ## Bài 68 Refactor Error và vấn đề về đa ngôn ngữ
 
-- Thực hiện
+- Thực hiện các `refactor` lại vấn đề mà quăng lỗi khi mà thực hiện các logic nghiệp vụ `dự án`
 
 - Đa ngôn ngữ ở đây thì sẽ có 2 trường phái đó là người dùng ngta gửi lên header ngôn ngữ gì
 
@@ -32,14 +32,34 @@
 
 ## Bài 69 Fix bug truyền sai RoleName khi mà tạo token
 
+- Đã fix bug truyền sai `roleName` vào bên trong khi mà tạo `refreshToken`
+
 ## Bài 70 Chức năng quên mật khẩu
+
+- Thực hiện chức năng quên mật khẩu
+
+- Khai báo một method dùng chung để mà kiểm tra mã `OTP` của người dùng có hợp lệ hay không.
+
+- Ngày xửa thì chúng ta chỉ sử dụng cái hàm sendOTP cho cái trường hợp là `Register` mà thôi bây giờ thêm cái trường hợp là `ForgotPassword` thì nó lại hơi khác một tí xíu nữa -> Nên là chỗ này cần phải chỉnh sửa lại nữa
 
 ## Bài 71 Phân tích chức năng 2FA
 
+- Phân tích chức năng 2FA cho người dùng, sẽ thực hiện phân tích tính năng 2FA của người dùng -> Và thực hiện cái tính năng này sao cho phù hợp với đa số người dùng nhất có thể.
+
+-
+
 ## Bài 72 Cập nhật Schema Model DTO cho chức năng 2FA
+
+- Tiến hành cập nhật `Schema Model DTO` cho chức năng `2FA`
 
 ## Bài 73 Tạo mã 2FA
 
+- Thực hiện tạo mã 2FA cho người dùng
+
 ## Bài 74 Cập nhật xác thực 2 lớp cho Login
 
+- Cập nhật xác thực 2 lớp cho Login
+
 ## Bài 75 Chức năng tắt mã 2FA
+
+- Thực hiện chức năng tắt mã 2FA của người dùng

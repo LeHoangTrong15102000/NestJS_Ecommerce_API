@@ -3,6 +3,7 @@ import { Body, Controller, Get, HttpCode, HttpStatus, Ip, Post, Query, Req, Res 
 import { AuthService } from 'src/routes/auth/auth.service'
 import { ZodSerializerDto } from 'nestjs-zod'
 import {
+  ForgotPasswordBodyDTO,
   GetAuthorizationUrlResDTO,
   LoginBodyDTO,
   LoginResDTO,
@@ -113,9 +114,12 @@ export class AuthController {
   // @ZodSerializerDto(ChangePasswordBodyDTO)
   // async changePassword(@Body() body: ChangePasswordBodyDTO) {}
 
-  // @Post('forgot-password)
-  // async forgotPassword(@Body() body: ForgotPasswordBodyDTO) {
-  //   return await this.authService.forgotPassword(body.email)}
+  @Post('forgot-password')
+  @IsPublic()
+  @ZodSerializerDto(MessageResDTO)
+  forgotPassword(@Body() body: ForgotPasswordBodyDTO) {
+    return this.authService.forgotPassword(body)
+  }
 
   // @Post('reset-password)
   // async resetPassword(@Body() body: ResetPasswordBodyDTO) {}
