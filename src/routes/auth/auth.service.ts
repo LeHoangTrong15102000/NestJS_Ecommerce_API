@@ -1,4 +1,4 @@
-import { HttpException, Injectable, UnauthorizedException, UnprocessableEntityException } from '@nestjs/common'
+import { HttpException, Injectable, UnauthorizedException } from '@nestjs/common'
 import { RolesService } from 'src/routes/auth/roles.service'
 import { generateOTP, isNotFoundPrismaError, isUniqueConstraintPrismaError } from 'src/shared/helpers'
 import { HashingService } from 'src/shared/services/hashing.service'
@@ -52,9 +52,11 @@ export class AuthService {
     type: TypeOfVerificationCodeType
   }) {
     const verificationCode = await this.authRepository.findUniqueVerificationCode({
-      email,
-      code,
-      type,
+      email_code_type: {
+        email,
+        code,
+        type,
+      },
     })
 
     if (!verificationCode) {
@@ -88,9 +90,11 @@ export class AuthService {
           roleId: clientRoleId,
         }),
         this.authRepository.deleteVerificationCode({
-          email: body.email,
-          code: body.code,
-          type: TypeOfVerificationCode.REGISTER,
+          email_code_type: {
+            email: body.email,
+            code: body.code,
+            type: TypeOfVerificationCode.REGISTER,
+          },
         }),
       ])
 
@@ -403,14 +407,16 @@ export class AuthService {
     await Promise.all([
       this.authRepository.updateUser({ id: user.id }, { password: hashedPassword }),
       this.authRepository.deleteVerificationCode({
-        email: body.email,
-        code: body.code,
-        type: TypeOfVerificationCode.FORGOT_PASSWORD,
+        email_code_type: {
+          email: body.email,
+          code: body.code,
+          type: TypeOfVerificationCode.FORGOT_PASSWORD,
+        },
       }),
     ])
 
     return {
-      message: 'Đổi mật khẩu thành công',
+      message: 'Đổi mật khẩu thành công.',
     }
   }
 

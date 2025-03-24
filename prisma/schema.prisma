@@ -113,15 +113,15 @@ model UserTranslation {
 
 model VerificationCode {
   id    Int                  @id @default(autoincrement())
-  email String               @unique @db.VarChar(500)
+  email String               @db.VarChar(500)
   code  String               @db.VarChar(50)
   type  VerificationCodeType
 
   expiresAt DateTime
   createdAt DateTime @default(now())
 
-  // Đánh index như thế này để mốt truy vấn cho nó dễ
-  @@index([email, code, type])
+  // Đánh index như thế này để mốt truy vấn cho nó dễ, sẽ để cái `@@unique` vào bên trong cái tổ hợp 3 trường email, code, type
+  @@unique([email, code, type])
   @@index([expiresAt])
 }
 
@@ -456,6 +456,8 @@ enum OrderStatus {
 enum VerificationCodeType {
   REGISTER
   FORGOT_PASSWORD
+  LOGIN
+  DISABLE_2FA
 }
 
 enum UserStatus {

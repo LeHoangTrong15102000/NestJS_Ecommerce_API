@@ -41,8 +41,8 @@ export const VerificationCodeSchema = z.object({
   type: z.enum([
     TypeOfVerificationCode.REGISTER,
     TypeOfVerificationCode.FORGOT_PASSWORD,
-    // TypeOfVerificationCode.LOGIN,
-    // TypeOfVerificationCode.DISABLE_2FA,
+    TypeOfVerificationCode.LOGIN,
+    TypeOfVerificationCode.DISABLE_2FA,
   ]),
   expiresAt: z.date(),
   createdAt: z.date(),
@@ -58,7 +58,12 @@ export const SendOTPBodySchema = VerificationCodeSchema.pick({
 export const LoginBodySchema = UserSchema.pick({
   email: true,
   password: true,
-}).strict()
+})
+  .extend({
+    totpCode: z.string().length(6).optional(), // 2FA code
+    code: z.string().length(6).optional(), // Email OTP code
+  })
+  .strict()
 
 // Thì thường cái res sẽ không thêm cờ `strict()` vào cho nó để mà làm gì cả
 // Đó là lí do đừng nên thêm cờ strict() vào cái `ResSchema` -> Vì có thể nếu có lỗi xảy ra thì nó sẽ quăng ra lỗi đó
@@ -136,6 +141,41 @@ export const ForgotPasswordBodySchema = z
     }
   })
 
+export const ResetPasswordBodySchema = z.object({
+  email: z.string().email(),
+})
+
+// Về cái setup thì cái body chúng ta sẽ không gửi lên cái gì hết
+export const EnableTwoFactorBodySchema = z.object({})
+
+// Còn về phía disable thì cái body cần gửi lên totpCode hoặc là code OTP
+export const DisableTwoFactorBodySchema = z
+  .object({
+    totpCode: z.string().length(6).optional(),
+    code: z.string().length(6).optional(),
+  })
+  .superRefine(({ totpCode, code }, ctx) => {
+    const message = 'Bạn phải cung cấp mã xác thực 2FA hoặc mã OTP. Không được cung cấp cả 2'
+    // Nếu như cả 2 thằng này điều khác undefined, cả 2 đều có hoặc không có thì nó sẽ nhảy vào câu if
+    if ((totpCode !== undefined) === (code !== undefined)) {
+      ctx.addIssue({
+        path: ['totpCode'],
+        message,
+        code: 'custom',
+      })
+      ctx.addIssue({
+        path: ['code'],
+        message,
+        code: 'custom',
+      })
+    }
+  })
+
+export const TwoFactorSetupResSchema = z.object({
+  secret: z.string(),
+  url: z.string().url(),
+})
+
 export type RegisterBodyType = z.infer<typeof RegisterBodySchema>
 export type RegisterResType = z.infer<typeof RegisterResSchema>
 export type VerificationCodeType = z.infer<typeof VerificationCodeSchema>
@@ -154,6 +194,9 @@ export type GoogleAuthStateType = z.infer<typeof GoogleAuthStateSchema>
 export type GetAuthorizationUrlResType = z.infer<typeof GetAuthorizationUrlResSchema>
 
 export type ForgotPasswordBodyType = z.infer<typeof ForgotPasswordBodySchema>
+export type EnableTwoFactorBodyType = z.infer<typeof EnableTwoFactorBodySchema>
+export type DisableTwoFactorBodyType = z.infer<typeof DisableTwoFactorBodySchema>
+export type TwoFactorSetupResType = z.infer<typeof TwoFactorSetupResSchema>
 
 // export const ForgotPasswordBodySchema = z.object({
 //   email: z.string().email(),

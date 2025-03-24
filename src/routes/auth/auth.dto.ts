@@ -1,5 +1,7 @@
 import { createZodDto } from 'nestjs-zod'
 import {
+  DisableTwoFactorBodySchema,
+  EnableTwoFactorBodySchema,
   ForgotPasswordBodySchema,
   GetAuthorizationUrlResSchema,
   LoginBodySchema,
@@ -10,6 +12,7 @@ import {
   RegisterBodySchema,
   RegisterResSchema,
   SendOTPBodySchema,
+  TwoFactorSetupResSchema,
 } from 'src/routes/auth/auth.model'
 
 // Sử dụng ZodSerializerDto chỉ là lượt bỏ những cái field không cần thiết mà thôi ko cần phải validation hết từng field
@@ -55,3 +58,7 @@ export class LogoutBodyDTO extends createZodDto(LogoutBodySchema) {}
 export class GetAuthorizationUrlResDTO extends createZodDto(GetAuthorizationUrlResSchema) {}
 
 export class ForgotPasswordBodyDTO extends createZodDto(ForgotPasswordBodySchema) {}
+
+export class EnableTwoFactorBodyDTO extends createZodDto(EnableTwoFactorBodySchema) {}
+export class DisableTwoFactorBodyDTO extends createZodDto(DisableTwoFactorBodySchema) {}
+export class TwoFactorSetupResDTO extends createZodDto(TwoFactorSetupResSchema) {}

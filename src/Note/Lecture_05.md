@@ -12,6 +12,12 @@
 
 ## Chương 14 Áp dụng các design pattern vào bên trong dự án
 
-## Chương 15 Thực hiện các chức năng nâng cao ở bên trong dự án
+## Chương 15 Thực hiện Websocket ở bên trong dự án
 
-## Chương 16 thực hiện Websocket ở bên trong dự án
+## Chương 16 Thực hiện xử lý review cho từng dự án
+
+## Chương 17 Thực hiện xử lý message cho dự án
+
+## Chương 18 Thực hiện các tính năng tiếp theo của dự án
+
+## Thực hiện các chức năng nâng cao ở bên trong dự án

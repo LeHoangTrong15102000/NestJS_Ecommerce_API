@@ -46,11 +46,39 @@
 
 - Phân tích chức năng 2FA cho người dùng, sẽ thực hiện phân tích tính năng 2FA của người dùng -> Và thực hiện cái tính năng này sao cho phù hợp với đa số người dùng nhất có thể.
 
--
+- Thì cái thư viện `OTPAuth` dùng để generate ra cái `2FA` đó -> Cái thư viện này nó cũng cung cấp cho chúng ta cái đường link để mà chúng ta test cái `2FA` này
+
+- Thì cái totp code nó được generate ra thì nó phụ thuộc quan trọng nhất là thằng `Secret(định dạng base32)` còn mấy thằng khác thì chỉ có nhiệm vụ là `label` hiển thị trên cái app của chúng ta mà thôi -> Chứ nó không có ảnh hưởng đến cái logic `generate` ra cái `OTP code` của chúng ta, chỉ phụ thuộc vào `secret` và `thuật toán` của nó mà thôi, ngoài ra phụ thuộc vào `con số - digits` và `chu kì -period`
+
+- Chúng ta sẽ đi vào phân tích và đưa nó vào bên trong dự án như thế nào
+
+  - Thì chúng ta sẽ tạo ra 2 cái API đó là `@Post('/2fa/setup')` và `@Post('/2fa/disable')`
+
+  - Thì cái `2fa/setup` chúng ta sẽ trả về cho client một cái `URI` thì thằng client nó sẽ dựa vào cái `URI` này và kết hợp với thư viện tạo ra `QR code` để mà tạo ra một cái `QR 2fa`. Ngoài ra chúng ta còn trả về cho người dùng cái `secret key` nữ thì người dùng sẽ lưu cái này vào đâu đấy, trong trường hợp mà nó không có dùng được mã `2fa - digits` thì nó có thể dùng cái `secret key` này để backup cho cái chuyện mà không sử dụng được `digits` từ ứng dụng `Authenticator` của người dùng
+
+  - Khi mà đã tạo mã `2FA` rồi thì khi mà `Login` chúng ta bắt người dùng phải xác thực mã `2FA` đó rồi thì mới được đăng nhập vào bên trong ứng dụng. Trong cái trường hợp này chúng ta có thể phòng bằng cách cho phép người dùng nhập `OTP code` thông qua email lỡ mà người dùng có bỏ quên điện thoại hoặc là mất điện thoại(nên là phải cho người ta một cái backup là OTP code thông qua email của họ).
+
+  - Cái API thứ 2 đó là `2fa/disable` - vô hiệu hóa, thì cái trường hợp mà người ta không cần cái `2FA` nữa thì chúng ta sẽ xóa đi cái `totpSecret` ở bên trong database là được.
+
+  - Tới cái bước là `Xác thực 2FA` hoặc là `OTP code`
+
+    - Thì cái trường hợp này xảy ra ở `API Login` hoặc là `API vô hiệu hóa 2FA` -> Thì trong 2 cái trường hợp này thì chúng ta đều có thể truyền lên `mã 2FA` hoặc là `OTP code` đều được.
+
+    - Mặc dù đã Login vào rồi nhưng mà cũng cần phải truyền lại mã `2FA` để mà `disable` cái mã 2FA đó đi
 
 ## Bài 72 Cập nhật Schema Model DTO cho chức năng 2FA
 
 - Tiến hành cập nhật `Schema Model DTO` cho chức năng `2FA`
+
+- Thực hiện phần `Schema Model DTO` cho chức năng `2FA` của chúng ta
+
+- Cái `verificationCode` bây giờ nó có rất là nhiều cái `item` có cùng cái email nhưng mà cái type nó khác nhau, nên là cái trường `email` ở trong cái bảng `Verificat ionCode` chúng ta không thể nào để `unique` được.
+
+- Khi mà disable thì chúng ta cần check cái `rule` như sau:
+
+  - Người dùng có thể truyền lên `totoCode` hoặc là `code`, người dùng không được truyền cả 2 thằng lên.
+
+-Cần phải tạo thêm cái `request` và `DTO` để mà gửi lên cái body là một cái `JSON` `rỗng` -> Vì khi mà tạo thì chúng ta có thể dựa vào cái `AccessToken` người ta gửi lên từ `Header` nên là không cần phải truyền cái dự liệu gì vào `bodyCode` cả
 
 ## Bài 73 Tạo mã 2FA
 
