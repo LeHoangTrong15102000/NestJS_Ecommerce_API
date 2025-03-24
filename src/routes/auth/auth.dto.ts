@@ -12,7 +12,7 @@ import {
   RegisterBodySchema,
   RegisterResSchema,
   SendOTPBodySchema,
-  TwoFactorSetupResSchema,
+  TwoFactorEnableResSchema,
 } from 'src/routes/auth/auth.model'
 
 // Sử dụng ZodSerializerDto chỉ là lượt bỏ những cái field không cần thiết mà thôi ko cần phải validation hết từng field
@@ -61,4 +61,4 @@ export class ForgotPasswordBodyDTO extends createZodDto(ForgotPasswordBodySchema
 
 export class EnableTwoFactorBodyDTO extends createZodDto(EnableTwoFactorBodySchema) {}
 export class DisableTwoFactorBodyDTO extends createZodDto(DisableTwoFactorBodySchema) {}
-export class TwoFactorSetupResDTO extends createZodDto(TwoFactorSetupResSchema) {}
+export class TwoFactorEnableResDTO extends createZodDto(TwoFactorEnableResSchema) {}

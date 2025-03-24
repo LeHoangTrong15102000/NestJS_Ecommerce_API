@@ -171,7 +171,7 @@ export const DisableTwoFactorBodySchema = z
     }
   })
 
-export const TwoFactorSetupResSchema = z.object({
+export const TwoFactorEnableResSchema = z.object({
   secret: z.string(),
   url: z.string().url(),
 })
@@ -196,7 +196,7 @@ export type GetAuthorizationUrlResType = z.infer<typeof GetAuthorizationUrlResSc
 export type ForgotPasswordBodyType = z.infer<typeof ForgotPasswordBodySchema>
 export type EnableTwoFactorBodyType = z.infer<typeof EnableTwoFactorBodySchema>
 export type DisableTwoFactorBodyType = z.infer<typeof DisableTwoFactorBodySchema>
-export type TwoFactorSetupResType = z.infer<typeof TwoFactorSetupResSchema>
+export type TwoFactorEnableResType = z.infer<typeof TwoFactorEnableResSchema>
 
 // export const ForgotPasswordBodySchema = z.object({
 //   email: z.string().email(),

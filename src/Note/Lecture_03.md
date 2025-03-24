@@ -84,6 +84,10 @@
 
 - Thực hiện tạo mã 2FA cho người dùng
 
+- Sẽ thực hiện tạo mã 2FA cho chức năng của người dùng
+
+- Ban đầu chúng ta sẽ tạo ra cái `TOTP object` từ cái totp này thì chúng ta có thể sẽ generate ra được cái `URI string` để mà trả về lại cho người dùng -> Nhằm mục đích đó là tạo ra cái `QR code`
+
 ## Bài 74 Cập nhật xác thực 2 lớp cho Login
 
 - Cập nhật xác thực 2 lớp cho Login

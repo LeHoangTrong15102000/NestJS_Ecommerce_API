@@ -3,6 +3,7 @@ import { Body, Controller, Get, HttpCode, HttpStatus, Ip, Post, Query, Req, Res 
 import { AuthService } from 'src/routes/auth/auth.service'
 import { ZodSerializerDto } from 'nestjs-zod'
 import {
+  DisableTwoFactorBodyDTO,
   ForgotPasswordBodyDTO,
   GetAuthorizationUrlResDTO,
   LoginBodyDTO,
@@ -13,6 +14,7 @@ import {
   RegisterBodyDTO,
   RegisterResDTO,
   SendOTPBodyDTO,
+  TwoFactorEnableResDTO,
 } from 'src/routes/auth/auth.dto'
 import { UserAgent } from 'src/shared/decorators/user-agent.decorator'
 import { MessageResDTO } from 'src/shared/dtos/response.dto'
@@ -20,6 +22,7 @@ import { IsPublic } from 'src/shared/decorators/auth.decorator'
 import { GoogleService } from 'src/routes/auth/google.service'
 import { Response } from 'express'
 import envConfig from 'src/shared/config'
+import { EmptyBodyDTO } from 'src/shared/dtos/request.dto'
 
 @Controller('auth')
 export class AuthController {
@@ -129,12 +132,12 @@ export class AuthController {
   //   return await this.authService.googleLogin(body.token)
   // }
 
-  // @Post('2fa/setup)
-  // async setupTwoFactor(@Body() body: any) {}
+  // Tại sao chúng ta không sử dụng method Get mà lại dùng method Post và truyền lên body rỗng là gì -> Vì Post mang ý nghĩa là tạo ra cái gì đó và Post cũng bảo mật hơn Get, vì Get có thể được kích hoạt thông qua URL trên trình duyệt, Post thì không, vấn đề đó thì kẻ tấn công có thể gởi cho ta một cái đường đẫn -> Sẽ kích hoạt cái API này thì điều đó nó sẽ không bảo mật
+  @Post('2fa/enable')
+  @ZodSerializerDto(TwoFactorEnableResDTO)
+  async enableTwoFactor(@Body() body: EmptyBodyDTO) {}
 
-  // @Post('2fa/enable)
-  // async enableTwoFactor(@Body() body: any) {}
-
-  // @Post('2fa/disable)
-  // async disableTwoFactor(@Body() body: any) {}
+  @Post('2fa/disable')
+  @ZodSerializerDto(MessageResDTO)
+  async disableTwoFactor(@Body() body: DisableTwoFactorBodyDTO) {}
 }
