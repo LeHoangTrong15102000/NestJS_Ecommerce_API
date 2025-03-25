@@ -5,6 +5,7 @@ import { HashingService } from 'src/shared/services/hashing.service'
 import { PrismaService } from 'src/shared/services/prisma.service'
 import { TokenService } from 'src/shared/services/token.service'
 import {
+  DisableTwoFactorBodyType,
   ForgotPasswordBodyType,
   LoginBodyType,
   RefreshTokenBodyType,
@@ -28,18 +29,20 @@ import {
   InvalidPasswordException,
   OTPExpiredException,
   RefreshTokenAlreadyUsedException,
+  TOTPAlreadyEnabledException,
 } from 'src/routes/auth/error.model'
+import { TwoFactorService } from 'src/shared/services/2fa.service'
 
 @Injectable()
 export class AuthService {
   constructor(
     private readonly hashingService: HashingService,
     private readonly authRepository: AuthRepository,
-    private readonly prismaService: PrismaService,
     private readonly sharedUserRepository: SharedUserRepository,
     private readonly tokenService: TokenService,
     private readonly rolesService: RolesService,
     private readonly emailService: EmailService,
+    private readonly twoFactorService: TwoFactorService,
   ) {}
 
   async validateVerificationCode({
@@ -424,7 +427,34 @@ export class AuthService {
 
   // async resetPassword () {}
 
-  // async setupTwoFactorAuth () {}
+  async enableTwoFactorAuth(userId: number) {
+    // 1. Lấy thông tin user, kiểm tra xem user có tồn tại hay không, và xem họ đã bật 2FA hay chưa
+    const user = await this.sharedUserRepository.findUnique({ id: userId })
+    if (!user) {
+      throw EmailNotFoundException
+    }
+    if (user.totpSecret) {
+      throw TOTPAlreadyEnabledException
+    }
 
-  // async enableTwoFactorAuth () {}
+    // 2. Tạo ra secret và uri
+    // Cái uri là để ng dùng sử dụng app Authenticator để mà quét để nhận mã 2FA qua ứng dụng, và sẽ dùng cái mã đó để mà đăng nhập mỗi lần login vào ứng dụng
+    const { secret, uri } = this.twoFactorService.generateTOTPSecret(user.email)
+
+    // 3. Cập nhật secret vào  user trong database của chúng ta
+    await this.authRepository.updateUser(
+      { id: userId },
+      {
+        totpSecret: secret,
+      },
+    )
+
+    // 4. Trả về secret và uri
+    return {
+      secret,
+      uri,
+    }
+  }
+
+  async disableTwoFactorAuth(body: DisableTwoFactorBodyType) {}
 }

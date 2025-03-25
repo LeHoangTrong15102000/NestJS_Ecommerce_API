@@ -173,7 +173,7 @@ export const DisableTwoFactorBodySchema = z
 
 export const TwoFactorEnableResSchema = z.object({
   secret: z.string(),
-  url: z.string().url(),
+  uri: z.string(),
 })
 
 export type RegisterBodyType = z.infer<typeof RegisterBodySchema>

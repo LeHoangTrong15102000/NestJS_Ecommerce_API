@@ -88,6 +88,10 @@
 
 - Ban đầu chúng ta sẽ tạo ra cái `TOTP object` từ cái totp này thì chúng ta có thể sẽ generate ra được cái `URI string` để mà trả về lại cho người dùng -> Nhằm mục đích đó là tạo ra cái `QR code`
 
+- Chúng ta sẽ có các bước như sau để mà enable cái `TwoFactorAuth` của người dùng
+
+- Nên là chúng ta cần truyền vào cái secret để mà nó tạo ra một cái object chính xác hơn
+
 ## Bài 74 Cập nhật xác thực 2 lớp cho Login
 
 - Cập nhật xác thực 2 lớp cho Login
