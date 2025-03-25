@@ -64,6 +64,22 @@ export const LoginBodySchema = UserSchema.pick({
     code: z.string().length(6).optional(), // Email OTP code
   })
   .strict()
+  .superRefine(({ totpCode, code }, ctx) => {
+    // Nếu mà thằng người dùng truyền lên một lúc cả 2 trường thì chúng ta sẽ addIssue cho phía client, chỉ check trường hợp là true và true của cả 2 trường mà thôi
+    const message = 'Bạn phải cung cấp mã xác thực 2FA hoặc mã OTP. Không được cung cấp cả 2'
+    if (totpCode !== undefined && code !== undefined) {
+      ctx.addIssue({
+        code: 'custom',
+        message,
+        path: ['totpCode'],
+      })
+      ctx.addIssue({
+        code: 'custom',
+        message,
+        path: ['code'],
+      })
+    }
+  })
 
 // Thì thường cái res sẽ không thêm cờ `strict()` vào cho nó để mà làm gì cả
 // Đó là lí do đừng nên thêm cờ strict() vào cái `ResSchema` -> Vì có thể nếu có lỗi xảy ra thì nó sẽ quăng ra lỗi đó

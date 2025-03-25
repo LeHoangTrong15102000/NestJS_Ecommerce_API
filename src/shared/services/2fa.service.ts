@@ -41,11 +41,11 @@ export class TwoFactorService {
   // Hàm để mà xủ lý
 }
 
-const twoFactorService = new TwoFactorService()
-console.log(
-  twoFactorService.verifyTOTP({
-    email: 'langtupro0456@gmail.com',
-    secret: 'PO5AB6LP5XJI3GLJ6IE5O3ATGBOK6KQH',
-    token: '361148',
-  }),
-)
+// const twoFactorService = new TwoFactorService()
+// console.log(
+//   twoFactorService.verifyTOTP({
+//     email: 'langtupro0456@gmail.com',
+//     secret: 'PO5AB6LP5XJI3GLJ6IE5O3ATGBOK6KQH',
+//     token: '361148',
+//   }),
+// )

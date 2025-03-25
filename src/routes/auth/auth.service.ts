@@ -2,7 +2,6 @@ import { HttpException, Injectable, UnauthorizedException } from '@nestjs/common
 import { RolesService } from 'src/routes/auth/roles.service'
 import { generateOTP, isNotFoundPrismaError, isUniqueConstraintPrismaError } from 'src/shared/helpers'
 import { HashingService } from 'src/shared/services/hashing.service'
-import { PrismaService } from 'src/shared/services/prisma.service'
 import { TokenService } from 'src/shared/services/token.service'
 import {
   DisableTwoFactorBodyType,
@@ -27,6 +26,8 @@ import {
   FailedToSendOTPException,
   InvalidOTPException,
   InvalidPasswordException,
+  InvalidTOTPAndCodeException,
+  InvalidTOTPException,
   OTPExpiredException,
   RefreshTokenAlreadyUsedException,
   TOTPAlreadyEnabledException,
@@ -143,10 +144,10 @@ export class AuthService {
   // Xử lý logic Login cho người dùng
   async login(body: LoginBodyType & { userAgent: string; ip: string }) {
     // Do cái thằng user trong đây ko có trả về role nên là đây là trường hợp cá biệt không dùng chung cái thằng sharedUserRepository được
+    // Kiểm tra user có tồn tại hay không
     const user = await this.authRepository.findUniqueUserIncludeRole({
       email: body.email,
     })
-
     if (!user) {
       throw EmailNotFoundException
     }
@@ -155,14 +156,49 @@ export class AuthService {
     if (!isPasswordMatch) {
       throw InvalidPasswordException
     }
-    // Tạo một cái record device mới
+
+    // Nếu user đẫ bật 2FA thì kiểm tra mã 2FA TOTP code hoặc là OTP code(email)
+    // Thực hiện verify mã 2FA của người dùng
+    if (user.totpSecret) {
+      // Nếu không có mã TOTP code và code thì thông báo cho client biết
+      if (!body.totpCode && !body.code) {
+        throw InvalidTOTPAndCodeException
+      }
+      // Kiểm tra TOTP code có hợp lệ hay không
+      if (body.totpCode) {
+        const isValid = this.twoFactorService.verifyTOTP({
+          email: user.email,
+          secret: user.totpSecret,
+          token: body.totpCode,
+        })
+        if (!isValid) {
+          throw InvalidTOTPException
+        }
+      } else if (body.code) {
+        // Kiểm tra OTP code có hợp lệ hay không
+        await this.validateVerificationCode({
+          email: user.email,
+          code: body.code,
+          type: TypeOfVerificationCode.LOGIN,
+        })
+        await this.authRepository.deleteVerificationCode({
+          email_code_type: {
+            email: user.email,
+            code: body.code,
+            type: TypeOfVerificationCode.LOGIN,
+          },
+        })
+      }
+    }
+
+    // 3. Tạo một cái record device mới
     const device = await this.authRepository.createDevice({
       userId: user.id,
       userAgent: body.userAgent,
       ip: body.ip,
     })
 
-    // Sau đó mới tạo tokens trả về cho người dùng
+    // 4. Sau đó mới tạo tokens trả về cho người dùng
     const tokens = await this.generateTokens({
       userId: user.id,
       deviceId: device.id,
@@ -425,7 +461,9 @@ export class AuthService {
 
   // async changePassword() {}
 
-  // async resetPassword () {}
+  // async resetPassword(body: resetPasswordBodyType) {
+  //   return
+  // }
 
   async enableTwoFactorAuth(userId: number) {
     // 1. Lấy thông tin user, kiểm tra xem user có tồn tại hay không, và xem họ đã bật 2FA hay chưa
@@ -438,7 +476,7 @@ export class AuthService {
     }
 
     // 2. Tạo ra secret và uri
-    // Cái uri là để ng dùng sử dụng app Authenticator để mà quét để nhận mã 2FA qua ứng dụng, và sẽ dùng cái mã đó để mà đăng nhập mỗi lần login vào ứng dụng
+    // Cái uri(để mà tạo ra QR code ở phía client) là để ng dùng sử dụng app Authenticator để mà quét để nhận mã 2FA qua ứng dụng, và sẽ dùng cái mã đó để mà đăng nhập mỗi lần login vào ứng dụng
     const { secret, uri } = this.twoFactorService.generateTOTPSecret(user.email)
 
     // 3. Cập nhật secret vào  user trong database của chúng ta

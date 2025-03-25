@@ -96,6 +96,8 @@
 
 - Cập nhật xác thực 2 lớp cho Login
 
+- Tiếp tục xử lý mã 2FA cho `login`
+
 ## Bài 75 Chức năng tắt mã 2FA
 
 - Thực hiện chức năng tắt mã 2FA của người dùng
