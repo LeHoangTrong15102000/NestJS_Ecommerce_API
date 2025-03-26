@@ -10,6 +10,7 @@ export const LanguageSchema = z.object({
   updatedAt: z.date(),
 })
 
+// Thì phải chuyển thằng này thằng một cái object thì `ZodSerializerDto` nó mới biết được, với lại trong tương lai mình có làm thêm phân trang cho thằng này thì mình đâu có cần thay đổi cấu trúc array đi.
 export const GetLanguagesResSchema = z.object({
   data: z.array(LanguageSchema),
   totalItems: z.number(),
@@ -23,6 +24,7 @@ export const GetLanguageParamsSchema = z
 
 export const GetLanguageDetailResSchema = LanguageSchema
 
+// Id Bây giờ thì chúng ta cần phải truyền lên cho nó
 export const CreateLanguageBodySchema = LanguageSchema.pick({
   id: true,
   name: true,

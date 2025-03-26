@@ -33,6 +33,7 @@ export class LanguageService {
         data,
       })
     } catch (error) {
+      // Liên quan tới unique của cái record thì thông báo lỗi như trên
       if (isUniqueConstraintPrismaError(error)) {
         throw LanguageAlreadyExistsException
       }
@@ -59,6 +60,7 @@ export class LanguageService {
   async delete(id: string) {
     try {
       // hard delete
+      // Đây là cái id mà chúng ta truyền vào chứ không phải là do postgres nó generate ra nên là chỗ này mình cần phải xóa cứng nó
       await this.languageRepo.delete(id, true)
       return {
         message: 'Delete successfully',
