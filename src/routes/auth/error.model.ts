@@ -78,6 +78,10 @@ export const TOTPNotEnabledException = new UnprocessableEntityException([
     message: 'Error.TOTPNotEnabled',
     path: 'totpCode',
   },
+  {
+    message: 'Error.TOTPNotEnabled',
+    path: 'code',
+  },
 ])
 
 export const InvalidTOTPAndCodeException = new UnprocessableEntityException([

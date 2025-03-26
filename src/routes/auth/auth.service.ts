@@ -158,6 +158,13 @@ export class AuthService {
       throw InvalidPasswordException
     }
 
+    // Kiểm tra nếu 2FA chưa bật nhưng người dùng vẫn gửi totpCode hoặc code
+    if (!user.totpSecret) {
+      if (body.totpCode || body.code) {
+        throw TOTPNotEnabledException
+      }
+    }
+
     // Nếu user đẫ bật 2FA thì kiểm tra mã 2FA TOTP code hoặc là OTP code(email)
     // Thực hiện verify mã 2FA của người dùng
     if (user.totpSecret) {
@@ -206,6 +213,7 @@ export class AuthService {
       roleId: user.roleId,
       roleName: user.role.name,
     })
+
     return tokens
   }
 
