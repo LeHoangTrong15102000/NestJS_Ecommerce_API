@@ -8,9 +8,10 @@ import CustomZodValidationPipe from 'src/shared/pipes/custom-zod-validation.pipe
 import { ZodSerializerInterceptor } from 'nestjs-zod'
 import { HttpExceptionFilter } from 'src/shared/filters/http-exception.filter'
 import { CatchEverythingFilter } from 'src/shared/filters/catch-everything.filter'
+import { LanguageModule } from 'src/routes/language/language.module'
 
 @Module({
-  imports: [SharedModule, AuthModule],
+  imports: [SharedModule, AuthModule, LanguageModule],
   controllers: [AppController],
   providers: [
     AppService,

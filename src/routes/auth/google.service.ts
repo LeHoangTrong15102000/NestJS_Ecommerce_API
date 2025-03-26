@@ -8,7 +8,7 @@ import { HashingService } from '../../shared/services/hashing.service'
 import { RolesService } from 'src/routes/auth/roles.service'
 import { v4 as uuidv4 } from 'uuid'
 import { AuthService } from 'src/routes/auth/auth.service'
-import { GoogleUserInfoError } from 'src/routes/auth/error.model'
+import { GoogleUserInfoError } from 'src/routes/auth/auth.error'
 
 @Injectable()
 export class GoogleService {
