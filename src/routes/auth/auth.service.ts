@@ -31,6 +31,7 @@ import {
   OTPExpiredException,
   RefreshTokenAlreadyUsedException,
   TOTPAlreadyEnabledException,
+  TOTPNotEnabledException,
 } from 'src/routes/auth/error.model'
 import { TwoFactorService } from 'src/shared/services/2fa.service'
 
@@ -494,5 +495,42 @@ export class AuthService {
     }
   }
 
-  async disableTwoFactorAuth(body: DisableTwoFactorBodyType) {}
+  async disableTwoFactorAuth(data: DisableTwoFactorBodyType & { userId: number }) {
+    const { userId, totpCode, code } = data
+    // 1. Lấy thông tin user và kiểm tra xem là họ đã bật 2FA hay chưa
+    const user = await this.sharedUserRepository.findUnique({ id: userId })
+    if (!user) {
+      throw EmailNotFoundException
+    }
+    if (!user.totpSecret) {
+      throw TOTPNotEnabledException
+    }
+
+    // 2. Kiểm tra mã TOTP có hợp lệ hay không
+    if (totpCode) {
+      const isValid = this.twoFactorService.verifyTOTP({
+        email: user.email,
+        secret: user.totpSecret,
+        token: totpCode,
+      })
+      if (!isValid) {
+        throw InvalidTOTPException
+      }
+    } else if (code) {
+      await this.authRepository.findUniqueVerificationCode({
+        email_code_type: {
+          email: user.email,
+          code,
+          type: TypeOfVerificationCode.DISABLE_2FA,
+        },
+      })
+    }
+
+    // 3. Nếu đã kiểm tra hợp lệ rồi thì chúng ta sẽ tiến hành xóa secret ở bên trong database thành null
+    await this.authRepository.updateUser({ id: userId }, { totpSecret: null })
+
+    return {
+      message: 'Tắt 2FA thành công',
+    }
+  }
 }

@@ -101,3 +101,5 @@
 ## Bài 75 Chức năng tắt mã 2FA
 
 - Thực hiện chức năng tắt mã 2FA của người dùng
+
+- Nhiệm vụ của chúng ta là xóa cái `TOTP secret` ở trong database là được

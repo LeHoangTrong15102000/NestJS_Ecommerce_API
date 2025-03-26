@@ -140,9 +140,13 @@ export class AuthController {
     return this.authService.enableTwoFactorAuth(userId)
   }
 
-  // @Post('2fa/disable')
-  // @ZodSerializerDto(MessageResDTO)
-  // disableTwoFactorAuth(@Body() body: DisableTwoFactorBodyDTO) {
-  //   return this.authService.disableTwoFactor(body)
-  // }
+  @Post('2fa/disable')
+  @ZodSerializerDto(MessageResDTO)
+  disableTwoFactorAuth(@Body() body: DisableTwoFactorBodyDTO, @ActiveUser('userId') userId: number) {
+    // Nếu mà truyền như thế này thì cái thằng userId nó nằm cùng object với body rồi
+    return this.authService.disableTwoFactorAuth({
+      ...body,
+      userId,
+    })
+  }
 }
