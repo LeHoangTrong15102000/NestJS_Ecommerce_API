@@ -32,7 +32,7 @@
 
 ## Bài 79 Vấn đề của Prisma db push
 
-- Chúng ta sẽ bàn luận về vấn đề của `prisma migrate` -> Từ phần đầu đến giờ chúng ta luôn sử dụng câu lệnh `prisma db push` với `Single Source of Truth` (SSOT) là file `schema.prisma`
+- Chúng ta sẽ bàn luận về vấn đề của `prisma migrate` -> Từ phần đầu đến giờ chúng ta luôn sử dụng câu lệnh `prisma db push` với `Single Source of Truth (SSOT)` là file `schema.prisma`
 
 > Single Source of Truth (SSOT) ở đây có thể hiểu là cái nơi duy nhất chứa thông tin của database. Mọi thứ đều được sinh ra ở đây.
 
@@ -90,11 +90,19 @@ Nếu bạn đã có sẵn file `schema.prisma` do đang sử dụng cách `pris
    --script > prisma/migrations/0_init/migration.sql
    ```
 
-3. Đánh dấu là file `0_init/migration.sql` đã được áp dụng. Câu lệnh dưới đây sẽ không thay đổi cấu trúc database, nó chỉ cập nhật dữ liệu trong table `_prisma_migrations`
+> > > > Thì cái câu lệnh trên nó tạo ra một cái file là `migration.sql` được generate ra từ cái file `schema.prisma` của chúng ta.
+
+3. Đánh dấu là file `0_init/migration.sql` đã được áp dụng. Câu lệnh dưới đây sẽ không thay đổi cấu trúc database, nó chỉ cập nhật dữ liệu trong table `_prisma_migrations`.
 
    ```bash
    npx prisma migrate resolve --applied 0_init
    ```
+
+> Tại sao chúng ta cần phải đánh dấu là nó `đã được áp dụng` -> Bởi vì tứ trước đến nay cái `schema.prisma` nó đã đồng bộ với cái thằng database của chúng ta rồi có nghĩa là cái `migration - 0_init` nó đã được chạy ở trong database rồi thì chúng ta cần phải đánh dấu nó `đã được áp dụng` -> Nên là cần chạy câu lệnh ở trên
+
+- Thì cái câu lệnh ở trên `npx prisma migrate resolve --applied 0_init` nó chỉ cập nhật dự liệu trong cái table `_prisma_migrations`
+
+- Và bây giờ cái `single source of truth (SSOT)` nó sẽ không còn phụ thuộc vào `schema.prisma` nữa mà nó sẽ phụ thuộc vào file `migrations`
 
 4. Bây giờ có thể coi là chúng ta đã chuyển từ `prisma db push` sang `prisma migrate` thành công. Commit lại file `schema.prisma` và thư mục `prisma/migrations` lên git.
 
@@ -147,4 +155,40 @@ Trong trường hợp bạn không sửa hoặc sửa sai, dẫn đến migratio
 
 > 🙏🏻Kinh nghiệm: Đừng tự ý sửa trực tiếp trên database, nếu bạn sửa trực tiếp trên database thì phải thêm câu lệnh vào migration file để đồng bộ với database
 
+## Bài 80 Chuyển đổi prisma db push sang prisma migrate
+
+## Bài 81 Thêm chức năng Partial Unique Index bằng Prisma Migrate
+
+## Bài 82 Custom Migration
+
+## Bài 83 Fix lỗi "The migration was modified after it was applied" và add thêm deletedById vào schema.prisma
+
 ## Chương 8 Chức năng `Role-Permission`
+
+## Bài 84 Bài tập CRUD permission
+
+## Bài 85 Hướng đẫn làm CRUD `Permission`
+
+## Bài 86 Tạo script Create `Permission` hàng loạt
+
+## Bài 87 Tạo script xóa hoặc tạo `Permission` dựa trên các endpoint hiện có
+
+## Bài 88 Hướng dẫn down migration và bài tập CRUD `Roles`
+
+## Bài 89 Hướng dẫn QueryRaw và CRUD `Roles`
+
+## Bài 90 Cập nhật Zod Schema cho `Permission Role` và giải thích vì sao query không dùng Index.
+
+## Bài 91 Fix bug Permission đã được xóa mềm nhưng vẫn còn trong `Role`
+
+## Bài 92 Cập nhật script add `Permisisons` vào `Admin Role`
+
+## Bài 93 Kiểm tra `Role Permission` khi request
+
+## Bài 94 Refactor `Authentication Guard`
+
+## Bài 95 Ngăn chặn User thao tác trên `Base Role`
+
+## Bài 96 Thêm cột `Module` vào `Permission` để mà `gom nhóm`
+
+## Bài 97 Fix Bug khi `Role` bị vô hiệu hóa thì nên từ chối `request` & Không cho phép User chỉnh sửa `Base Role`
