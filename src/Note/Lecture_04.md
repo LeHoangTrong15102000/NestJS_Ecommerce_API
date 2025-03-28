@@ -200,6 +200,56 @@ Trong trường hợp bạn không sửa hoặc sửa sai, dẫn đến migratio
 
 - Thực hiện `Custom Migration` ở trong `schema.prisma` của chúng ta
 
+- Sẽ thực hiện demo thêm một số trường hợp khi mà chúng ta thao tác với `prisma migrate`
+
+- Trong một số trường hợp khi mà thay đổi schema, nếu thực hiện migrate sẽ bị mất data. Để xử lý trường hợp này, chúng ta cần phải edit lại `file migration` trước khi mà chúng ta thực hiện lại câu lệnh `npx prisma migrate dev`
+
+- Workflow migration đúng:
+
+  - Chạy `npx prisma migrate dev --create-only` để tạo file migration mới
+  - Sửa file migration mới tạo
+  - Chạy `npx prisma migrate dev` để áp dụng migration
+
+- Trong trường hợp chúng ta không sửa hoặc là sửa sai, dẫn đến việc `migration failed` thì chúng ta sẽ xử lý như thế nào
+
+- Xử lý khi mà `Migration Failed`
+
+```sql
+ALTER TABLE "Permission" DROP COLUMN "description",
+ADD COLUMN     "content" TEXT NOT NULL;
+```
+
+- Thì nếu mà chúng ta thực hiện như thế này thì chúng ta sẽ bị mất data -> Ở đây việc của chúng ta chỉ là rename `description` thành `content` cần việc gì mà chúng ta phải đi `drop column` rồi `add column`
+
+  - Nên là chúng ta sẽ sửa cái câu lệnh lại đó là
+
+  ```sql
+    ALTER TABLE "Permission" RENAME COLUMN "description" TO "content"
+  ```
+
+  - Xong rồi sau đó chạy câu lệnh là `npx prisma migrate dev` -> Như thế này thì nó sẽ apply vào trong database mà không bị lỗi `reset database`
+
+- Bây giờ chúng ta sẽ xử lý khi mà `migration failed`
+
+  - Chúng ta vẫn sẽ thực hiện những câu lệnh như trên theo trình tự.
+
+  - Chúng ta sẽ thực hiện đánh dấu `rollback migration`
+
+    ```bash
+      npx prisma migrate resolve --rolled-back <migration-name>
+    ```
+
+    - Sau khi mà nó có cái `rolled-back` rồi thì chúng ta tiến hành sửa cái file `migration` đó
+    - Và sau đó chúng ta sẽ thực hiện `Sửa file migration`
+
+    - Rồi tiếp đến chúng ta tiên hành redeploy migration nó lại
+
+    ```bash
+      npx prisma migrate deploy
+    ```
+
+> Kinh nghiệm đó chính là: Đừng tự ý sửa trực tiếp ở trên database, nếu mà sửa trực tiếp trên database thì phải thêm câu lệnh vào `migration` `Thì Single Source of Truth của chúng ta bây giờ là những cái file migration này` file để đồng bộ với database.
+
 ## Bài 83 Fix lỗi "The migration was modified after it was applied" và add thêm deletedById vào schema.prisma
 
 ## Chương 8 Chức năng `Role-Permission`
@@ -216,7 +266,7 @@ Trong trường hợp bạn không sửa hoặc sửa sai, dẫn đến migratio
 
 ## Bài 89 Hướng dẫn QueryRaw và CRUD `Roles`
 
-## Bài 90 Cập nhật Zod Schema cho `Permission Role` và giải thích vì sao query không dùng Index.
+## Bài 90 Cập nhật Zod Schema cho `Permission Role` và giải thích vì sao query không dùng Index
 
 ## Bài 91 Fix bug Permission đã được xóa mềm nhưng vẫn còn trong `Role`
 
