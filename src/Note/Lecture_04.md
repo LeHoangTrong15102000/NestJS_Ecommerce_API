@@ -157,9 +157,48 @@ Trong trường hợp bạn không sửa hoặc sửa sai, dẫn đến migratio
 
 ## Bài 80 Chuyển đổi prisma db push sang prisma migrate
 
+- Thực hiện chuyển đổi prisma db push sang prisma migrate thành công
+
 ## Bài 81 Thêm chức năng Partial Unique Index bằng Prisma Migrate
 
+- Thực hiện thêm tính năng `Partial Unique Index` bằng `Prisma Migrate` -> Sẽ tìm hiểu và thực việc này
+
+- Thì chúng ta sẽ coi lại cái schema `Permission` một chút đó là chúng ta mong muốn cái field `path` và `method - HTTP` nó phải unique theo cái cặp value của chúng ta -> Vì chúng ta không muốn người dùng phải tạo ra cái API là `permissions và method` giống như vậy nữa -> Nên là chúng ta sẽ đánh index cái cặp value `path và method` -> nhưng khi mà sử dụng cái cách này thì nó lại nảy sinh ra cái vấn đề mới đó là chúng ta đang sử dụng cái `soft-delete` -> Nên khi là chúng ta xóa cái API đó đi thì nó lại không cho phép chúng ta tạo lại cái `path - method` tương tự như vậy bởi vì chúng ta chỉ mới `soft - delete` mà thôi
+
+  - Thì lúc đó chúng ta sẽ nghĩ rằng chúng ta sẽ thêm cái `deletedAt` vào trong để nhóm `@@unique` lại thì lúc này chúng ta lại nghĩ là những thằng chúng ta đã xóa thì `deletedAt` nó có giá trị -> Nên là chúng ta sẽ thử tạo lại cùng cái `path` và `method` giống như cái ban đầu chúng ta đã xóa -> Nghĩ rằng như thế là nó sẽ cho phép chúng tạo -> Nhưng không ở trong thằng `postgresql` nó coi `deletedAt=null` là giá trị khác nhau.
+
+    - Ví dụ chúng ta tạo ra một cái `path=permission và method=GET deletedAt=null` và sau đó chúng ta lại tạo ra một `path=permission và method=GET deletedAt=null` nữa thì nó vẫn cho phép vì nó coi `deletedAt ở thằng item 1` và `deletedAt ở thằng item 2` là khác nhau -> Thế nó mới đau
+
+    - Trong cái trường hợp này chúng ta sẽ áp dụng cái kỹ thuật là `Partial Unique Index` -> Thì chúng ta sẽ đánh `Unique Index` trên cái field `path` và `method` kèm theo điều kiện đó là `@@unique([path,method], {where: {deletedAt: null}})` có nghĩa là khi mà `deletedAt=null` thì chúng ta mới đánh cái `uniqueIndex` là `path và method` -> Điều này đảm bảo là những cái item mà tạo mới nó sẽ ko được trùng nhau về cái `path và method`
+
+      - Còn những cái item đã bị xóa đi thì chúng ta không cần quan tâm về `path và method` nữa -> Thì ở trong cái thằng prisma nó lại không hỗ trợ cái kĩ thuật này -> Nên là để làm cái kĩ thuật này thì chúng ta cần phải `custom` cái file `migration`
+
+- Nên là bây giờ chúng ta sẽ đi vào cái vấn đề là sẽ thêm vào một số tính năng mà `prisma.schema` nó không có hỗ trợ mình
+
+  - Để mà làm được thì cái `schema` của chúng ta phải `sync` với `database` hiện tại -> Thì hiện tại chúng ta đã sync với database rồi và hiện tại chúng ta cũng đang sử dụng `prisma migrate`
+
+  - Chúng ta có thể thêm bằng cách chỉnh sửa `migration` như sau:
+
+    - Đầu tiên chúng ta sẽ tạo ra một file `migration` bằng câu lệnh đó là `npx prisma migrate dev --create-only` `--create-only` là tùy chọn nó sẽ giới hạn `thành động` của cái câu lệnh này `chỉ ở cái bước là tạo file migration thôi` mà nó sẽ không có `apply` vào bên trong database của chúng ta -> Thì ở cái bước này cái thằng `prisma` nó sẽ kiểm tra cái `file schema.prisma` với cái database để mà tạo ra cái file `migration` nếu như mà cái file `prisma.schema` nó đang được `đồng bộ` với database thì nó sẽ tạo ra được một cái `file migration rỗng`.
+
+    - Thì cái cú pháp:
+
+      ```ts
+        @@unique([path,method], {where: {deletedAt: null}})
+      ```
+
+      Thì nó sẽ như bên dưới
+
+      ```sql
+      @@unique([path,method], {where: {deletedAt: null}})
+      CREATE UNIQUE INDEX permission_path_method_unique ON "Permission" (path, method) WHERE "deletedAt" IS NULL
+      ```
+
+- Cái bước thứ 3 là chúng ta chạy câu lệnh `npx prisma migrate dev` thì cái câu lênh này nó sẽ sử dụng cái file `migration` mới nhất để mà nó apply vào bên trong `database` -> `npx prisma migrate dev` -> Thì lúc này khi mà refresh lại cái database thì chúng ta đã thấy được cái `Unique` vào bên trong cái bảng `Permission` được rồi
+
 ## Bài 82 Custom Migration
+
+- Thực hiện `Custom Migration` ở trong `schema.prisma` của chúng ta
 
 ## Bài 83 Fix lỗi "The migration was modified after it was applied" và add thêm deletedById vào schema.prisma
 
