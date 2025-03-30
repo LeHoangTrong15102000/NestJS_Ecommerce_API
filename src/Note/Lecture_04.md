@@ -250,7 +250,15 @@ ADD COLUMN     "content" TEXT NOT NULL;
 
 > Kinh nghiệm đó chính là: Đừng tự ý sửa trực tiếp ở trên database, nếu mà sửa trực tiếp trên database thì phải thêm câu lệnh vào `migration` `Thì Single Source of Truth của chúng ta bây giờ là những cái file migration này` file để đồng bộ với database.
 
-## Bài 83 Fix lỗi "The migration was modified after it was applied" và add thêm deletedById vào schema.prisma
+## Bài 83 Fix lỗi `The migration was modified after it was applied" và add thêm deletedById vào schema.prisma`
+
+- Sẽ thực hiện fix cái vấn đề này
+
+- Thì cái thằng `checksum` ở trong database nó sẽ phân biệt, checksum ở trong database `table migration` để mà biết cái file này nó đã được chỉnh sửa hay chưa nó có khác với cái file kia hay không thì nó dựa vào cái `checksum` -> Có thể thấy được là cùng một cái name migration đầu tiên nhưng mà có tới 2 cái file migration
+
+  - Thì cái prisma nó check trong database có cái `checksum` `6a` nhưng trong cái `folder migration` thì t ko thấy có cái file nào là 6a hết
+
+  - Trong cái trường hợp này thì chúng ta cần xóa cái `file migration` mà bị lỗi ở trong `database` -> Thì chỉ cần xóa cái `file migration bị lỗi` ở trong database đi là được mà thôi không cần phải sử dụng câu lệnh `npx prisma migrate reset` vì dùng câu lệnh này nó sẽ xóa hết data ở trong `database` của chúng ta -> Đây là một bài học
 
 ## Chương 8 Chức năng `Role-Permission`
 
