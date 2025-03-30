@@ -264,6 +264,8 @@ ADD COLUMN     "content" TEXT NOT NULL;
 
 ## Bài 84 Bài tập CRUD permission
 
+- Thực hiện `CRUD permission` có hỗ trợ phân trang -> Truyền phân trang thông qua `query` với `page và limit`
+
 ## Bài 85 Hướng đẫn làm CRUD `Permission`
 
 ## Bài 86 Tạo script Create `Permission` hàng loạt

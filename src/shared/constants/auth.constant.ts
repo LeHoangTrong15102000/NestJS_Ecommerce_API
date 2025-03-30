@@ -30,3 +30,13 @@ export const TypeOfVerificationCode = {
 } as const
 
 export type TypeOfVerificationCodeType = (typeof TypeOfVerificationCode)[keyof typeof TypeOfVerificationCode]
+
+export const HTTPMethod = {
+  GET: 'GET',
+  POST: 'POST',
+  PUT: 'PUT',
+  DELETE: 'DELETE',
+  PATCH: 'PATCH',
+  OPTIONS: 'OPTIONS',
+  HEAD: 'HEAD',
+} as const

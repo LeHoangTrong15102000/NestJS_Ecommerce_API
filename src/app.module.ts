@@ -11,9 +11,10 @@ import { CatchEverythingFilter } from 'src/shared/filters/catch-everything.filte
 import { LanguageModule } from 'src/routes/language/language.module'
 import { RoleModule } from 'src/routes/role/role.module'
 import { PermissionModule } from 'src/routes/permission/permission.module'
+import { MediaModule } from 'src/routes/media/media.module'
 
 @Module({
-  imports: [SharedModule, AuthModule, LanguageModule, RoleModule, PermissionModule],
+  imports: [SharedModule, AuthModule, LanguageModule, RoleModule, PermissionModule, MediaModule],
   controllers: [AppController],
   providers: [
     AppService,

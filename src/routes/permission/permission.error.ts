@@ -1,8 +1,12 @@
 import { UnprocessableEntityException } from '@nestjs/common'
 
-export const LanguageAlreadyExistsException = new UnprocessableEntityException([
+export const PermissionAlreadyExistsException = new UnprocessableEntityException([
   {
-    message: 'Error.LanguageAlreadyExists',
-    path: 'id',
+    message: 'Error.PermissionAlreadyExists',
+    path: 'path',
+  },
+  {
+    message: 'Error.PermissionAlreadyExists',
+    path: 'method',
   },
 ])
