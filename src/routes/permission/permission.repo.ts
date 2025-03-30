@@ -13,8 +13,8 @@ export class PermissionRepo {
   constructor(private prismaService: PrismaService) {}
 
   async list(pagination: GetPermissionsQueryType): Promise<GetPermissionsResType> {
-    const skip = (pagination.page - 1) * pagination.limit
-    const take = pagination.limit
+    const skip = (pagination.page - 1) * pagination.limit // công thức của skip
+    const take = pagination.limit // lấy bao nhiêu item
     const [totalItems, data] = await Promise.all([
       this.prismaService.permission.count({
         where: {

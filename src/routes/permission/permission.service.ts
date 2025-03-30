@@ -52,6 +52,7 @@ export class PermissionService {
       if (isNotFoundPrismaError(error)) {
         throw NotFoundRecordException
       }
+      // Update thì nó có thể dính tới unique constraint nên là chúng ta check thêm cái trường hợp này
       if (isUniqueConstraintPrismaError(error)) {
         throw PermissionAlreadyExistsException
       }
