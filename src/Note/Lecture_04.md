@@ -280,6 +280,10 @@ ADD COLUMN     "content" TEXT NOT NULL;
 
 - Tạo script xóa hoặc là tạo `Permission` dựa trên các `Endpoint` hiện có
 
+- Nếu mà cái `permission` trong `database` mà nó không tồn tại trong cái source code của mình thì chúng ta sẽ xóa nó đi và ngược lại, nếu mà trong source code chứa những cái route mà nó không tồn tại trong permission trong database thì chúng ta sẽ add vào -> Thì đó là 2 cái nhiệm vụ mà chúng ta cần phải làm -> Thì chúng ta sẽ chỉnh sửa trực tiếp trong cái file `create permissions` mà không cần phải tạo cái file mới
+
+- Sẽ tiến hành so sánh để mà cái việc so sánh nó thuận lợi thì chúng ta sẽ tạo ra một cái object có cái key là `method-path`
+
 ## Bài 88 Hướng dẫn down migration và bài tập CRUD `Roles`
 
 ## Bài 89 Hướng dẫn QueryRaw và CRUD `Roles`
