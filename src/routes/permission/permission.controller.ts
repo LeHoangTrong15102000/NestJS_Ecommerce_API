@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Param, Post, Put, Query } from '@nestjs/common'
+import { Body, Controller, Delete, Get, Param, Patch, Post, Put, Query } from '@nestjs/common'
 import { isThisSecond } from 'date-fns'
 import { ZodSerializerDto } from 'nestjs-zod'
 import {

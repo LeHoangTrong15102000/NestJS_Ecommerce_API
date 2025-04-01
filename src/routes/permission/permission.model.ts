@@ -1,5 +1,5 @@
 import { HTTPMethod } from 'src/shared/constants/auth.constant'
-import { z } from 'zod'
+import { optional, z } from 'zod'
 
 export const PermissionSchema = z.object({
   id: z.number(),
@@ -31,7 +31,7 @@ export const GetPermissionsResSchema = z.object({
 
 export const GetPermissionsQuerySchema = z
   .object({
-    page: z.coerce.number().int().positive().default(1), // Phải thêm coerce để chuyển từ string sang number
+    page: z.coerce.number().int().positive().default(1), // Phải thêm coerce để chuyển từ string sang number,kiểu inter và số dương
     limit: z.coerce.number().int().positive().default(10),
   })
   .strict()
@@ -48,6 +48,9 @@ export const CreatePermissionBodySchema = PermissionSchema.pick({
   name: true,
   path: true,
   method: true,
+  description: true,
+}).partial({
+  description: true,
 })
 
 export const UpdatePermissionBodySchema = CreatePermissionBodySchema
