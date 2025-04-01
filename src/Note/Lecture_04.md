@@ -268,9 +268,17 @@ ADD COLUMN     "content" TEXT NOT NULL;
 
 ## Bài 85 Hướng đẫn làm CRUD `Permission`
 
+- Đã hoàn thành việc CRUD cho `Permission`
+
 ## Bài 86 Tạo script Create `Permission` hàng loạt
 
+- Viết script để mà tạo ra `Permission` hàng loạt dựa trên cái `List API Endpoint` của chúng ta -> Thì chúng ta cần phải `list` ra được các cái `API endpoint` đã -> Thì chúng ta sẽ lên `google` và `search` để mà tìm cách xử lý cái vấn đề đó
+
+- Thì sau khi mà lên `google search` thì chúng ta sẽ tìm thấy được kết quả mà thôi -> Chúng ta mong muốn là khi mà nó chạy tạo permission thì nó sẽ exit ra khỏi cái `terminal` luôn -> Khi mà đã tạo xong thì chạy lại nó sẽ xảy ra lỗi đó là `Unique Constrants Path Method`
+
 ## Bài 87 Tạo script xóa hoặc tạo `Permission` dựa trên các endpoint hiện có
+
+- Tạo script xóa hoặc là tạo `Permission` dựa trên các `Endpoint` hiện có
 
 ## Bài 88 Hướng dẫn down migration và bài tập CRUD `Roles`
 
