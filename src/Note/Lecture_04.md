@@ -286,6 +286,31 @@ ADD COLUMN     "content" TEXT NOT NULL;
 
 ## Bài 88 Hướng dẫn down migration và bài tập CRUD `Roles`
 
+- Chúng ta sẽ cho unique cái `name` của `Role` khi mà `deletedAt` là null, nó cũng sẽ giống với khi mà chúng ta làm với thằng `permission`
+
+- Thì bây giờ chúng ta sẽ xoá đi cái key `@unique` của cái field là `name` trong `Role` đi
+
+- Khi mà migrate bị nhầm thì chúng ta sẽ làm như thế nào -> Thì bây giờ chúng ta sẽ cùng giải quyết luôn cái vấn đề đó
+
+- Thì ban đầu chúng ta sẽ revert lại cái thằng `prisma`, chúng ta sẽ chạy câu lệnh `npx prisma migrate dev --create-only`
+
+  - Thì ở trong cái `migration` chúng ta mới tạo này thì chúng ta sẽ thực hiện câu lệnh revert lại cái câu lệnh mà chúng ta viết sai ở trong `file migration` trước
+
+  ```sql
+    CREATE UNIQUE INDEX Role_name_unique
+    ON "Role" (name)
+    WHERE "deletedAt" IS NULL;
+
+    revert lại thành
+    DROP INDEX Role_name_unique (chỗ này sẽ tuỳ nơi mà ghi tên cái index cho nó đúng)
+  ```
+
+  - Sau đó chúng ta chạy câu lệnh `npx prisma migrate dev`
+
+  -> Thì đến lúc này cái database của chúng ta coi như là đã revert thành công -> Thì 2 thằng migration ở bên trong dự án nó đã bù trừ cho nhau rồi -> Đến đây thì chúng ta có thể xoá nó đi được
+
+  -> Sau khi mà xoá 2 cái `file migration` đi thì lúc này chúng ta sẽ tạo lại cái `migration` mới và `migrate` nó lên lại `database` là được
+
 ## Bài 89 Hướng dẫn QueryRaw và CRUD `Roles`
 
 ## Bài 90 Cập nhật Zod Schema cho `Permission Role` và giải thích vì sao query không dùng Index

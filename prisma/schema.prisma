@@ -200,13 +200,15 @@ model Permission {
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
 
+  // @@unique([path,method], {where: {deletedAt: null}})
   @@index([deletedAt])
 }
 
 model Role {
   id          Int          @id @default(autoincrement())
-  name        String       @unique @db.VarChar(500)
-  description String
+  // Sẽ cho trường name là unique khi mà deletedAt là null
+  name        String       @db.VarChar(500)
+  description String       @default("")
   isActive    Boolean      @default(true)
   permissions Permission[]
   users       User[]
@@ -222,6 +224,7 @@ model Role {
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
 
+  //  Ở đây unique name thì nó giống y chang cái bên `permission`
   @@index([deletedAt])
 }
 
