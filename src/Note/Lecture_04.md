@@ -313,6 +313,8 @@ ADD COLUMN     "content" TEXT NOT NULL;
 
 ## Bài 89 Hướng dẫn QueryRaw và CRUD `Roles`
 
+- Thực hiện `QueryRaw` và `CRUD` `Roles`
+
 ## Bài 90 Cập nhật Zod Schema cho `Permission Role` và giải thích vì sao query không dùng Index
 
 ## Bài 91 Fix bug Permission đã được xóa mềm nhưng vẫn còn trong `Role`
