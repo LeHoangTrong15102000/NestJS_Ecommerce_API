@@ -2,6 +2,7 @@ import { z } from 'zod'
 import { RoleSchema } from 'src/shared/models/shared-role.model'
 import { PermissionSchema } from 'src/shared/models/shared-permission.model'
 
+// sẽ extend thêm permissions array vào bên trong role schema
 export const RoleWithPermissionsSchema = RoleSchema.extend({
   permissions: z.array(PermissionSchema),
 })
@@ -27,6 +28,7 @@ export const GetRoleParamsSchema = z
   })
   .strict()
 
+// Lấy chi tiết của một cái role ra thì trong đó sẽ chứa thêm mảng các permission
 export const GetRoleDetailResSchema = RoleWithPermissionsSchema
 
 export const CreateRoleBodySchema = RoleSchema.pick({

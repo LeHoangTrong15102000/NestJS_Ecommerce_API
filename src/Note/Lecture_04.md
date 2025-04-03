@@ -311,9 +311,33 @@ ADD COLUMN     "content" TEXT NOT NULL;
 
   -> Sau khi mà xoá 2 cái `file migration` đi thì lúc này chúng ta sẽ tạo lại cái `migration` mới và `migrate` nó lên lại `database` là được
 
+  -> Từ cái source code của chúng ta sau khi mà pull về thì cần chạy `npx prisma migrate deploy` để mà nó đưa các file migration chưa có lên database -> Sau đó thì cần `npx prisma migrate dev` để mà nó `sync` với database về cấu trúc và dữ liệu
+
 ## Bài 89 Hướng dẫn QueryRaw và CRUD `Roles`
 
 - Thực hiện `QueryRaw` và `CRUD` `Roles`
+
+- Hiện tại là nó đang bị lỗi ở cái chỗ đó là `where và truyền vào RoleName.Client` ở `RolesSevice` -> Do chúng ta làm `Partial Unique Name` khi mà cái `deletedAt là Null` cái chức năng này prisma nó không thiểu -> Bơi vì là nó không hỗ trợ nên là nó sẽ không hiểu được cái vấn đề này -> Khi mà nó không hiểu thì nó sẽ không có generate ra cái kiểu `type` cho nó đúng được.
+
+  -> Nên là trong cái trường hợp này chúng ta cần phải sử dụng một cái `Method` là `QueryRaw`
+
+- Khi mà sử dụng QueryRaw thì những cái biến ở bên ngoài truyền vào thì không cần sử dụng dấu nháy đơn `như này` là được
+
+  - Sử dụng `IS` khi mà so sánh nó với `true` `false` hay là null not null đồ chẳng hạn -> Còn các trường hợp còn lại thì sử dụng toán tử là `=`
+
+  - Khi mà chúng ta start cái app lên thì cái method register này nó đâu có chạy đâu
+
+  - cái Method `getClientRoleId` này nó không có chạy khi mà chúng ta `start` cái app lên
+
+  ```sql
+
+    SELECT * FROM "Role" WHERE name = ${RoleName.Client} AND 'deletedAt' IS NULL LIMIT 1;
+    Khi mà viết câu `queryRaw` như thế này thì nên sử dụng dấu `nháy kép` thay vì dấu `nháy đơn`.
+  ```
+
+- Ngoài cái roleItem ra thì chúng ta còn trả về mã `permission` nữa để mà cho thằng client nó hiển thị cho nó dễ
+
+- Thì khi mà cập nhật `permission` ở trong role thì chúng ta sẽ truyển lên là `permissionIds` một cái mảng array chứa các `id` của `permission` -> Để mà client biết được rằng ở bên trong cái role này có chứa các `permission` nào thì chúng ta để `id` của các permission đó vào trong `permissionIds`
 
 ## Bài 90 Cập nhật Zod Schema cho `Permission Role` và giải thích vì sao query không dùng Index
 

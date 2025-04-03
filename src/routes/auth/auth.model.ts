@@ -1,4 +1,5 @@
 import { TypeOfVerificationCode } from 'src/shared/constants/auth.constant'
+import { RoleSchema } from 'src/shared/models/shared-role.model'
 import { UserSchema } from 'src/shared/models/shared-user.model'
 import { createContext } from 'vm'
 import { z } from 'zod'
@@ -115,17 +116,17 @@ export const DeviceSchema = z.object({
   isActive: z.boolean(),
 })
 
-export const RoleSchema = z.object({
-  id: z.number(),
-  name: z.string(),
-  description: z.string(),
-  isActive: z.boolean(),
-  createdById: z.number().nullable(),
-  updatedById: z.number().nullable(),
-  createdAt: z.date(),
-  updatedAt: z.date(),
-  deletedAt: z.date().nullable(),
-})
+// export const RoleSchema = z.object({
+//   id: z.number(),
+//   name: z.string(),
+//   description: z.string(),
+//   isActive: z.boolean(),
+//   createdById: z.number().nullable(),
+//   updatedById: z.number().nullable(),
+//   createdAt: z.date(),
+//   updatedAt: z.date(),
+//   deletedAt: z.date().nullable(),
+// })
 
 // Logout body Schema nó sẽ giống với RefreshTokenBodySchema
 export const LogoutBodySchema = RefreshTokenBodySchema

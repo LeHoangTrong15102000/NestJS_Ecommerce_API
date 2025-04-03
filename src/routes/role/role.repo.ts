@@ -45,6 +45,7 @@ export class RoleRepo {
         id,
         deletedAt: null,
       },
+      // Nên thêm include để mà nó trả về mảng các permissions của role
       include: {
         permissions: true,
       },
@@ -71,6 +72,8 @@ export class RoleRepo {
         description: data.description,
         isActive: data.isActive,
         permissions: {
+          // Tại vì thằng nó cần là một kiểu {id:number}[] như này là nó phù hợp
+          // {id: <permissionId>} đây là cú pháp mà Prisma yêu cầu để xác định các bản ghi cần liên kết.
           set: data.permissionIds.map((id) => ({ id })),
         },
         updatedById,
