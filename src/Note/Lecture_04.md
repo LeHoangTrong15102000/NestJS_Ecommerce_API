@@ -341,6 +341,18 @@ ADD COLUMN     "content" TEXT NOT NULL;
 
 ## Bài 90 Cập nhật Zod Schema cho `Permission Role` và giải thích vì sao query không dùng Index
 
+- Cập nhật Zod Schema cho `Permission và Role` và sẽ giải thích về `Index SQL` khi mà chúng ta query trên cái database
+
+- Bây giờ chúng ta sẽ mở cái database lên và sẽ test cái việc là cái database của chúng ta có sử dụng `Index` khi mà nó `query` hay không -> Sẽ query vào trong table Role để mà xem là nó có đang sử dụng `Index-name-unique-partial` hay không -> Thì chúng ta sử dụng cái từ khóa đó là `explain analyze`
+
+  - Khi mà nó hiển thị ra là `Seq scan` có nghĩa là nó đang quét tuần tự là nó sẽ chạy từ thằng số 1, 2, 3, ... Chứ không phải là nó dùng `Index` để mà nó lấy ra
+
+  - Thì khi mà thêm `"deletedAt" IS NULL` vào thì nó vẫn là `seq scan` có nghĩa là nó vẫn không sử dụng `Index` để mà nó `query` -> Thì lí giải cho cái việc này đó là số lượng Item của chúng ta đang quá ít, khi mà nó đang quá ít thì nó sẽ sử dụng `seq scan` để mà nó lấy ra cái item đó -> SỐ lượng nhi ều khoảng 10000 thì Index nó mới trở nên hiệu quả, vì vậy ở số lượng ít nhất vậy thì cái database nó sẽ tự động chọn giải pháp để mà query cho nó hiệu quả -> Nên là ở đây nó sử dụng `Seq Scan`.
+
+  - Khi mà chúng ta query bằng `Id` thì nó vẫn sử dụng `Seq Scan` để mà nó query item.
+
+-
+
 ## Bài 91 Fix bug Permission đã được xóa mềm nhưng vẫn còn trong `Role`
 
 ## Bài 92 Cập nhật script add `Permisisons` vào `Admin Role`

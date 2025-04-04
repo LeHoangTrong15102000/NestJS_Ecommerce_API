@@ -74,6 +74,7 @@ export class RoleRepo {
         permissions: {
           // Tại vì thằng nó cần là một kiểu {id:number}[] như này là nó phù hợp
           // {id: <permissionId>} đây là cú pháp mà Prisma yêu cầu để xác định các bản ghi cần liên kết.
+          // Khi mà set như thế này thì các mảng permission mới sẽ được thêm vào, lúc này danh sách permissions sẽ được cập nhật lại các permission mới
           set: data.permissionIds.map((id) => ({ id })),
         },
         updatedById,
