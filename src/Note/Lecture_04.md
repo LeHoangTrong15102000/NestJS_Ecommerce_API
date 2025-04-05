@@ -363,7 +363,17 @@ ADD COLUMN     "content" TEXT NOT NULL;
 
   - Còn nếu mà đã delete thật sự thì chỗ cập nhật nó sẽ quăng ra lỗi, còn nếu chỉ soft-deleted thì chỗ hàm `update` nó sẽ không có phát hiện nên là chúng ta cần phải kiểm tra trước
 
+  - Thường thì mấy lỗi này thì trên FE chúng ta mới bị lỗi mà thôi, khi mà chúng ta xóa một cái permission nào đó rồi mà bằng cách nào đó trên UI chúng ta vẫn còn hiển thị để cho cái thằng `Role` chúng ta add vào thì nó ra mấy cái lỗi như thế này mà thôi. -> Xử lý xong vấn đề về update `Role` khi `Permission` đã bị xóa
+
 ## Bài 92 Cập nhật script add `Permisisons` vào `Admin Role`
+
+- Thực hiện add script `Permissions` vào `Admin Role` -> Hiện tại cái `Role Admin` `list permission` nó đang là rỗng và bây giờ chúng ta mong muốn rằng đó là mỗi lần chạy lại cái `script create-permissions` thì cái `Role Admin` nó sẽ cập nhật lại cái danh sách `permissions`.
+
+- Sau khi mà `query` để mà cập nhật lại cái `permissions` ở trong `AdminRole` thì sẽ bị lỗi trong câu `where` do cái `name` của chúng ta không còn là `index unique` nữa -> Cách để mà fix cái trường hợp này đó là chúng ta có thể chuyển nó thành `queryRaw` hoặc là chúng ta sẽ sử dụng `id` ứng với cái `AdminRole` -> Nên là ở trong cái fileScript này chúng ta sẽ sử dụng theo cái tính dễ đọc hơn là tốt độ `truy vấn` bởi vì cái filescript này chúng ta chỉ chạy có một vài lần mà thôi
+
+- Sau này khi mà permissions ở trong Role nó phình to lên thì cái giải pháp cuối cùng chúng ta sẽ là `phân trang cái RoleDetail này`, cái giải pháp đầu tiên là chúng ta sẽ `Giảm số lượng thuộc tính trả về cho client`
+
+  - Khi nào mà số lượng nó lên đến `1000-2000` thì chúng ta sẽ nghĩ tới cái giải pháp phân trang cho cái trường hợp đó
 
 ## Bài 93 Kiểm tra `Role Permission` khi request
 

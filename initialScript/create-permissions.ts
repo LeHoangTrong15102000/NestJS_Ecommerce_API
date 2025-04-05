@@ -1,6 +1,6 @@
 import { NestFactory } from '@nestjs/core'
 import { AppModule } from 'src/app.module'
-import { HTTPMethod } from 'src/shared/constants/role.constant'
+import { HTTPMethod, RoleName } from 'src/shared/constants/role.constant'
 import { PrismaService } from 'src/shared/services/prisma.service'
 
 const prisma = new PrismaService()
@@ -79,6 +79,32 @@ async function bootstrap() {
   } else {
     console.log('No permission to add')
   }
+
+  // Lấy lại permission ở trong database sau khi đã thêm mới hoặc là bị xóa
+  const updatedPermissionsInDb = await prisma.permission.findMany({
+    where: {
+      deletedAt: null,
+    },
+  })
+  // Ưu tiên tính dễ đọc hơn là hiệu suất truy vấn
+  const adminRole = await prisma.role.findFirstOrThrow({
+    where: {
+      name: RoleName.Admin,
+      deletedAt: null,
+    },
+  })
+  // Cập nhật lại các permissions trong Admin Role
+  await prisma.role.update({
+    where: {
+      id: adminRole.id,
+    },
+    data: {
+      permissions: {
+        // Sẽ lấy ra một array các object id -> Thì khi mà getDetailRole của AdminRole thì prisma nó sẽ tự động map tới đối tượng permission dựa theo cái `id`
+        set: updatedPermissionsInDb.map((item) => ({ id: item.id })),
+      },
+    },
+  })
 
   // console.log(availableRoutes) // Nó sẽ list Available Routes có sẵn hiện tại của chúng ta
   // Sẽ tiến hành add vào trong database

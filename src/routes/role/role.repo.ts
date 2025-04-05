@@ -93,6 +93,7 @@ export class RoleRepo {
       }
     }
 
+    // Chỗ này sử dụng await hay không thì cũng ko thành vấn đề gì
     return this.prismaService.role.update({
       where: {
         id,
@@ -106,6 +107,7 @@ export class RoleRepo {
           // Tại vì thằng nó cần là một kiểu {id:number}[] như này là nó phù hợp
           // {id: <permissionId>} đây là cú pháp mà Prisma yêu cầu để xác định các bản ghi cần liên kết.
           // Khi mà set như thế này thì các mảng permission mới sẽ được thêm vào, lúc này danh sách permissions sẽ được cập nhật lại các permission mới
+          // Cũng tương tự khi mà chúng ta đưa mấy cái thằng permissionId đã được xóa cứng vào trong đây thì prisma nó cũng quăng cái lỗi mà thôi
           set: data.permissionIds.map((id) => ({ id })),
         },
         updatedById,
