@@ -355,6 +355,14 @@ ADD COLUMN     "content" TEXT NOT NULL;
 
 ## Bài 91 Fix bug Permission đã được xóa mềm nhưng vẫn còn trong `Role`
 
+- Fig bug vấn đề đó là `Permission` đã được xóa mềm rồi nhưng mà vẫn còn trong `Role` -> Nói chung là khi mà phát triển một dự án thì vấn đề bug là đều không tránh khỏi được -> Tại vì chúng ta vẫn còn include cái `permission` do là `soft-deleted` nên là cái item đó vẫn còn ở trong database -> nên là chúng ta cần phải thêm một cái điều kiện nữa là `where: {deletedAt: null}` như thế này là được -> Ok như vậy là đã fix xong cái vấn đề đó khi xóa mềm `permission` `Role Detail` không cập nhật lại danh sách các `permission` rồi
+
+- Đến cái lỗi thứ 2 là chúng ta cập nhật danh sách các permission ở trong `Role` -> Nếu chúng ta cố tính truyền vào `permissionId` đã được xóa mềm rồi thì cái API của chúng ta nó không quăng ra lỗi, đáng lẽ chỗ này nó nên quăng ra lỗi(không quăng ra lỗi cũng không sao mặc dù ki mà trả về một cái đối tượng permission thì chúng ta cũng đâu có trả về những permissionId đã bị xóa đâu) nhưng mà ở trong database nó vẫn được `add` vào thì cái điều này nó không hay cho lắm.
+
+  - Nên là lúc này chúng ta sẽ coi thử cái `permissionId` nào đã được xóa mềm rồi thì chúng ta sẽ quăng ra lỗi -> Và chúng ta sẽ không thực hiện cái thành động `updated` tại đó
+
+  - Còn nếu mà đã delete thật sự thì chỗ cập nhật nó sẽ quăng ra lỗi, còn nếu chỉ soft-deleted thì chỗ hàm `update` nó sẽ không có phát hiện nên là chúng ta cần phải kiểm tra trước
+
 ## Bài 92 Cập nhật script add `Permisisons` vào `Admin Role`
 
 ## Bài 93 Kiểm tra `Role Permission` khi request

@@ -47,7 +47,11 @@ export class RoleRepo {
       },
       // Nên thêm include để mà nó trả về mảng các permissions của role
       include: {
-        permissions: true,
+        permissions: {
+          where: {
+            deletedAt: null,
+          },
+        },
       },
     })
   }
@@ -61,7 +65,34 @@ export class RoleRepo {
     })
   }
 
-  update({ id, updatedById, data }: { id: number; updatedById: number; data: UpdateRoleBodyType }): Promise<RoleType> {
+  async update({
+    id,
+    updatedById,
+    data,
+  }: {
+    id: number
+    updatedById: number
+    data: UpdateRoleBodyType
+  }): Promise<RoleType> {
+    // Kiểm tra nếu có bất cứ permissionId nào mà đã soft-delete thì không cho phép cập nhật, còn nếu mà nó đã bị deleted thì chỗ cập nhật ở dưới nó sẽ quăng ra lỗi
+    if (data.permissionIds.length > 0) {
+      // chúng ta sẽ fetch ra hết các permission dựa vào permissionIds này
+      //  Trả về mảng các permission theo cái mảng permissionIds đã được cung cấp
+      const permission = await this.prismaService.permission.findMany({
+        where: {
+          id: {
+            in: data.permissionIds,
+          },
+        },
+      })
+      // Filter các permisison đã bị xóa mềm ở trong database
+      const deletedPermission = permission.filter((item) => item.deletedAt)
+      if (deletedPermission.length > 0) {
+        const deletedIds = deletedPermission.map((item) => item.id).join(', ')
+        throw new Error(`Cannot update role with deleted permissions: ${deletedIds}`)
+      }
+    }
+
     return this.prismaService.role.update({
       where: {
         id,
@@ -80,7 +111,12 @@ export class RoleRepo {
         updatedById,
       },
       include: {
-        permissions: true,
+        // Chỉ trả về các permissions chưa bị xóa mềm
+        permissions: {
+          where: {
+            deletedAt: null,
+          },
+        },
       },
     })
   }

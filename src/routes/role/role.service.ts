@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common'
+import { BadRequestException, Injectable } from '@nestjs/common'
 import { RoleRepo } from 'src/routes/role/role.repo'
 import { CreateRoleBodyType, GetRolesQueryType, UpdateRoleBodyType } from 'src/routes/role/role.model'
 import { NotFoundRecordException } from 'src/shared/error'
@@ -51,6 +51,10 @@ export class RoleService {
       }
       if (isUniqueConstraintPrismaError(error)) {
         throw RoleAlreadyExistsException
+      }
+      // Khi mà bên repo quăng ra lỗi khi mà update những cái permission đã bị xóa rồi thì bên đây sẽ hứng cái lỗi đó và thông báo cho user biết
+      if (error instanceof Error) {
+        throw new BadRequestException(error.message)
       }
       throw error
     }
