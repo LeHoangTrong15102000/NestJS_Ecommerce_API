@@ -69,7 +69,7 @@ export class AccessTokenGuard implements CanActivate {
         throw new ForbiddenException()
       })
 
-    console.log('role permission', role.permissions.length)
+    // console.log('role permission', role.permissions.length)
     // const canAccess = role.permissions.some((permission) => permission.method === method && permission.path === path)
     // Ở đây chúng ta có thể check theo độ dài của cái permissions mà không cần phải query thêm vào làm gì
     const canAccess = role.permissions.length > 0 // Chỉ cần như này là được

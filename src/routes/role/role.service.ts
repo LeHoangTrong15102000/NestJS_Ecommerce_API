@@ -1,9 +1,10 @@
-import { BadRequestException, Injectable } from '@nestjs/common'
+import { BadRequestException, HttpException, Injectable } from '@nestjs/common'
 import { RoleRepo } from 'src/routes/role/role.repo'
 import { CreateRoleBodyType, GetRolesQueryType, UpdateRoleBodyType } from 'src/routes/role/role.model'
 import { NotFoundRecordException } from 'src/shared/error'
 import { isNotFoundPrismaError, isUniqueConstraintPrismaError } from 'src/shared/helpers'
-import { RoleAlreadyExistsException } from 'src/routes/role/role.error'
+import { ProhibitedActionOnBaseRoleException, RoleAlreadyExistsException } from 'src/routes/role/role.error'
+import { RoleName } from 'src/shared/constants/role.constant'
 
 @Injectable()
 export class RoleService {
@@ -39,12 +40,21 @@ export class RoleService {
 
   async update({ id, data, updatedById }: { id: number; data: UpdateRoleBodyType; updatedById: number }) {
     try {
-      const role = await this.roleRepo.update({
+      const role = await this.roleRepo.findById(id)
+      if (!role) {
+        throw NotFoundRecordException
+      }
+      // Không cho phép bất kì ai cập nhật role ADMIN kể cả là ADMIN
+      if (role.name === RoleName.Admin) {
+        throw ProhibitedActionOnBaseRoleException
+      }
+
+      const updatedRole = await this.roleRepo.update({
         id,
         updatedById,
         data,
       })
-      return role
+      return updatedRole
     } catch (error) {
       if (isNotFoundPrismaError(error)) {
         throw NotFoundRecordException
@@ -53,15 +63,31 @@ export class RoleService {
         throw RoleAlreadyExistsException
       }
       // Khi mà bên repo quăng ra lỗi khi mà update những cái permission đã bị xóa rồi thì bên đây sẽ hứng cái lỗi đó và thông báo cho user biết
+
+      if (error instanceof HttpException) {
+        throw error
+      }
+
       if (error instanceof Error) {
         throw new BadRequestException(error.message)
       }
+
       throw error
     }
   }
 
   async delete({ id, deletedById }: { id: number; deletedById: number }) {
     try {
+      const role = await this.roleRepo.findById(id)
+      if (!role) {
+        throw NotFoundRecordException
+      }
+      // Không cho phép bất kì ai xóa 3 role cơ bản
+      const baseRoles: string[] = [RoleName.Admin, RoleName.Client, RoleName.Seller]
+      if (baseRoles.includes(role.name as keyof typeof RoleName)) {
+        throw ProhibitedActionOnBaseRoleException
+      }
+
       await this.roleRepo.delete({
         id,
         deletedById,

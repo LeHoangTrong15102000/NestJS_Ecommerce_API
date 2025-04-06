@@ -411,6 +411,12 @@ Mỗi request đi qua chúng ta sẽ:
 
 ## Bài 95 Ngăn chặn User thao tác trên `Base Role`
 
+> Để mà cái hệ thống chúng ta ổn định thì chúng ta nên:
+
+- Không cho phép ai có thể xóa 3 role cơ bản này: ADMIN, CLIENT, SELLER. Vì 3 role này chúng ta dùng trong code rất là nhiều, ví dụ register auto role `CLIENT`
+
+- Không cho bất kì ai cập nhật role `ADMIN`, kể cả user với role là `ADMIN` đi chăng nữa. Tránh `ADMIN` này thay đổi `permission` tầm bậy làm mất quyền kiểm soát hệ thống.
+
 ## Bài 96 Thêm cột `Module` vào `Permission` để mà `gom nhóm`
 
 ## Bài 97 Fix Bug khi `Role` bị vô hiệu hóa thì nên từ chối `request` & Không cho phép User chỉnh sửa `Base Role`
