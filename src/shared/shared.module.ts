@@ -27,6 +27,7 @@ const sharedServices = [
 @Module({
   providers: [
     ...sharedServices,
+    // 2 thằng Guard này cần phải được khai báo để mà sử dụng được ở bên trong AuthenticationGuard
     AccessTokenGuard,
     APIKeyGuard,
     // Thằng AuthenticationGuard được khai báo toàn cục rồi nên là đã được sử dụng toàn App

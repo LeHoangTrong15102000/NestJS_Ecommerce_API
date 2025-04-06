@@ -1,4 +1,4 @@
-import { Injectable, CanActivate, ExecutionContext, UnauthorizedException } from '@nestjs/common'
+import { Injectable, CanActivate, ExecutionContext, UnauthorizedException, HttpException } from '@nestjs/common'
 import { Reflector } from '@nestjs/core'
 import { AuthType, ConditionGuard } from 'src/shared/constants/auth.constant'
 import { AUTH_TYPE_KEY, AuthTypeDecoratorPayload } from 'src/shared/decorators/auth.decorator'
@@ -18,6 +18,42 @@ export class AuthenticationGuard implements CanActivate {
     private readonly apiKeyGuard: APIKeyGuard,
   ) {}
   async canActivate(context: ExecutionContext): Promise<boolean> {
+    const authTypeValue = this.getAuthTypeValue(context)
+    const guards = authTypeValue.authTypes.map((authType) => this.authTypeGuardMap[authType])
+
+    // let error = new UnauthorizedException()
+    // if (authTypeValue.options.condition === ConditionGuard.Or) {
+    //   for (const instance of guards) {
+    //     const canActivate = await Promise.resolve(instance.canActivate(context)).catch((err) => {
+    //       error = err
+    //       return false
+    //     })
+    //     if (canActivate) {
+    //       return true
+    //     }
+    //   }
+    //   throw error
+    // }
+    // // Mặc định sử dụng AuthType.Bearer
+    // else {
+    //   for (const instance of guards) {
+    //     const canActivate = await Promise.resolve(instance.canActivate(context)).catch((err) => {
+    //       error = err
+    //       return false
+    //     })
+    //     if (!canActivate) {
+    //       throw new UnauthorizedException()
+    //     }
+    //   }
+    //   return true
+    // }
+
+    return authTypeValue.options.condition === ConditionGuard.And
+      ? this.handleAndCondition(guards, context)
+      : this.handleOrCondition(guards, context)
+  }
+
+  private getAuthTypeValue(context: ExecutionContext): AuthTypeDecoratorPayload {
     // Mặc định ở trong dự án này là mọi API đều phải có Bearer token nên mặc định sẽ để là AuthType.Bearer, nếu mà API nào mà cung cấp thì sẽ lấy còn không thì lấy mặc định
     // reflector.getAllAndOverride
     const authTypeValue = this.reflector.getAllAndOverride<AuthTypeDecoratorPayload | undefined>(AUTH_TYPE_KEY, [
@@ -25,31 +61,43 @@ export class AuthenticationGuard implements CanActivate {
       context.getClass(),
     ]) ?? { authTypes: [AuthType.Bearer], options: { condition: ConditionGuard.And } }
 
-    const guards = authTypeValue.authTypes.map((authType) => this.authTypeGuardMap[authType])
+    return authTypeValue
+  }
 
-    let error = new UnauthorizedException()
-    if (authTypeValue.options.condition === ConditionGuard.Or) {
-      for (const instance of guards) {
-        const canActivate = await Promise.resolve(instance.canActivate(context)).catch((err) => {
-          error = err
-          return false
-        })
-        if (canActivate) {
+  private async handleOrCondition(guards: CanActivate[], context: ExecutionContext) {
+    let lastError: any = null
+
+    // Duyệt qua hết các guard, nếu có một guard pass thì return là true
+    for (const guard of guards) {
+      try {
+        if (await guard.canActivate(context)) {
           return true
         }
+      } catch (error) {
+        lastError = error
       }
-      throw error
-    } else {
-      for (const instance of guards) {
-        const canActivate = await Promise.resolve(instance.canActivate(context)).catch((err) => {
-          error = err
-          return false
-        })
-        if (!canActivate) {
+    }
+    if (lastError instanceof HttpException) {
+      throw lastError
+    }
+    throw new UnauthorizedException()
+  }
+
+  private async handleAndCondition(guards: CanActivate[], context: ExecutionContext) {
+    for (const guard of guards) {
+      try {
+        if (!(await guard.canActivate(context))) {
+          // còn nếu mà nó return về false thì nó sẽ quăng ra UnauthorizedException
           throw new UnauthorizedException()
         }
+      } catch (error) {
+        if (error instanceof HttpException) {
+          throw error
+        }
+        throw new UnauthorizedException()
       }
-      return true
     }
+
+    return true
   }
 }

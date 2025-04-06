@@ -377,7 +377,37 @@ ADD COLUMN     "content" TEXT NOT NULL;
 
 ## Bài 93 Kiểm tra `Role Permission` khi request
 
-## Bài 94 Refactor `Authentication Guard`
+- Sẽ thực hiện kiểm tra `Role-Permission` khi mà thực hiện một cái request -> Sẽ thực hiện nâng cấp cái core của chúng ta lên để mà check được liệu là người dùng có quyền truy cập vào cái `Route` hay không.
+
+> Flow middleware
+
+Mỗi request đi qua chúng ta sẽ:
+
+1. Kiểm tra xem AT có hợp lệ hay không, còn hạn hay không. Từ đó lấy ra `userId` và `roleId`
+2. Dựa vào `roleId` vào để query database lấy danh sách `permission` của cái `Role` đó
+3. Kiểm tra danh sách `permission` của `role` đó có quyền truy cập vào endpoint đó không
+
+-> Thì bây giờ chúng ta cần phải implement cái bước thứ 2 ở cái Guard nào bây giờ -> THì bây giờ cái `AuthenticationGuard` nó chỉ `canActive` của từng cái Guard mà thôi chứ nó không có `query database` gì cả, bên này cũng không có lấy `AccessToken` luôn nên là chúng ta cần phải thực hiện cái vấn đề này ở
+
+- Rồi thì chúng ta sẽ qua xem cái `AccessTokenGuard` -> Thì rõ ràng chúng ta sẽ implement cái đoạn `query database` ở cái `AccessTokenGuard` này vì ở đây nó có lấy ra cái `AccessToken` để mà lấy ra được cái `userId` và `roleId` được
+
+  - Nếu như mà người dùng gửi lên cái `accessToken` mà nó hợp lệ và còn `thời hạn` thì chúng ta thực hiện `query database`
+    -> Nếu accessToken còn hợp lệ thì thực hiện query database tại khu vực này
+    -> Cái Guard này nó chỉ chạy khi mà những cái route nó yêu cầu cái accessTokenGuard này chạy thôi, còn những route `public` thì nó sẽ không có chạy
+
+  - Khi mà chọn qua được cái client rồi thì nó ko được request tới những cái API như là `getListRole` `getListPermission` chẳng hạn như thế là sai -> Thì bây giờ việc cửa chúng ta cần làm đó là `handle` cái phần này thì mới được
+
+  - Thì sau khi mà người dùng gửi cái request lên cho server thì chúng ta có thể lấy ra được cái path để mà kiểm tra xem người dùng có quyền truy cập vào cái `APIEndpoint` đó hay không -> Thì khi mà lấy ra được cái `path` như thế này thì nó rất là khớp với cái `permission` mà chúng ta đã add vào bên trong cái mảng `permissions` của từng `Role` của người dùng, và thêm nữa là chúng ta cần phải lấy ra thêm cái `method` của cái `route` thì mới được
+
+  - Sau khi mà lấy ra được một cái `permission` từ cái `role` của người dùng rồi thì chúng ta sẽ tiền hành kiểm tra nó luôn, cái vấn đề mà tại sao nó không quăng ra cái lỗi `Forbidden` mà lại quăng ra `Unauthorized` thì cái vấn đề này chúng ta sẽ giải quyết sau.
+
+## Bài 94 Refactor `Authentication Guard`/
+
+- Sẽ thực hiện Refactor lại `Authentication Guard` của chúng ta ở bên trong cái core dự án này
+
+- Chúng ta sẽ tiền hành refactor lại cái canActive nó cho nó gọn lại
+
+  - 2 cái câu điều kiện ở bên trong `canActive` thì chúng ta sẽ tách nó ra thành 2 cái function: 1 cái func là `OR` và 1 cái function là `AND`
 
 ## Bài 95 Ngăn chặn User thao tác trên `Base Role`
 
