@@ -419,4 +419,16 @@ Mỗi request đi qua chúng ta sẽ:
 
 ## Bài 96 Thêm cột `Module` vào `Permission` để mà `gom nhóm`
 
+- Sẽ thực hiện thêm cột `module` vào `permission` để mà gom nhóm -> Sẽ thực hiện gom nhóm các `permission` lại, thay vì phải thực hiện show hàng trăm cái `permission` ra bên ngoài thì trong nó không được đẹp lắm nên là bây giờ chúng ta sẽ nhóm nó lại theo `module/group` -> Như thế thì nó sẽ tăng về mặt `UI/UX` cho thằng người dùng hơn rất là nhiều
+
+- Để mà làm cái vấn đề này thì chúng ta có nhiều cách để mà làm
+
+  - Tạo một cái bảng `Module`, nhưng mà đơn giản hơn là chúng ta có thể add một cái column `Module` vào `permission schema` là được
+
+- Lúc mà chúng ta tạo ra cái `permission` thì chúng ta truyền thêm cái trường `module` nữa rồi thì khi mà trả về cho `client` thì thằng `client` nó sẽ dựa vào cái `module` như này để mà nó `render` ra được cái `UI` như thiết kế là được
+
+  - Chút nữa chúng ta sẽ biết được là bên client nó render ra như thế nào
+
 ## Bài 97 Fix Bug khi `Role` bị vô hiệu hóa thì nên từ chối `request` & Không cho phép User chỉnh sửa `Base Role`
+
+- Fix cái vấn đề đó `Role` bị vô hiệu hóa nên là từ chối `request`
