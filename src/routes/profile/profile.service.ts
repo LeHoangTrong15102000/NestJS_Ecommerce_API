@@ -24,7 +24,7 @@ export class ProfileService {
 
   async updateProfile({ userId, body }: { userId: number; body: UpdateMeBodyType }) {
     try {
-      return await this.sharedUserRepository.updateUserProfile(
+      return await this.sharedUserRepository.updateUser(
         { id: userId, deletedAt: null },
         {
           ...body,
@@ -50,8 +50,9 @@ export class ProfileService {
       if (!isPasswordMatch) {
         throw InvalidPasswordException
       }
+
       const hashedPassword = await this.hashingService.hash(newPassword)
-      await this.sharedUserRepository.updateUserProfile(
+      await this.sharedUserRepository.updateUser(
         { id: userId, deletedAt: null },
         {
           password: hashedPassword,

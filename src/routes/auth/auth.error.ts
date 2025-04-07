@@ -52,12 +52,12 @@ export const EmailNotFoundException = new UnprocessableEntityException([
 ])
 
 // Password related errors
-export const InvalidPasswordException = new UnprocessableEntityException([
-  {
-    message: 'Error.InvalidPassword',
-    path: 'password',
-  },
-])
+// export const InvalidPasswordException = new UnprocessableEntityException([
+//   {
+//     message: 'Error.InvalidPassword',
+//     path: 'password',
+//   },
+// ])
 
 // Auth token related errors
 export const RefreshTokenAlreadyUsedException = new UnauthorizedException('Error.RefreshTokenAlreadyUsed')

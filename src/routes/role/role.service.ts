@@ -75,6 +75,7 @@ export class RoleService {
         throw error
       }
 
+      // Do là cái exception nó cũng là một instanceof  Error nên là nó nhảy vào cái request này
       if (error instanceof Error) {
         throw new BadRequestException(error.message)
       }

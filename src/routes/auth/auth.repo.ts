@@ -8,6 +8,7 @@ import {
 } from 'src/routes/auth/auth.model'
 import { TypeOfVerificationCodeType } from 'src/shared/constants/auth.constant'
 import { UserType } from 'src/shared/models/shared-user.model'
+import { WhereUniqueUserType } from 'src/shared/repositories/shared-user.repo'
 import { PrismaService } from 'src/shared/services/prisma.service'
 
 @Injectable()
@@ -112,9 +113,7 @@ export class AuthRepository {
     })
   }
 
-  async findUniqueUserIncludeRole(
-    uniqueObject: { email: string } | { id: number },
-  ): Promise<(UserType & { role: RoleType }) | null> {
+  async findUniqueUserIncludeRole(uniqueObject: WhereUniqueUserType): Promise<(UserType & { role: RoleType }) | null> {
     return this.prismaService.user.findUnique({
       where: uniqueObject,
       include: {
@@ -174,13 +173,13 @@ export class AuthRepository {
     })
   }
 
-  // Update user
-  updateUser(where: { id: number } | { email: string }, data: Partial<Omit<UserType, 'id'>>): Promise<UserType> {
-    return this.prismaService.user.update({
-      where,
-      data,
-    })
-  }
+  // // Update user
+  // updateUser(where: { id: number } | { email: string }, data: Partial<Omit<UserType, 'id'>>): Promise<UserType> {
+  //   return this.prismaService.user.update({
+  //     where,
+  //     data,
+  //   })
+  // }
 
   // Delete verificationCode
   async deleteVerificationCode(
