@@ -52,6 +52,7 @@ export class AccessTokenGuard implements CanActivate {
         where: {
           id: roleId,
           deletedAt: null,
+          isActive: true, // Role bị vô hiệu hóa thì sẽ từ chối request
         },
         include: {
           // Nếu mà lấy ra như này thì nó sẽ lấy ra hết cái permission nên là chúng ta thêm path và method vào để mà nó chỉ lấy ra được một cái permission duy nhất mà thôi
