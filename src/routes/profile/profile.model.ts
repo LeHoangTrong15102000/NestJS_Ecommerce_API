@@ -15,12 +15,22 @@ export const ChangePasswordBodySchema = UserSchema.pick({
     confirmNewPassword: z.string().min(6).max(100),
   })
   .strict()
-  .superRefine(({ newPassword, confirmNewPassword }, ctx) => {
+  .superRefine(({ password, newPassword, confirmNewPassword }, ctx) => {
+    // kiểm tra newPassword và confirmNewPassword phải giống nhau
     if (newPassword !== confirmNewPassword) {
       ctx.addIssue({
         code: 'custom',
         message: 'Error.ConfirmPasswordNotMatch',
         path: ['confirmNewPassword'],
+      })
+    }
+
+    // Kiểm tra password và newPassword không được trùng nhau
+    if (password === newPassword) {
+      ctx.addIssue({
+        code: 'custom',
+        message: 'Error.NewPasswordMustBeDifferent',
+        path: ['newPassword'],
       })
     }
   })

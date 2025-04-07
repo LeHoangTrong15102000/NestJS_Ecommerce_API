@@ -19,7 +19,7 @@ import { ProfileModule } from 'src/routes/profile/profile.module'
   controllers: [AppController],
   providers: [
     AppService,
-    // Thằng Pipe dùng để biến đổi cấu trúc lỗi trả về
+    // Thằng Pipe dùng để biến đổi cấu trúc lỗi trả về, chỉ chạy trước cái route handler
     {
       provide: APP_PIPE,
       useClass: CustomZodValidationPipe,

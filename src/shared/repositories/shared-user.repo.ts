@@ -17,4 +17,28 @@ export class SharedUserRepository {
       where: uniqueObject,
     })
   }
+
+  findUniqueIncludeRolePermissions(uniqueObject: WhereUniqueUserType): Promise<UserIncludeRolePermissionsType | null> {
+    return this.prismaService.user.findUnique({
+      where: uniqueObject,
+      include: {
+        role: {
+          include: {
+            permissions: {
+              where: {
+                deletedAt: null,
+              },
+            },
+          },
+        },
+      },
+    })
+  }
+
+  updateUserProfile(uniqueObject: WhereUniqueUserType, data: Partial<UserType>): Promise<UserType | null> {
+    return this.prismaService.user.update({
+      where: uniqueObject,
+      data,
+    })
+  }
 }
