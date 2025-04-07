@@ -1,25 +1,26 @@
 import { HTTPMethod } from 'src/shared/constants/role.constant'
+import { PermissionSchema } from 'src/shared/models/shared-permission.model'
 import { optional, z } from 'zod'
 
-export const PermissionSchema = z.object({
-  id: z.number(),
-  name: z.string().max(500),
-  description: z.string(),
-  path: z.string().max(1000),
-  method: z.enum([
-    HTTPMethod.GET,
-    HTTPMethod.POST,
-    HTTPMethod.PUT,
-    HTTPMethod.DELETE,
-    HTTPMethod.PATCH,
-    HTTPMethod.OPTIONS,
-    HTTPMethod.HEAD,
-  ]),
-  createdById: z.number().nullable(),
-  updatedById: z.number().nullable(),
-  createdAt: z.date(),
-  updatedAt: z.date(),
-})
+// export const PermissionSchema = z.object({
+//   id: z.number(),
+//   name: z.string().max(500),
+//   description: z.string(),
+//   path: z.string().max(1000),
+//   method: z.enum([
+//     HTTPMethod.GET,
+//     HTTPMethod.POST,
+//     HTTPMethod.PUT,
+//     HTTPMethod.DELETE,
+//     HTTPMethod.PATCH,
+//     HTTPMethod.OPTIONS,
+//     HTTPMethod.HEAD,
+//   ]),
+//   createdById: z.number().nullable(),
+//   updatedById: z.number().nullable(),
+//   createdAt: z.date(),
+//   updatedAt: z.date(),
+// })
 
 export const GetPermissionsResSchema = z.object({
   data: z.array(PermissionSchema),
@@ -49,6 +50,7 @@ export const CreatePermissionBodySchema = PermissionSchema.pick({
   path: true,
   method: true,
   description: true,
+  module: true,
 }).partial({
   description: true,
 })

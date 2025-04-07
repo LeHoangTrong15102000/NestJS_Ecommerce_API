@@ -429,6 +429,10 @@ Mỗi request đi qua chúng ta sẽ:
 
   - Chút nữa chúng ta sẽ biết được là bên client nó render ra như thế nào
 
+- Cái mà chúng ta cần chỉnh sửa tiếp theo đó là file `create-permissions` thì chúng ta sẽ lấy ra được cái `module name` dựa vào cái path `/auth/login` thì sẽ lấy ra được cái module là `/auth` -> Sẽ lấy nó ra ở trong cái hàm `availableRoute`
+
+- Thì bây giờ thằng FE có thể gom nhóm `permission` dựa vào cái `module` được thì bây giờ chúng ta sẽ xử lý giả dụ cái trường hợp khi mà chúng ta là một `FE Developer`
+
 ## Bài 97 Fix Bug khi `Role` bị vô hiệu hóa thì nên từ chối `request` & Không cho phép User chỉnh sửa `Base Role`
 
 - Fix cái vấn đề đó `Role` bị vô hiệu hóa nên là từ chối `request`
