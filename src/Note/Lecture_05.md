@@ -4,11 +4,19 @@
 
 ## Bài 98 Bài tập `Profile`
 
+- Thực hiện bài tập CRUD cho `Profile`
+
 ## Bài 99 Hướng dẫn làm `Profile`
+
+- Làm bài tập CRUD với `Profile`
 
 ## Bài 100 Fix bug error message bên `API Role` và refactor lại một số file bên auth
 
+- Fix bug và thực hiện rafactor lại mốt số file bên auth
+
 ## Chương 10 Chức năng `User: Quản lý User`
+
+-
 
 ## Bài 101 Refactor `RolesService` trong auth
 
