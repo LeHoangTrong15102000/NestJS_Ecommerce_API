@@ -85,7 +85,11 @@ body tương tự như tạo user
 
 - Hướng dẫn CRUD với `User` sau đó là thực hiện các API liên quan đến `User` của người dùng
 
-## Bài 104 Migrate unique email và `totpSecret`
+## Bài 104 Migrate `unique` `email` và `totpSecret`
+
+- Sẽ thực hiện Unique `Email` và `TotpSecret`
+
+- Chúng ta sẽ bỏ đánh index cho cái `totpSecret` vì nó là chuỗi `base32` nên là nó sẽ không quá dài, và có khả năng cao là nó sẽ bị trùng nếu mà `user` quá nhiều -> Nên là chúng ta không cần phải đánh `index unique` cho `totpSecret` làm gì
 
 ## Bài 105 Fix lỗi prisma liên quan đến `Unique email`
 
