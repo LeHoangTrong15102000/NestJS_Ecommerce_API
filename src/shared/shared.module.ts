@@ -11,6 +11,7 @@ import { SharedUserRepository } from 'src/shared/repositories/shared-user.repo'
 import { EmailService } from 'src/shared/services/email.service'
 import { TwoFactorService } from 'src/shared/services/2fa.service'
 import { S3Service } from 'src/shared/services/s3.service'
+import { SharedRoleRepository } from 'src/shared/repositories/shared-role.repo'
 
 const sharedServices = [
   PrismaService,
@@ -20,6 +21,7 @@ const sharedServices = [
   EmailService,
   TwoFactorService,
   S3Service,
+  SharedRoleRepository,
 ]
 
 // Module này được coi là import toàn cục rồi, nên là những cái  Service shared chung thì chỉ cần import vào trong đây là được

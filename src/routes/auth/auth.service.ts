@@ -34,6 +34,7 @@ import {
 } from 'src/routes/auth/auth.error'
 import { TwoFactorService } from 'src/shared/services/2fa.service'
 import { InvalidPasswordException } from 'src/shared/error'
+import { SharedRoleRepository } from 'src/shared/repositories/shared-role.repo'
 
 @Injectable()
 export class AuthService {
@@ -42,9 +43,9 @@ export class AuthService {
     private readonly authRepository: AuthRepository,
     private readonly sharedUserRepository: SharedUserRepository,
     private readonly tokenService: TokenService,
-    private readonly rolesService: RolesService,
     private readonly emailService: EmailService,
     private readonly twoFactorService: TwoFactorService,
+    private readonly sharedRoleRepository: SharedRoleRepository,
   ) {}
 
   async validateVerificationCode({
@@ -80,7 +81,7 @@ export class AuthService {
     try {
       await this.validateVerificationCode({ code: body.code, email: body.email, type: TypeOfVerificationCode.REGISTER })
 
-      const clientRoleId = await this.rolesService.getClientRoleId()
+      const clientRoleId = await this.sharedRoleRepository.getClientRoleId()
       const hashedPassword = await this.hashingService.hash(body.password)
       // Sau khi mà xác thực xong rồi thì xóa code
 

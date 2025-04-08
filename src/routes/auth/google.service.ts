@@ -5,10 +5,11 @@ import { GoogleAuthStateType } from 'src/routes/auth/auth.model'
 import envConfig from 'src/shared/config'
 import { AuthRepository } from './auth.repo'
 import { HashingService } from '../../shared/services/hashing.service'
-import { RolesService } from 'src/routes/auth/roles.service'
+// import { RolesService } from 'src/routes/auth/roles.service'
 import { v4 as uuidv4 } from 'uuid'
 import { AuthService } from 'src/routes/auth/auth.service'
 import { GoogleUserInfoError } from 'src/routes/auth/auth.error'
+import { SharedRoleRepository } from 'src/shared/repositories/shared-role.repo'
 
 @Injectable()
 export class GoogleService {
@@ -16,7 +17,7 @@ export class GoogleService {
   constructor(
     private readonly authRepository: AuthRepository,
     private readonly hashingService: HashingService,
-    private readonly roleService: RolesService,
+    private readonly sharedRoleRepository: SharedRoleRepository,
     private readonly authService: AuthService,
   ) {
     // Thì nó sẽ nhận vào clientId clientSecret và RedirectUri, truyền vào đúng thứ tự cho nó là được
@@ -82,7 +83,7 @@ export class GoogleService {
       })
       // Nếu không có User tức là người mới, vậy nên sẽ tiến hành đăng ký
       if (!user) {
-        const clientRoleId = await this.roleService.getClientRoleId()
+        const clientRoleId = await this.sharedRoleRepository.getClientRoleId()
         const randomPassword = uuidv4()
         const hashedPassword = await this.hashingService.hash(randomPassword) // Tạo mật khẩu mặc định cho người đùng
 

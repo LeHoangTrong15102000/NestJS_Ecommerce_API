@@ -206,7 +206,7 @@ export type RefreshTokenResType = LoginResType // chỗ này cũng có thể ghi
 export type LogoutBodyType = RefreshTokenBodyType
 
 export type DeviceType = z.infer<typeof DeviceSchema>
-export type RoleType = z.infer<typeof RoleSchema>
+// export type RoleType = z.infer<typeof RoleSchema>
 export type GoogleAuthStateType = z.infer<typeof GoogleAuthStateSchema>
 export type GetAuthorizationUrlResType = z.infer<typeof GetAuthorizationUrlResSchema>
 
