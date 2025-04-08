@@ -48,7 +48,6 @@ export class UserService {
   private async getRoleIdByUserId(userId: number) {
     const currentUser = await this.sharedUserRepository.findUnique({
       id: userId,
-      deletedAt: null,
     })
     if (!currentUser) {
       throw NotFoundRecordException
@@ -69,7 +68,6 @@ export class UserService {
   async findById(id: number) {
     const user = await this.sharedUserRepository.findUniqueIncludeRolePermissions({
       id,
-      deletedAt: null,
     })
     if (!user) {
       throw NotFoundRecordException
@@ -145,7 +143,6 @@ export class UserService {
       const updatedUser = await this.sharedUserRepository.updateUser(
         {
           id,
-          deletedAt: null,
         },
         {
           ...data,

@@ -93,6 +93,10 @@ body tương tự như tạo user
 
 ## Bài 105 Fix lỗi prisma liên quan đến `Unique email`
 
+- Khi mà email nó không còn là `unique` thì chúng ta không thể nào mà sử dụng được cái hàm `findUnique` được nữa -> Nên là để mà linh động hơn chúng ta sẽ dùng một cái method khác đó chính là `findFirst` nếu chúng truyền đúng cái `value` mà nó đã được `index` thì nó sẽ tìm ra cái `valueIndex` đó `Nó vẫn tận dụng được cái Index bình thường`, còn nếu mà chúng ta truyền `value` nó linh hoạt thì tất nhiên là nó không có tận dụng được cái `Index của thằng findFirst trong prisma rồi`
+
+- Chúng ta vẫn sử dụng lại cái `uniqueObject` để mà đảm bảo là người dùng ngta truyền đúng cái `valueIndex` vào -> Thay vì phải sử dụng `queryRaw` nó khá là rối thì chúng ta sẽ sử dụng `findFirst` cho nó khỏe
+
 ## Chương 11 Chức năng `Media`
 
 ## Bài 106 Upload single file

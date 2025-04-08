@@ -108,13 +108,23 @@ export class AuthRepository {
     })
   }
 
+  // Chỉnh sửa thêm deletedAt: null vào dể mà bên những service gọi tới không cần phải thêm vào
   async findUniqueUserIncludeRole(uniqueObject: WhereUniqueUserType): Promise<(UserType & { role: RoleType }) | null> {
-    return this.prismaService.user.findUnique({
-      where: uniqueObject,
+    return this.prismaService.user.findFirst({
+      where: {
+        ...uniqueObject,
+        deletedAt: null,
+      },
       include: {
         role: true,
       },
     })
+    // return this.prismaService.user.findUnique({
+    //   where: uniqueObject,
+    //   include: {
+    //     role: true,
+    //   },
+    // })
   }
 
   // Thằng này nó sẽ không có throw ra lỗi vì nó tìm ko thấy thì nó sẽ trả về là null
