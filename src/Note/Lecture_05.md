@@ -101,6 +101,16 @@ body tương tự như tạo user
 
 ## Bài 106 Upload single file
 
+- Thực hiện chức năng `upload file`
+
+- Sao đó chúng ta sẽ copy cái example của nó như thế là chúng ta có thể `request` được cái `API upload` rồi -> Khi mà đã `upload` thành công rồi thì làm sao để mà chúng ta có thể thấy được cái file mà chúng ta vừa mới upload được bây giờ -> Thì chúng ta cần vào đọc lại cái `documents` của nó, thì chúng ta cần phải thêm vào cái đường dẫn để mà chứa các cái file upload của người dùng nữa thì mới được.
+
+- Chúng ta thấy được là cái file của chúng ta upload lên nó đã đổi tên rồi nhưng mà nó thiếu cái phần mở rộng, cái đuôi file của chúng ta đó là `image/jpeg`
+
+  - Chúng ta sẽ để một cái đường dẫn tuyệt đối luôn cho nó
+
+  - Đến cái phần file name chúng ta sẽ sử dụng cái hàm Random cho `fileName`, phần mở rộng của cái `filename` thì chúng ta cần sử dụng cái method là `path.extname(filename)` -> Là có thể lấy được phần mở rộng của cái `filename` đó
+
 ## Bài 107 File validation
 
 ## Bài 108 Upload Array of Files và Serve Static
@@ -131,7 +141,31 @@ body tương tự như tạo user
 
 ## Bài 120 Tạo thuật toán generate SKU
 
-## Chương 13 Tìm hiểu về `Redis`
+## Bài 121 Tạo `Model` liên quan đến `Product`
+
+## Bài 122 Khai báo type cho `JSON` trong `prisma`
+
+## Bài 123 Khai báo method `findById` và `delete` trong `ProductRepo`
+
+## Bài 124 Tạo method `Create` trong `ProductRepo`
+
+## Bài 125 Tạo method `Update` trong `ProductRepo`
+
+## Bài 126 Test CRUD `API Product` và cập nhật `schema Validation`
+
+## Bài 127
+
+## Bài 128
+
+## Bài 129
+
+## Bài 130
+
+## Bài 131
+
+## Chương 13 Tìm hiểu về `Review`
+
+## Chương 13.1 Chức năng
 
 ## Chương 14 Áp dụng các design pattern vào bên trong dự án
 
