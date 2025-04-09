@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common'
 import { MulterModule } from '@nestjs/platform-express'
+import { existsSync, mkdirSync } from 'fs'
 import multer from 'multer'
 import path from 'path'
 import { MediaController } from 'src/routes/media/media.controller'
@@ -28,4 +29,12 @@ const storage = multer.diskStorage({
   providers: [MediaService, MediaRepo],
   controllers: [MediaController],
 })
-export class MediaModule {}
+export class MediaModule {
+  // Và cũng yên tâm là khi mà request thì cái constructor này nó cũng chỉ chạy một lần mà thôi
+  constructor() {
+    // Kiểm tra cái đường đẫn UPLOADDIR này đã có hay chưa, ở đây sẽ sử dụng hàm đồng bộ luôn không cần dùng Promise vì ở đây nó chỉ chạy một lần mà thôi
+    if (!existsSync(UPLOAD_DIR)) {
+      mkdirSync(UPLOAD_DIR, { recursive: true })
+    }
+  }
+}

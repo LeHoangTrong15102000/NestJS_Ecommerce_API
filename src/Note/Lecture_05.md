@@ -113,6 +113,25 @@ body tương tự như tạo user
 
 ## Bài 107 File validation
 
+- `File Vaidation` -> sẽ thực hiện validation cho file đầu vào, nếu chúng ta muốn custom thì chúng ta sẽ sử dụng cái cú pháp giống như ở trên document của `NestJS`, còn hông thì chúng ta sẽ sử dụng `validation sẵn có` của NestJS cũng được
+
+  - Thì cái hàm `parseFilePipe` này chúng ta sẽ đưa nó vào trong cái `upload file`
+
+    ```ts
+      new ParseFilePipe({
+        validators: [],
+      }),
+      Và chúng ta sẽ để những cái validation ở bên trong đó
+    ```
+
+  - Với một cái vấn đề nữa là khi mà chúng ta xóa cái thư mục upload mà chúng ta lại custom một cái `Storage` ở bên trong `MulterModule` thì nó sẽ bị lỗi
+
+  - Nên là chúng ta sẽ thêm vào cái `constructor()` ở chỗ này để khi mà nó chạy tới cái `MediaModule` thì nó sẽ khởi tạo cái `folder` `upload` nếu như mà chưa có cái folder đó
+
+  - Tiếp theo là chúng ta có thể validate đó là `FileTypeValidator` đó là chúng ta `validator` về kiểu `file` đầu vào mà ng dùng gửi lên `server` -> Thường thì sẽ chuyển cái đầu vào là `Regex` để mà nó nhận được các đuôi file như là `jpeg/png/jpg/webp...`
+
+  - Thì ngoài ra ở bên trong cái thằng `FileInterceptor` ngoài nhận vào tham só là `filename` thì nó còn nhận vào một options thứ 2 đó là `localOptions: MulterOptions` thì khi mà `validate` một cái file đầu vào thì nó sẽ chạy cái hàm ở bên trong `MulterOptions` trước sau đó thì nó mới chạy xuống các hàm `validate` ở dưới `ParseFilePipe` sau -> Thì nó cũng giống như cái `lifeCycle` của `NestJS` mà thôi
+
 ## Bài 108 Upload Array of Files và Serve Static
 
 ## Bài 109 Hướng dẫn tạo và kết nối với AWS S3
