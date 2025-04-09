@@ -136,6 +136,14 @@ body tương tự như tạo user
 
 ## Bài 108 Upload Array of Files và Serve Static
 
+- Khi mà `upload nhiều file` thì ở bên trong NestJS nó sẽ có 2 loại
+
+  - Đó là chúng ta có thể dùng một cái `key` sau đó đưa nhiều file vào trong cái key đó, chúng ta có thể đưa nhiều file vào trong cái key rất là bình thường -> Thì đây gọi là `Arrays of file`
+
+  - Cái loại thứ 2 là `Multiple File` chúng ta dùng nhiều `key` khác nhau, mỗi `key` chúng ta có thêm vào 1 hoặc là nhiều file khác nhau. -> thì cái `Multiple File` nó chỉ khác `Array of File` như vậy thôi còn cấu hình là nó không có khác gì mấy.
+
+  - Thì ở trong phần này thì chúng ta sẽ tập trung xử lý `Array of File` còn cái `Multiple File` thì cũng tương tự mà thôi.
+
 ## Bài 109 Hướng dẫn tạo và kết nối với AWS S3
 
 ## Bài 110 Upload file lên S3
