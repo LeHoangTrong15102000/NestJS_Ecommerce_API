@@ -132,6 +132,8 @@ body tương tự như tạo user
 
   - Thì ngoài ra ở bên trong cái thằng `FileInterceptor` ngoài nhận vào tham só là `filename` thì nó còn nhận vào một options thứ 2 đó là `localOptions: MulterOptions` thì khi mà `validate` một cái file đầu vào thì nó sẽ chạy cái hàm ở bên trong `MulterOptions` trước sau đó thì nó mới chạy xuống các hàm `validate` ở dưới `ParseFilePipe` sau -> Thì nó cũng giống như cái `lifeCycle` của `NestJS` mà thôi
 
+  - Thằng NestJS nó chỉ có 2 cái `validator File` ở trong `ParseFilePipe` mà thôi còn lại thì chúng ta cần phải tự build lên nếu chúng ta cần những tính năng nâng cao hơn nữa ở trong cái hệ thống của chúng ta.
+
 ## Bài 108 Upload Array of Files và Serve Static
 
 ## Bài 109 Hướng dẫn tạo và kết nối với AWS S3
