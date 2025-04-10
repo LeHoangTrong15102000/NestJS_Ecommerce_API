@@ -180,11 +180,15 @@ body tương tự như tạo user
 
 ## Bài 109 Hướng dẫn tạo và kết nối với AWS S3
 
-- Hướng dẫn tạo và kết nối với `AWS S3`
+- Hướng dẫn tạo và kết nối với `AWS S3`, nếu mà không sử dụng S3 bên AWS thì chúng ta có thể sử dụng S3 ở một số nhà cung cấp khác ví dụ như là `Digital Ocean` thì thằng này nó vẫn dùng thư viện của `AWS` để mà tương tác với `S3` bên `DigitalOcean`, thì ở VN cũng có nhà cung cấp đó là `VNdata` cũng dùng cái `AWS S3` để mà tương tác với `VN Data Cloud Storage` luôn
 
 ## Bài 110 Upload file lên S3
 
 - Thực hiện upload file lên `S3 AWS`
+
+- Lỡ mà có quên hay gì đó thì chúng ta có thể tạo mới lại cái `ACCESS_KEY_S3` bình thường, và chúng ta có thể tạo ra nhiều cái `ACESS KEY S3`
+
+- Thì để mà kết nối với S3 thì chúng ta cần phải cài đặt 2 cái thư viện đó là `@aws-sdk/client-s3` và thư viện đó là `@aws-sdk/lib-storage`
 
 ## Bài 111 Fix bug upload file nhưng không xóa file
 
