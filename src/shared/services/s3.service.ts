@@ -8,6 +8,13 @@ export class S3Service {
   constructor() {
     this.s3 = new S3({
       region: envConfig.S3_REGION,
+      credentials: {
+        accessKeyId: envConfig.S3_ACCESS_KEY_ID,
+        secretAccessKey: envConfig.S3_SECRET_ACCESS_KEY,
+      },
     })
+    // this.s3.listBuckets({}).then((res) => {
+    //   console.log(res)
+    // })
   }
 }

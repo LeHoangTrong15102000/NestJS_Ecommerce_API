@@ -33,7 +33,7 @@ const configSchema = z.object({
   APP_NAME: z.string(),
   PREFIX_STATIC_ENDPOINT: z.string(),
   S3_REGION: z.string(),
-  S3_ACCESS_KEY: z.string(),
+  S3_ACCESS_KEY_ID: z.string(),
   S3_SECRET_ACCESS_KEY: z.string(),
 })
 
