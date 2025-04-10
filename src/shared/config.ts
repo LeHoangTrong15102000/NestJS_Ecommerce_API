@@ -35,6 +35,8 @@ const configSchema = z.object({
   S3_REGION: z.string(),
   S3_ACCESS_KEY_ID: z.string(),
   S3_SECRET_ACCESS_KEY: z.string(),
+  S3_BUCKET_NAME: z.string(),
+  // S3_IMAGE_QUALITY: z.number(),
 })
 
 const configServer = configSchema.safeParse(process.env)

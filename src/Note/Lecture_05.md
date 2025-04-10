@@ -190,6 +190,18 @@ body tương tự như tạo user
 
 - Thì để mà kết nối với S3 thì chúng ta cần phải cài đặt 2 cái thư viện đó là `@aws-sdk/client-s3` và thư viện đó là `@aws-sdk/lib-storage`
 
+- Cái `filename` là cái mà nó sẽ đưa vào cái `s3 Bucket` này
+
+  - Cái `Key` sẽ là một cái đường dẫn - dẫn tới cái file của chúng ta ở trong cái `Bucket`, ví dụ như cái `Key` của chúng ta là `images/123.png` thì `images` là cái folder
+
+  - `Body` nó có thể nhận vào là `buffer` hoặc là `readable` cái kiểu của nó có thể là `ReadableStreamOptionalType` | `BlobOptionalType` -> Sẽ sử dụng cái method là `readFileSync` nó sẽ đọc cái file bằng cái đường dẫn -> Khi mà đọc thì nó sẽ trả về `buffer` thì nó sẽ phù hợp với kiểu dữ liệu cửa thằng `Body`
+
+  - `filepath` là đường đẫn đến cái file của chúng ta, thì sau khi mà upload lên trên cái server của chúng ta rồi thì sẽ có đường dẫn đến cái `file`, thì từ cái đường dẫn của cái `file` này ở trên server của chúng ta sẽ lấy cái `file` đó `upload` trên `S3 Bucket` -> Giống như là chúng ta sẽ sử dụng cái `server` của chúng ta làm một cái server `trung gian`
+
+- Khi mà `upload` một cái `Array file` thì chúng ta sẽ có thể lấy ra được cái `path` và từ cái `path` đó thì chúng ta sẽ
+
+- Bây giờ chúng ta sẽ không `uploadFile` lên trên máy nữa mà chúng ta sẽ upload lên S3 luôn -> Nên là ở hàm `uploadFile` chúng ta sẽ đẩy lên S3 luôn
+
 ## Bài 111 Fix bug upload file nhưng không xóa file
 
 ## Bài 112 Upload file với `Presigned URL`

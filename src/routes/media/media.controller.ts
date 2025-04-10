@@ -17,10 +17,11 @@ import path from 'path'
 import envConfig from 'src/shared/config'
 import { UPLOAD_DIR } from 'src/shared/constants/other.constant'
 import { IsPublic } from 'src/shared/decorators/auth.decorator'
+import { S3Service } from 'src/shared/services/s3.service'
 
 @Controller('media')
 export class MediaController {
-  contrucstor() {}
+  constructor(private readonly s3Service: S3Service) {}
 
   @Post('images/upload')
   @UseInterceptors(
@@ -41,10 +42,20 @@ export class MediaController {
     )
     files: Array<Express.Multer.File>,
   ) {
-    console.log('object files', files)
-    return files.map((file) => ({
-      url: `${envConfig.PREFIX_STATIC_ENDPOINT}/${file.filename}`,
-    }))
+    // Thằng này nó trả về một cái Promise array thì chúng ta nên dùng Promise.all để tối ưu cái tốc độ
+    return Promise.all(
+      files.map((file) => {
+        return this.s3Service.uploadedFile({
+          filename: 'images/' + file.filename, // lưu nó vào trong folder images
+          filepath: file.path,
+          contentType: file.mimetype,
+        })
+      }),
+    )
+
+    // return files.map((file) => ({
+    //   url: `${envConfig.PREFIX_STATIC_ENDPOINT}/${file.filename}`,
+    // }))
   }
 
   @Get('static/:filename')
