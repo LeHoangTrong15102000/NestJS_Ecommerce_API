@@ -2,14 +2,14 @@ import { Module } from '@nestjs/common'
 import { MulterModule } from '@nestjs/platform-express'
 import { existsSync, mkdirSync } from 'fs'
 import multer from 'multer'
-import path from 'path'
 import { MediaController } from 'src/routes/media/media.controller'
 import { MediaRepo } from 'src/routes/media/media.repo'
 import { MediaService } from 'src/routes/media/media.service'
+import { UPLOAD_DIR } from 'src/shared/constants/other.constant'
 import { generateRandomFileName } from 'src/shared/helpers'
 
 // Nó sẽ ra cái đường dẫn ngang hàng với thằng folder NestJS_Super_Ecommerce_API của chúng ta -> Nên là chỉ cần đưa cái folder upload vào là được
-const UPLOAD_DIR = path.resolve('upload')
+
 // console.log(UPLOAD_DIR)
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {

@@ -144,9 +144,47 @@ body tương tự như tạo user
 
   - Thì ở trong phần này thì chúng ta sẽ tập trung xử lý `Array of File` còn cái `Multiple File` thì cũng tương tự mà thôi.
 
+- Sau khi mà upload thành công rồi thì nên trả về cho người dùng cái đường link sau khi mà `upload` người dùng có thể click vào cái đường link đó để mà view được cái hình ảnh
+
+  - Cái đường link chúng ta muốn nó có dạng như là: `localhost:3000/media/static/{tên-file}`
+
+  - Để mà sử dụng được `useStaticAssets` thì chúng ta cần phải truyền cái `GenericType` là `NestExpressApplication` -> Rồi sau đó chúng ta sẽ cái đường dẫn đến cái `folder upload` của chúng ta là được
+
+  - Bây giờ nó sẽ nảy ra một cái trường hợp nữa đó là đôi khi chúng ta muốn thiết lập cái `Guard` cho cái `media` thì làm sao -> Hiện tại chúng ta chưa làm cái `guard` cho cái media nên là khi mà enter vào thì nó nhảy vào luôn, Cho dù chúng ta có khai báo `route` là `media/static` endpoint ở bên trong `controller` đi chăng nữa thì nó cũng không có bắt được
+
+  - Bây giờ quay trở lại cái vấn đề đó là cái thằng static này nó không thiết lập cái `guard` được
+
+  - Cái thằng `StaticAssets` nó là một cái middleware nó đã chạy trước và nó return kết quả về trước luôn rồi nên là nó không nhảy về cái route này được:
+
+    ```ts
+      @Get('static/:file')
+      serveFile(@Param('file') file: string) {
+        console.log(file)
+      }
+
+    ```
+
+  - Trong cái trường hợp này chúng ta mà muốn custom một cái `Guard` cho những `static file` -> Nên là phải cần tới cái Guard để không phải là ai có cái đường link đều có thể xem `file ảnh` hay `video` cả chỉ những người đã xác thực `verify AccessToken` rồi thì mới cho vào xem được -> Thì trong những trường hợp như vậy chúng ta sẽ kh ông dùng cái middleware `useStaticAssets` nữa.
+
+  - Thì chúng ta sẽ xử lý ở bên trong cái `API Endpoint` luôn -> Thì ở cái `Route Handler` này thì nó cần phải chạy quá cái `Guard` của chúng ta trước khi mà nó vào cái `API Endpoint` này nên là từ cái bước như này thì chúng ta có thể `custom` được sâu hơn, có thể thêm những cái `Guard Custom` vào cho nó nữa
+
+  - Khi mà chúng ta đưa vào cái đường dẫn file sai thì nó sẽ ra lỗi là `404` bây giờ chúng ta muốn `custom` một cái `message` khác cho nó để mà nó hiển thị ra lỗi tường minh hơn -> Thì cái `sendFile` cái tham số thứ 2 nó xử lý `errBack`
+
+    - Khi mà quy chuẩn lại code thì chúng ta sẽ nhận được kết quả lỗi trả về một cách quy chuẩn như thế này:
+
+      ```JSON
+        "message": "File not found",
+        "error": "Not Found",
+        "statusCode": 404
+      ```
+
 ## Bài 109 Hướng dẫn tạo và kết nối với AWS S3
 
+- Hướng dẫn tạo và kết nối với `AWS S3`
+
 ## Bài 110 Upload file lên S3
+
+- Thực hiện upload file lên `S3 AWS`
 
 ## Bài 111 Fix bug upload file nhưng không xóa file
 
@@ -156,7 +194,9 @@ body tương tự như tạo user
 
 ## Bài 114 Validate file khi dùng `Presigned URL`
 
-## Bài 115 Hướng dẫn dùng S3 storoge của `VN Data`
+## Bài 115 Hướng dẫn dùng S3 storage của `VN Data`
+
+- Thực hiện upload file với `S3 Storage` của `VN Data`
 
 ## Chương 12 Chức năng `Product`
 
