@@ -14,20 +14,19 @@ import {
 import { FilesInterceptor } from '@nestjs/platform-express'
 import { Response } from 'express'
 import path from 'path'
-import envConfig from 'src/shared/config'
+import { MediaService } from 'src/routes/media/media.service'
 import { UPLOAD_DIR } from 'src/shared/constants/other.constant'
 import { IsPublic } from 'src/shared/decorators/auth.decorator'
-import { S3Service } from 'src/shared/services/s3.service'
 
 @Controller('media')
 export class MediaController {
-  constructor(private readonly s3Service: S3Service) {}
+  constructor(private readonly mediaService: MediaService) {}
 
   @Post('images/upload')
   @UseInterceptors(
     FilesInterceptor('files', 100, {
       limits: {
-        fileSize: 5 * 1024 * 1024, // 2MB;
+        fileSize: 5 * 1024 * 1024, // 5MB;
       },
     }),
   )
@@ -35,27 +34,14 @@ export class MediaController {
     @UploadedFiles(
       new ParseFilePipe({
         validators: [
-          new MaxFileSizeValidator({ maxSize: 5 * 1024 * 1024 }), // 2MB;
+          new MaxFileSizeValidator({ maxSize: 5 * 1024 * 1024 }), // 5MB;
           new FileTypeValidator({ fileType: /(jpg|jpeg|png|webp)$/ }), // jpg/ jpeg/png/webp
         ],
       }),
     )
     files: Array<Express.Multer.File>,
   ) {
-    // Thằng này nó trả về một cái Promise array thì chúng ta nên dùng Promise.all để tối ưu cái tốc độ
-    return Promise.all(
-      files.map((file) => {
-        return this.s3Service.uploadedFile({
-          filename: 'images/' + file.filename, // lưu nó vào trong folder images
-          filepath: file.path,
-          contentType: file.mimetype,
-        })
-      }),
-    )
-
-    // return files.map((file) => ({
-    //   url: `${envConfig.PREFIX_STATIC_ENDPOINT}/${file.filename}`,
-    // }))
+    return this.mediaService.uploadFile(files)
   }
 
   @Get('static/:filename')

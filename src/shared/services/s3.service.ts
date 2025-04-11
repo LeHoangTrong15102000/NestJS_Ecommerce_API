@@ -25,8 +25,8 @@ export class S3Service {
       client: this.s3,
       params: {
         Bucket: envConfig.S3_BUCKET_NAME,
-        Key: filename,
-        Body: readFileSync(filepath),
+        Key: filename, // Sẽ là đường dẫn, dẫn tới cái file của chúng ta ở trong Bucket
+        Body: readFileSync(filepath), // readFileAsync chuyển nó thành buffer rồi truyền vào cái body
         ContentType: contentType,
       },
       tags: [],
@@ -41,10 +41,11 @@ export class S3Service {
       leavePartsOnError: false,
     })
 
-    parallelUploads3.on('httpUploadProgress', (progress) => {
-      console.log(progress)
-    })
+    // parallelUploads3.on('httpUploadProgress', (progress) => {
+    //   console.log(progress)
+    // })
 
+    // return về promise
     return parallelUploads3.done()
   }
 }

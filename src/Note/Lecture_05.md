@@ -202,6 +202,22 @@ body tương tự như tạo user
 
 - Bây giờ chúng ta sẽ không `uploadFile` lên trên máy nữa mà chúng ta sẽ upload lên S3 luôn -> Nên là ở hàm `uploadFile` chúng ta sẽ đẩy lên S3 luôn
 
+- Khi mà upload file thành công thì nó sẽ trả về `Key` và `Location`
+
+  - `Location` sẽ dẫn đến cái đường link sau khi mà chúng ta đã `upload` lên -> Thì bây giờ chúng ta sẽ trả về cái `Location` này cho người dùng
+
+  - Vấn đề bây giờ là chúng ta chưa có thể xem được cái đường dẫn file được lưu trong `AWS S3` mà thôi nên là bây giờ chúng ta sẽ config để mà coi được cái đó
+
+    - Việc đầu tiên là cần `Edit S3 block Public Access settings`
+
+    - Và sau đó là cứ làm theo hướng dẫn như ở trên `docs` của thằng `AWS` là được mà thôi
+
+  -> Và sau đó khi mà nhấn vào cái đường link thì chúng ta đã có thể coi được cái tấm ảnh với cái đường dẫn trên server của `AWS S3` rồi
+
+  - Tại sao khi mà chúng ta nhấn vào cái đường link trên `AWS` thì nó lại `down` luôn cả cái `file` về luôn hoặc là nó không có view cái ảnh đúng -> Do là khi chung ta upload một cái file ảnh lên trên mà chúng ta không truyền cái `contentType: mimetype` vào nên là nó tự động download cái file đó về khi mà chúng ta nhấn vào cái đường dẫn của file đó
+
+  - Chúng ta vẫn còn thiếu một bước đó là xóa cái file ở thư mục `upload` của dự án sau khi mà đã `upload` lên `S3 Bucket` luôn, nên là chúng ta sẽ xử lý cái vấn đề đó ở bên trong cái `MediaService` luôn.
+
 ## Bài 111 Fix bug upload file nhưng không xóa file
 
 ## Bài 112 Upload file với `Presigned URL`
