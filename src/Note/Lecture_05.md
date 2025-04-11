@@ -220,6 +220,16 @@ body tương tự như tạo user
 
 ## Bài 111 Fix bug upload file nhưng không xóa file
 
+- Sẽ fix bug cái vấn đề đó là `Upload file` nhưng mà không xóa cái `file` của chúng ta
+
+  - Nếu chúng ta upload file bị fail ngay tại cái bước `FilesInterceptor` thì nó sẽ không có cái `file` trong upload là đúng, còn nếu nó mà fail ở bên trong cái `ParseFilePipe` thì nó xuất hiện cái file trong thư mục `upload` thì đây rõ ràng là bug rồi
+
+  - `FilesInterceptor` là của multer xử lý -> Sau khi mà nó qua được cái `FilesInterceptor` rồi thì nó sẽ tới cái thằng `ParseFilePipe` thì cái cách để mà fix được trong cái trường hợp này là chúng ta sẽ can thiệp vào bên trong cái `ParseFilePipe` nhưng mà đây là một cái `build-in` của NestJS rồi -> Nên là chúng ta sẽ tạo ra một cái `class` mới kế thừa cái `class - ParseFilePipe` đó
+
+  - `ParseFilePipe` có thằng `transform` nên là chúng ta sẽ xử lý ở bên trong cái thằng `transform` đó -> Thì cái value của chúng ta chính là cái file `Array<Express.Multer.File>`
+
+  - Với cái `Value là một Array file` thì chúng ta có thể tìm đến cái `path` của mấy cái `file` đó để mà xóa
+
 ## Bài 112 Upload file với `Presigned URL`
 
 ## Bài 113 Dùng React upload file với `Presigned URL`
