@@ -260,9 +260,11 @@ body tương tự như tạo user
 
   - Thì khi mà upload lên `AWS` thì nó không cho phép chúng ta sử dụng cái `Auth` nào hết nên là chúng ta sẽ sử dụng cái `No Auth` ở phần upload lên người dùng, cái Method để mà upload thì chúng ta sử dụng method là `PUT`, và cái body chúng ta gửi lên thì chúng ta sẽ chọn `Binary` -> Thì cái `link` chính là cái `PresignedUrl` của chúng ta -> Thì cái link nó sẽ trả về như thế này cho chúng ta `https://ecommerce-super-nestjs.s3.ap-southeast-1.amazonaws.com/e001301b-245b-49f1-952c-be74426e9de1.jpg`
 
-- Nên là ở cái method `getPresignedUrl` chúng ta sẽ return về cái link cho `client` luôn -> Oke đó chính là lý do mà chúng ta cần phải trả về cái `url` cho người dùng
+- Nên là ở cái method `getPresignedUrl` chúng ta sẽ return về cái link cho `client` luôn -> Oke đó chính là lý do mà chúng ta cần phải trả về cái `url` cho người dùng -> Lưu ý rằng là cái này chỉ upload được một file mà thôi, để mà upload dược nhiều file thì chúng ta cần phải get ra nhiều cái `PresignedURL` khác nhau
 
 ## Bài 113 Dùng React upload file với `Presigned URL`
+
+- Dùng React để demo việc upload hình ảnh lên phía `AWS S3` cho người dùng
 
 ## Bài 114 Validate file khi dùng `Presigned URL`
 
