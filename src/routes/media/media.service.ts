@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common'
 import { S3Service } from 'src/shared/services/s3.service'
 import { unlink } from 'fs/promises'
 import { generateRandomFileName } from 'src/shared/helpers'
+import { PresignedUploadFileBodyType } from 'src/routes/media/media.model'
 
 @Injectable()
 export class MediaService {
@@ -25,14 +26,16 @@ export class MediaService {
     )
     // Tiến hành xóa cái file sau khi upload lên S3, dùng fs/promises để mà tối ưu cái việc xóa bất đồng bộ
     await Promise.all(files.map((file) => unlink(file.path)))
-    return result
+    return {
+      data: result,
+    }
 
     // return files.map((file) => ({
     //   url: `${envConfig.PREFIX_STATIC_ENDPOINT}/${file.filename}`,
     // }))
   }
 
-  async getPresignedUrl(body: { filename: string }) {
+  async getPresignedUrl(body: PresignedUploadFileBodyType) {
     const randomFilname = generateRandomFileName(body.filename)
     const presignedUrl = await this.s3Service.createPresignedUrlWithClient(randomFilname)
     const url = presignedUrl.split('?')[0]

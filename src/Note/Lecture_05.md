@@ -268,6 +268,14 @@ body tương tự như tạo user
 
 ## Bài 114 Validate file khi dùng `Presigned URL`
 
+- Sẽ có 2 cách để mà giải quyết phần nào đấy cái `issue` này
+
+  - Cách đầu tiền là sử dụng `AWS lambda` tưởng tượng nó như là một cái func chạy trên `AWS` -> Mỗi là mà chúng ta `upload file` -> thì nó sẽ chạy để mà nó kiểm tra cái file đấy có đúng cái định dạng yêu cầu hay không, nếu mà sai thì nó sẽ xóa cái file đó
+
+  - Cách thứ 2 là chúng ta sẽ validate cái `filesize` tại cái bước mà nó gọi đến cái server để mà lấy -> Thì ở đây client cần phải truyền lên cái `filesize` thì với cái cách này chúng ta có thể validate được cái filename và filesize -> Nhưng mà cách này nó sẽ không hiểu quả hơn là cách sử dụng `func lambda` ở trên vì thằng client có thể fake được cái `filesize`, nói chung là xác suất đó cũng thấp mà thôi, quan trong là chúng ta giải quyết được phần nào đó
+
+    -> Tóm lại thì khi mà thằng client nó gọi tới để mà lấy cái `presignedUrl` thì chúng ta sẽ `validate` cái `file size` ngay tại cái bước đó
+
 ## Bài 115 Hướng dẫn dùng S3 storage của `VN Data`
 
 - Thực hiện upload file với `S3 Storage` của `VN Data`
