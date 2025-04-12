@@ -232,6 +232,36 @@ body tương tự như tạo user
 
 ## Bài 112 Upload file với `Presigned URL`
 
+- Thực hiện `Upload file` với `Presigned URL` -> Chúng ta sẽ sử dụng cái kĩ thuật này để mà upload ảnh lên trên S3 hoặc là các `Storage` khác
+
+  - Client -> Server -> S3 -> Thì cái `flow` này thì `server` là một nơi trung gian chứa cái file tạm -> Thì cái `flow` này chúng ta sẽ toàn quyền quản lí được cái file đó, cũng như là `validate` được cái `request` mà từ `client` gửi lên `server` nó có đủ quyền hạn hay không
+
+    - Nhưng mà nhược diểm đó là nó sẽ tăng cái gánh nặng lên trên `server` -> Nếu như mà nhiều người cùng upload thì `server` chúng ta nó sẽ sập là chắc chắn, cùng với đó là server của chúng ta nó không đủ dung lượng để mà lưu trữ
+
+  - Client -> S3 -> Nếu mà sử dụng cái trường hợp này thì chúng ta cần phải cung cấp `SECRET_KEY` và `ACCESS_KEY` nhưng mà cung cấp 2 cái giá trị là điều không nên cho thằng client rồi -> Kẻ gian nó sẽ lợi dụng và phá cái hệ thống của chúng ta -> Cho nên cái phương án này là không được.
+
+    -> Vì vậy chúng ta cần cung cấp cái giải pháp để mà trung hòa được 2 cái thằng ở trên -> Đó là chúng ta sẽ sử dụng `Presigned URL`
+
+  - Client -> Server để lấy `presigned URL` của `AWS S3`, với cái presigned URL này AWS nó cho phép chúng ta config cái thời gian sử dụng của Presigned URL là bao nhiêu giây đó, trong thời gian đó thì thằng client cần phải gửi file lên trên S3, nếu mà hết thời gian đó thì client nó không sử dụng được nữa, thì nó đảm bảo được việc là `Client` -> gửi trực tiếp lên trên S3 mà không thông qua `Server`, giảm workload lên server
+
+    - Nhược điểm đó chính là cái S3 không có khả năng `validate` cái `file`, không có khả năng `validate` cái `request` -> Vì thể chúng ta để cái `presigned url` ngắn để mà khi thằng `client` nó nhận về thì nó phải `upload` ngay -> Sau này đi làm đa số đều sử dụng cái kĩ thuật này cả
+
+  - Client -> Server để lấy Presigned URL ->
+
+    Client -> S3 bằng Presigned URL
+
+- Cái thư viện mime-types với cái thư viện này thì chúng ta có thể lấy cái `content-type` từ cái extentions của cái file `exp: mime.lookup(json) //'application/json'` hoặc là `exp:  mime.lookup('file.html') // 'text/html'`
+
+- Client nó cần phải gửi lên `filename` không nhỉ ? để mà cho nó truyền lên filename hoặc là ext name cũng được -> mà thôi cứ cho nó truyền lên `filename` đi, truyền `filename` thì `client` không cần phải xử lý cái gì nhiều cả, truyền ext thì phải xử lý thêm nữa -> Khi mà có filename rồi thì chúng ta cần phải `random` cái filename đó
+
+  -> Sau đó sẽ trả về cho người dùng là `PresignedURL`
+
+  -> Thì sau khi mà thực hiện cái `method` `getPresignedUrl` thì chúng ta sẽ lấy được cái `PresignedURL` đó -> Thì lúc này chúng ta sẽ sử dụng cái `PresignedUrl` đó để mà `upload`, khi mà chúng ta random một cái file là `jpg` thì chúng ta cũng phải cần lấy một file đuôi `jpg` để mà `upload` lên theo
+
+  - Thì khi mà upload lên `AWS` thì nó không cho phép chúng ta sử dụng cái `Auth` nào hết nên là chúng ta sẽ sử dụng cái `No Auth` ở phần upload lên người dùng, cái Method để mà upload thì chúng ta sử dụng method là `PUT`, và cái body chúng ta gửi lên thì chúng ta sẽ chọn `Binary` -> Thì cái `link` chính là cái `PresignedUrl` của chúng ta -> Thì cái link nó sẽ trả về như thế này cho chúng ta `https://ecommerce-super-nestjs.s3.ap-southeast-1.amazonaws.com/e001301b-245b-49f1-952c-be74426e9de1.jpg`
+
+- Nên là ở cái method `getPresignedUrl` chúng ta sẽ return về cái link cho `client` luôn -> Oke đó chính là lý do mà chúng ta cần phải trả về cái `url` cho người dùng
+
 ## Bài 113 Dùng React upload file với `Presigned URL`
 
 ## Bài 114 Validate file khi dùng `Presigned URL`

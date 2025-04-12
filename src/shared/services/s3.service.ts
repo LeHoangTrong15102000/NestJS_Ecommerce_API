@@ -1,7 +1,9 @@
-import { S3 } from '@aws-sdk/client-s3'
+import { PutObjectCommand, S3 } from '@aws-sdk/client-s3'
 import { Upload } from '@aws-sdk/lib-storage'
+import { getSignedUrl } from '@aws-sdk/s3-request-presigner'
 import { Injectable } from '@nestjs/common'
 import { readFileSync } from 'fs'
+import mime from 'mime-types'
 import envConfig from 'src/shared/config'
 
 @Injectable()
@@ -47,6 +49,15 @@ export class S3Service {
 
     // return về promise
     return parallelUploads3.done()
+  }
+
+  // ContentType lấy ra từ cái filename
+  createPresignedUrlWithClient(filename: string) {
+    // 'application/octet-stream' này là một cái binary data mà không có định dạng nhất định giống như là unknown vậy
+    const contentType = mime.lookup(filename) || 'application/octet-stream'
+    const command = new PutObjectCommand({ Bucket: envConfig.S3_BUCKET_NAME, Key: filename, ContentType: contentType })
+    //  expiresIn nó sẽ nhận vào là giây
+    return getSignedUrl(this.s3, command, { expiresIn: 10 })
   }
 }
 

@@ -97,6 +97,7 @@ export class AuthController {
     try {
       const data = await this.googleService.googleCallback({ code, state })
 
+      // Client đang thao tác với Oauth2 của GG. Thay vì chính GG trả response cho client thì GG nó thực hiện redirect để "chuyển trách nhiệm response" cho server nest.js chúng ta
       return res.redirect(
         `${envConfig.GOOGLE_CLIENT_REDIRECT_URI}?accessToken=${data.accessToken}&refreshToken=${data.refreshToken}`,
       )
