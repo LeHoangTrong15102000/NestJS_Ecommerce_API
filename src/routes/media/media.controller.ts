@@ -6,7 +6,6 @@ import {
   MaxFileSizeValidator,
   NotFoundException,
   Param,
-  ParseFilePipe,
   Post,
   Res,
   UploadedFiles,
@@ -49,6 +48,7 @@ export class MediaController {
     return this.mediaService.uploadFile(files)
   }
 
+  // Cái route này dùng để test thử cái trường hợp nếu mà cái đường dẫn file được bảo vệ trong dự án thực tế thì sẽ như thế nào -> Custom Guard(accessTokenGuard) để mà chặn những cái request chưa được xác thực
   @Get('static/:filename')
   @IsPublic()
   serveFile(@Param('filename') filename: string, @Res() res: Response) {
