@@ -12,7 +12,7 @@ if (!fs.existsSync(path.resolve('.env'))) {
   process.exit(1)
 }
 
-// Nó gọn hơn rất là nhiều so với class-validator
+// Nó gọn hơn rất là nhiều so với class-validator, class-transform
 const configSchema = z.object({
   DATABASE_URL: z.string(),
   ACCESS_TOKEN_SECRET: z.string(),
@@ -36,6 +36,11 @@ const configSchema = z.object({
   S3_ACCESS_KEY_ID: z.string(),
   S3_SECRET_ACCESS_KEY: z.string(),
   S3_BUCKET_NAME: z.string(),
+  // VNDATA_REGION: z.string(),
+  // VNDATA_ACCESS_KEY_ID: z.string(),
+  // VNDATA_SECRET_ACCESS_KEY: z.string(),
+  S3_ENDPOINT: z.string(),
+  // VNDATA_CLOUD_STORAGE: z.string(),
   // S3_IMAGE_QUALITY: z.number(),
 })
 

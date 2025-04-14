@@ -280,6 +280,14 @@ body tương tự như tạo user
 
 - Thực hiện upload file với `S3 Storage` của `VN Data`
 
+- Khi mà khơi động lên thì VNDATA nó sẽ báo lỗi là `-3008` gì đó xong rồi mã code là `ENOTFOUND` -> Thì cần cung cấp thêm `S3_ENDPOINT` thì cái này chỉ dùng đối với những S3 ngoài AWS mà thôi
+
+  -> Thì lúc này chúng ta vẫn có thể `upload` được file nhưng mà chúng ta không xem được cái `file` đó
+  -> Cách fix thì lên trang của VNDATA để mà tìm hiểu, coi cách để mà fix cái vấn đề này là như thế nào -> Thì chúng ta sẽ cấu hình cái CORS và cái Policy giống như là ở bên `AWS S3` vậy
+  -> Đã cấu hình xong và chạy được cái `Cloud S3 Storage` của `VNData` rồi
+
+- Làm thể nào để mà chúng ta tạo ra cái `Policy` `CORS` ấy khi mà chúng ta không có cái UI -> Thì chúng ta sẽ sử dụng cái `SDK` để mà thiết lập ở bên trong cái source code hoặc là có thể sử dụng `REST API` cũng được -> Nhưng mà cũng nên sử dụng `SDK`
+
 ## Chương 12 Chức năng `Product`
 
 ## Bài 116 CRUD `Brand` và `Brand Translation`
@@ -303,6 +311,12 @@ body tương tự như tạo user
 ## Bài 125 Tạo method `Update` trong `ProductRepo`
 
 ## Bài 126 Test CRUD `API Product` và cập nhật `schema Validation`
+
+Ứng dụng gọi xe tích hợp AIRide vào thì hệ thống sử dụng là Fastify, Prisma, để mà development hệ thống
+
+-> Cơ hội là đây chứ đâu nữa, không lúc này thì lúc nào nữa
+
+- Đặt mục tiêu là xong tháng này là sẽ xong cái `Module Booking` trong hệ thống `AIRide` của business, chắc chắn là có bug rồi đó nhưng mà sẽ cố gắng để mà hoàn thành mà thôi,
 
 ## Bài 127
 

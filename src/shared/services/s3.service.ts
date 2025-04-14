@@ -11,6 +11,7 @@ export class S3Service {
   private s3: S3
   constructor() {
     this.s3 = new S3({
+      endpoint: envConfig.S3_ENDPOINT,
       region: envConfig.S3_REGION,
       credentials: {
         accessKeyId: envConfig.S3_ACCESS_KEY_ID,
@@ -20,6 +21,48 @@ export class S3Service {
     // this.s3.listBuckets({}).then((res) => {
     //   console.log(res)
     // })
+
+    // this.s3.putBucketCors({
+    //   Bucket: envConfig.S3_BUCKET_NAME,
+    //   CORSConfiguration: {
+    //     CORSRules: [
+    //       {
+    //         AllowedHeaders: ['*'],
+    //         AllowedMethods: ['GET', 'PUT'],
+    //         AllowedOrigins: ['*'],
+    //         ExposeHeaders: [],
+    //       },
+    //     ],
+    //   },
+    // })
+
+    // this.s3.putBucketPolicy({
+    //   Bucket: envConfig.S3_BUCKET_NAME,
+    //   Policy: JSON.stringify({
+    //     version: '2012-10-17',
+    //     Statement: [
+    //       {
+    //         Sid: 'AllowAccess',
+    //         Effect: 'Allow',
+    //         Principal: '*',
+    //         Action: 's3:GetObject',
+    //         Resource: `arn:aws:s3:::${envConfig.S3_BUCKET_NAME}/*`,
+    //       },
+    //     ],
+    //   }),
+    // })
+
+    // this.s3
+    //   .getBucketCors({
+    //     Bucket: envConfig.S3_BUCKET_NAME,
+    //   })
+    //   .then((res) => console.log(res.CORSRules))
+
+    // this.s3
+    //   .getBucketPolicy({
+    //     Bucket: envConfig.S3_BUCKET_NAME,
+    //   })
+    //   .then(console.log)
   }
 
   uploadedFile({ filename, filepath, contentType }: { filename: string; filepath: string; contentType: string }) {
