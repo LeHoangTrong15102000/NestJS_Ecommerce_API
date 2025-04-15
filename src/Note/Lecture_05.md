@@ -328,17 +328,17 @@ body tương tự như tạo user
 
 ## Bài 131
 
-## Chương 13 Tìm hiểu về `Review`
+## Chương 13 Tìm hiểu về chức năng `Cart` và `Order`
 
 ## Chương 13.1 Chức năng
 
-## Chương 14 Áp dụng các design pattern vào bên trong dự án
+## Chương 14 Chức năng thanh toán online
 
-## Chương 15 Thực hiện `Websocket` ở bên trong dự án
+## Chương 15 Chức năng Review
 
-## Chương 16 Thực hiện xử lý `Review` cho từng dự án
+## Chương 16 Chức năng Chat
 
-## Chương 17 Thực hiện xử lý `Message` cho dự án
+## Chương 17 Chức năng nâng cao
 
 ## Chương 18 Thực hiện các tính năng tiếp theo của dự án
 
