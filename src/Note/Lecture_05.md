@@ -294,6 +294,10 @@ body tương tự như tạo user
 
 ## Bài 117 Đa ngôn ngữ với `NestJS i18n`
 
+- Hiện tại thì cái API trong website của chúng ta đang có hai loại đa ngôn ngữ -> Đầu tiên là chúng ta sẽ trả về cho phía client là dạng `Key-Message` -> Thì cái dạng này chúng ta không quan tâm client nó gửi lên ngôn ngữ gì, nó yêu cầu gì thì chúng ta ko cần quan tâm chúng ta chỉ cần quăng về cái `Key-Message` cho client là được -> Thì thằng client nó sẽ tự động render ra cái message dựa trên ngôn ngữ mà nó đang dùng
+
+- Cái dạng thứ 2 là client nó gửi lên một cái `header`
+
 ## Bài 118 CRUD `Category` và `Category Translation`
 
 ## Bài 119 Migrate Product
