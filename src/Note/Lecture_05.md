@@ -296,7 +296,11 @@ body tương tự như tạo user
 
 - Hiện tại thì cái API trong website của chúng ta đang có hai loại đa ngôn ngữ -> Đầu tiên là chúng ta sẽ trả về cho phía client là dạng `Key-Message` -> Thì cái dạng này chúng ta không quan tâm client nó gửi lên ngôn ngữ gì, nó yêu cầu gì thì chúng ta ko cần quan tâm chúng ta chỉ cần quăng về cái `Key-Message` cho client là được -> Thì thằng client nó sẽ tự động render ra cái message dựa trên ngôn ngữ mà nó đang dùng
 
-- Cái dạng thứ 2 là client nó gửi lên một cái `header`
+- Cái dạng thứ 2 là client nó gửi lên một cái `header` ví dụ như là `Accept-Language` ví dụ nó sẽ gửi lên là `vi` thì cái này nó rất là phổ biến đa số là người ta sẽ sử dụng cái `header Accept-Language`, một số thì sẽ sử dụng thông qua cái `query-param` như là cái `lang` -> Một số sẽ sử dụng cả 2 luôn nhưng mà sẽ có sự ưu tiên hơn -> Thì thằng client nó gửi lên tính hiệu ngôn ngữ của nó và server của chúng ta nhận được, thì chúng ta sẽ sử dụng decorotor `@Header()` lấy cái ngôn ngữ xong rồi truyền vào bên trong cái service -> repo -> rồi chuyền về cái ngôn ngữ mà client nó yêu cầu , API của chúng ta không chỉ phục vụ cho mỗi trang của chúng ta mà nó còn phục vụ cho nhiều trang khác nữa -> Thì những bên thứ nó mong muốn trả về cái dạng message đã được render ra sẵn, chứ đừng có trả về dạng `key` nó ko thích -> Thì đó là lúc chúng ta nên sử dụng thư viện chứ config bằng tay thì nó hơi lâu
+
+- Thì chúng ta cần phải add cái resolve vào thì mới sử dụng được cái `i18n` này
+
+  - Thì cái Options là `AcceptLanguage` này nó sẽ phụ vụ cho cái thằng `header` là `Accept-Language` mà client nó gửi xuống -> Là cái thằng `i18n module` này nó sẽ nhận diện ngôn ngữ dựa trên cái `Accept-Language` header từ ng dùng gửi lên và cái `query-params` là `lang` -> Và nó sẽ ưu tiên lấy cái `QueryResolver`, nếu mà người dùng mà không truyền lên thì nó sẽ lấy cái `AcceptLanguage`
 
 ## Bài 118 CRUD `Category` và `Category Translation`
 
@@ -333,8 +337,6 @@ body tương tự như tạo user
 ## Bài 131
 
 ## Chương 13 Tìm hiểu về chức năng `Cart` và `Order`
-
-## Chương 13.1 Chức năng
 
 ## Chương 14 Chức năng thanh toán online
 

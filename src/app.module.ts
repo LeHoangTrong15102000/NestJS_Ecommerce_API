@@ -14,9 +14,24 @@ import { PermissionModule } from 'src/routes/permission/permission.module'
 import { ProfileModule } from 'src/routes/profile/profile.module'
 import { UserModule } from 'src/routes/user/user.module'
 import { MediaModule } from 'src/routes/media/media.module'
+import { AcceptLanguageResolver, I18nModule, QueryResolver } from 'nestjs-i18n'
+import path from 'path'
+import { BrandModule } from 'src/routes/brand/brand.module'
+import { BrandTranslationModule } from 'src/routes/brand/brand-translation/brand-translation.module'
+
+// console.log(path.resolve('src/i18n/'))
 
 @Module({
   imports: [
+    I18nModule.forRoot({
+      fallbackLanguage: 'en', // Nếu không có truyền cái gì lên thì nó sẽ tự động lấy là `en`
+      loaderOptions: {
+        path: path.resolve('src/i18n/'),
+        watch: true,
+      },
+      // Cái chỗ này chúng ta có thể custom lại cái resolvers bằng cách sử dụng HeaderResolver và nhận vào cái options là ['Accept-Language1'] chẳng hạn
+      resolvers: [{ use: QueryResolver, options: ['lang'] }, AcceptLanguageResolver],
+    }),
     SharedModule,
     AuthModule,
     LanguageModule,
@@ -25,6 +40,8 @@ import { MediaModule } from 'src/routes/media/media.module'
     ProfileModule,
     UserModule,
     MediaModule,
+    BrandModule,
+    BrandTranslationModule,
   ],
   controllers: [AppController],
   providers: [
