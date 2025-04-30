@@ -31,6 +31,7 @@ import { BrandTranslationModule } from 'src/routes/brand/brand-translation/brand
       },
       // Cái chỗ này chúng ta có thể custom lại cái resolvers bằng cách sử dụng HeaderResolver và nhận vào cái options là ['Accept-Language1'] chẳng hạn
       resolvers: [{ use: QueryResolver, options: ['lang'] }, AcceptLanguageResolver],
+      typesOutputPath: path.resolve('src/generated/i18n.generated.ts'),
     }),
     SharedModule,
     AuthModule,

@@ -39,7 +39,7 @@ const configSchema = z.object({
   // VNDATA_REGION: z.string(),
   // VNDATA_ACCESS_KEY_ID: z.string(),
   // VNDATA_SECRET_ACCESS_KEY: z.string(),
-  S3_ENDPOINT: z.string(),
+  // S3_ENDPOINT: z.string(),
   // VNDATA_CLOUD_STORAGE: z.string(),
   // S3_IMAGE_QUALITY: z.number(),
 })

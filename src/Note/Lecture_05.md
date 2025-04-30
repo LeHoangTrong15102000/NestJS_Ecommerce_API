@@ -302,6 +302,10 @@ body tương tự như tạo user
 
   - Thì cái Options là `AcceptLanguage` này nó sẽ phụ vụ cho cái thằng `header` là `Accept-Language` mà client nó gửi xuống -> Là cái thằng `i18n module` này nó sẽ nhận diện ngôn ngữ dựa trên cái `Accept-Language` header từ ng dùng gửi lên và cái `query-params` là `lang` -> Và nó sẽ ưu tiên lấy cái `QueryResolver`, nếu mà người dùng mà không truyền lên thì nó sẽ lấy cái `AcceptLanguage`
 
+- Thì bây giờ chúng ta cần phải lấy được cái `current-Language` để mà truyền vào bên trong cái `ListBrand` -> Chúng ta mong muốn là khi mà mình không có truyền cái gì lên thì nó sẽ trả về `all Language` cho chúng ta luôn
+
+  -> Nếu mà cái `language` mà gửi lên là all thì chúng ta sẽ trả về tất cả còn không sẽ trả về theo cái `languageId`
+
 ## Bài 118 CRUD `Category` và `Category Translation`
 
 ## Bài 119 Migrate Product
