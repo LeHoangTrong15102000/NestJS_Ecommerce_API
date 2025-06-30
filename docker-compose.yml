@@ -1,0 +1,53 @@
+version: '3.8'
+
+services:
+  # Database
+  postgres:
+    image: postgres:17-alpine
+    container_name: ecom-postgres
+    environment:
+      POSTGRES_DB: ecom_db
+      POSTGRES_USER: ecom_user
+      POSTGRES_PASSWORD: ecom_password
+    ports:
+      - '5432:5432'
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - ecom-network
+
+  # NestJS API
+  api:
+    build: .
+    container_name: ecom-api
+    ports:
+      - '3000:3000'
+    environment:
+      DATABASE_URL: postgresql://ecom_user:ecom_password@postgres:5432/ecom_db
+      NODE_ENV: development
+      JWT_SECRET: your-super-secret-jwt-key-for-development
+      JWT_EXPIRES_IN: 7d
+      PORT: 3000
+    depends_on:
+      - postgres
+    networks:
+      - ecom-network
+    volumes:
+      - ./uploads:/app/uploads # Nếu có file uploads
+      - ./.env:/app/.env # Mount file .env
+
+  # Redis (nếu cần cache)
+  redis:
+    image: redis:7-alpine
+    container_name: ecom-redis
+    ports:
+      - '6379:6379'
+    networks:
+      - ecom-network
+
+volumes:
+  postgres_data:
+
+networks:
+  ecom-network:
+    driver: bridge

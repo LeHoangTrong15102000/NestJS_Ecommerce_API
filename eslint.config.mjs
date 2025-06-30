@@ -39,4 +39,10 @@ export default tseslint.config(
       'prettier/prettier': 'off',
     },
   },
+  {
+    files: ['**/*.spec.ts', '**/*.test.ts', '**/test/**/*.ts'],
+    rules: {
+      '@typescript-eslint/unbound-method': 'off',
+    },
+  },
 )
