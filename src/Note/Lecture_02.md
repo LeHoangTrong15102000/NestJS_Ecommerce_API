@@ -1,85 +1,704 @@
-# Khoá học NestJS Super - API Ecommerce toàn diện nhất hiện tại
+# Khóa học NestJS Super - API Ecommerce toàn diện nhất hiện tại
 
-## Bài 56 Logic cơ bản chức năng Login [Login part 1]
+---
 
-- Đầu tiên cần phải tạo model Login cho chức năng login , khi mà đã tạo xong `LoginBodySchema` thì chúng ta qua `LoginBodyDTO` để mà tạo thêm cho nó nữa
+## 🎯 **Bài 56: Logic cơ bản chức năng Login [Login part 1]**
 
-- Nhưng mà cái flow `Login` và `RefreshToken` thì chúng ta sẽ lấy cái `deviceId` ở đâu ra bây giờ
+### **Mục tiêu**
 
-## Bài 57 Cách lấy IP và UserAgent của client [Login part 2]
+Xây dựng logic cơ bản cho chức năng đăng nhập
 
-- Lấy `IP` và `UserAgent` của người dùng khi mà đăng nhập `login` vào hệ thống
+### **Model Setup**
 
-- Khi mà tạo thư viện là `Request-ip` thì khi mà sau này có deploy lên VPS hay một cái server nào đó thì cần phải config thêm cái cấu hình cho nó thì nó mới nhận được cái `IP`,ví dụ như là chúng ta sử dụng `NginX` thì cần phải config thêm `X-Real-IP`
+#### **LoginBodySchema Creation:**
 
-## Bài 58 Một số cập nhật nhỏ
+```typescript
+// Tạo model Login cho chức năng login
+const LoginBodySchema = z.object({
+  email: z.string().email(),
+  password: z.string().min(6),
+  deviceId: z.string().optional(), // Sẽ được xử lý trong flow
+})
+```
 
-- Thực hiện một số cập nhật nhỏ ở Lấy IP của người dùng
+#### **LoginBodyDTO:**
 
-- Nếu cùng một cái payload, ví dụ 2 cái yêu cầu tạo token trong cùng một dây nếu mà nó có cùng một cái payload thì có thể là nó sẽ bị trùng `Token`, để mà tránh bị trùng `token` thì chúng ta cần phải thêm một cái `ID` riêng cho nó là nó không bị trùng -> tải `UUID` để mà giải quyết cái vấn đề này
+```typescript
+export type LoginBodyDTO = z.infer<typeof LoginBodySchema>
+```
 
-- Khi mà thêm vào `payload` đó thì không cần phải khai báo lại kiểu `interface` cho cái `payload` đó, bởi vì là chúng ta không có sử dụng cái `Uuid` đó làm cái gì cả
+### **Câu hỏi thiết kế quan trọng**
 
-- Sẽ khai báo thêm một số `Model` và `Type` khác cho cái dự án của chúng ta để mà chúng ta làm việc nó lẹ hơn nhiều.
+🤔 **Vấn đề:** Flow `Login` và `RefreshToken` sẽ lấy `deviceId` từ đâu?
 
-## Bài 59 Chức năng Refresh Token
+**Các lựa chọn:**
 
-- Thực hiện chức năng `RefreshToken` cho ứng dụng của chúng ta
+1. **Client tự generate:** Frontend tạo deviceId và gửi lên
+2. **Server generate:** Backend tạo deviceId dựa trên thông tin client
+3. **Hybrid approach:** Kết hợp cả hai phương pháp
 
-- Từ userId tìm ra được `User` sau đó `JOIN` với thằng `Role` để mà lấy ra được cái `roleName`.
+---
 
-- Hoặc là cái bước tìm `RefreshToken` chúng ta thực hiện luôn câu lệnh `JOIN` để mà lấy ra được cái `roleId` `roleName` -> Thì ở đây chúng ta sẽ suy nghĩ rằng nên là sử dụng phương án nào cho nó tối ưu nhất.
+## 🎯 **Bài 57: Cách lấy IP và UserAgent của client [Login part 2]**
 
-- `RefreshToken` `JOIN` với `User` rồi từ `User` `JOIN` tiếp với thằng `Role` -> Thì chúng ta làm theo cách nào cũng được.
+### **Mục tiêu**
 
-- 3 cái thằng `UpdateDevice` `DeleteRefreshToken` và `GenerateTokens` nó không cần phải chạy tuần tự nên là chúng ta có thể dùng `Promise.all` cho cả 3 thằng này được
+Thu thập thông tin `IP` và `UserAgent` khi user đăng nhập
 
-- Thường khi mà khai báo một cái biến má có sử dụng Promise.all thì chúng ta sẽ sử dụng dấu `$` ở đầu để phân biệt được với một cái biến thông thường
+### **Implementation**
 
-- Nhưng mà lúc này thì chúng ta lại muốn là `RefreshToken new` lấy lại cái `exp` của cái `RefreshToken old` nên là ở cái phần logic này chúng ta sẽ xử lý lại cái chỗ đó
+#### **1. Cài đặt thư viện:**
 
-## Bài 60 Chức nắng Logout
+```bash
+npm install request-ip
+npm install @types/request-ip
+```
 
-- Thực hiện chức năng `Logout` cho cái ứng dụng của chúng ta
+#### **2. Tạo Decorator để lấy IP:**
 
-- Ở cái phần logout này thì chúng ta cũng cần phải check `Bearer Token` được gửi lên từ `Header Authorization` của người dùng nữa
+```typescript
+import { createParamDecorator, ExecutionContext } from '@nestjs/common'
+import * as requestIp from 'request-ip'
 
-## Bài 61 Return message cho sendOTP và tạo Decorator `@IsPublic`
+export const GetClientIp = createParamDecorator((data: unknown, ctx: ExecutionContext): string => {
+  const request = ctx.switchToHttp().getRequest()
+  return requestIp.getClientIp(request) || 'unknown'
+})
+```
 
-- Tạo thêm một cái decorator là `@IsPublic`
+#### **3. Tạo Decorator để lấy UserAgent:**
 
-- Xử lý về vấn đề `Public API endpoint` khi mà không cần phải xác thực quyền
+```typescript
+export const GetUserAgent = createParamDecorator((data: unknown, ctx: ExecutionContext): string => {
+  const request = ctx.switchToHttp().getRequest()
+  return request.headers['user-agent'] || 'unknown'
+})
+```
 
-## Bài 62 Bài tạp Oauth 2.0 với Google
+#### **4. Sử dụng trong Controller:**
 
-## Bài 63 Tạo dự án trên Google Console Cloud
+```typescript
+@Post('login')
+async login(
+  @Body() body: LoginBodyDTO,
+  @GetClientIp() ip: string,
+  @GetUserAgent() userAgent: string,
+) {
+  return this.authService.login(body, ip, userAgent);
+}
+```
 
-- `Authorized redirect URIs` là cái URL mà google nó `redirect` về cái server của chúng ta -> `http://localhost:3000/auth/google/callback`
+### **⚠️ Lưu ý quan trọng**
 
-## Bài 64 Tạo Google Authorized Url bằng googleapis
+🚀 **Production Deployment:**
 
-- Sẽ thực hiện tạo `Google Authorized Url` bằng `googleapis`
+- Khi deploy lên VPS/server, cần config thêm cho reverse proxy
+- **Nginx:** Cần config `X-Real-IP` header
+- **Load Balancer:** Cần config `X-Forwarded-For`
 
-- Từ server của chúng ta redirect về `URL FE` trả về cho phía FE là `AT` và `RT` thì 2 cái thằng này thì FE nó sẽ nhận thông qua cái `query params` và nó sẽ lưu vào `localStorage` ở bên phía client của nó, lưu vào cookies hay localStorage thì tùy thằng FE nó sẽ xử lý cái việc đấy.
+### **Example Nginx Configuration:**
 
-- Thì ở trong đây cái `URL` khi mà người dùng nhấn vào cái button sẽ được `Server-BE` của chúng ta tạo ra
+```nginx
+location / {
+    proxy_pass http://backend;
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header Host $http_host;
+}
+```
 
-  - Vì nếu browser không req đến server ở ở server ko lấy được `IP` và `UserAgent` của browser được mà method Login của chúng ta lại yêu cầu `IP` và `UserAgent` cho nên là
+---
 
-  - Do cái thằng server nó đảm nhận nhiệm vụ tạo ra cái `URL` nên là bắt buộc thằng `browser` nó gọi đến thằng `server` để mà lấy về cái `URL` này thì trong lúc gọi đấy chúng ta sẽ lấy cái `IP` và `UserAgent` của Browser, sau khi mà lấy xong rồi thì chúng ta sẽ đưa nó vào cái `URL-accounts.google` và trả về cho Browser, trong cái URL nó sẽ chứa `IP và UserAgent` sao khi mà `Browser` nó mở cái `URL` lên rồi thì nó sẽ chọn login với `Google`
+## 🎯 **Bài 58: Một số cập nhật nhỏ**
 
-  - Thằng Google ngoài cái việc nó gửi thông tin của google thì nó cũng gửi lại chính cái `IP` và `UserAgent` ở trên URL về cho `server backend` -> Thì cái đó gọi là `State` -> Bây giờ chúng ta sẽ cài đặt thư viện `googleapis` để mà xử lý cái việc đăng nhập với google này
+### **Vấn đề Token Collision**
 
-  - Bây giờ chúng ta sẽ sử dụng cái thư viện `googleapis` để tìm hiểu về cái chức năng đăng nhập với `google` này
+#### **Nguyên nhân:**
 
-  - Khi mà tạo ra một cái `string` từ cái Object bằng cú pháp `JSON.stringify({userAgent, ip})` thì rất có nhiều khả năng là chúng ta sẽ bị gặp lỗi vì nó vẫn có khả năng xuất hiện những cái kí tự `{}` xuất hiện trên URL -> Nên là vì vậy để tránh cái trường hợp đó thì chúng ta sẽ chuyển nó thành `base64` thì chúng ta sẽ sử dụng cú pháp như sau `Buffer.from(JSON.stringify({userAgent, ip})).toString('base64')` -> Thì đây là cú pháp tạo ra string trên `URL` hoặc không thì chúng ta có thể sử dụng thư viện để mà hỗ trợ.
+- 2 yêu cầu tạo token cùng lúc với cùng payload
+- Có thể tạo ra token trùng nhau
 
-  - Sau khi mà đã khai báo xong thì bây giờ chúng ta sẽ test thử cái tính năng tạo ra URL từ `googleapis` -> Thì đây chính là cái thư viện chính chủ của google nên là chúng ta không cần phải sợ gì hết
+#### **Giải pháp:**
 
-  - Và bài sau sẽ tích hợp cái FE vite vào để mà test chức năng `Login` với `Google`
+```typescript
+import { v4 as uuidv4 } from 'uuid'
 
-  - Ok đã get đường dẫn của `googleAuth` rồi -> Bây giờ tiến hành thực hiện các logic tiếp theo của chức năng mà thôi.
+// Thêm UUID vào payload để đảm bảo unique
+const payload = {
+  userId,
+  roleId,
+  roleName,
+  jti: uuidv4(), // JSON Token Identifier
+}
+```
 
-## Bài 65 Source Frontend Vite React để mà test chức năng Login với Google
+#### **Lưu ý:**
 
-- Sau khi mà nhảy tới cái link login của `google` -> Sau khi thằng google Login thành công thì nó sẽ Redirect về `server` và server sẽ chuyển tiếp về cái trang `/auth/oauh-google-callback` chính là cái component `Oauth` của chúng ta
+- `jti` không cần khai báo trong interface
+- Chỉ dùng để đảm bảo tính unique của token
+- Không sử dụng `jti` trong business logic
+
+### **Model và Type Declarations**
+
+#### **Mục tiêu:**
+
+- 📋 Khai báo thêm Model và Type cho dự án
+- ⚡ Tăng tốc độ development
+- 🔧 Type safety tốt hơn
+
+#### **Best Practices:**
+
+```typescript
+// Tạo types cho các response thường dùng
+export interface LoginResponse {
+  accessToken: string
+  refreshToken: string
+  user: UserInfo
+}
+
+export interface UserInfo {
+  id: string
+  email: string
+  name: string
+  role: RoleInfo
+}
+```
+
+---
+
+## 🎯 **Bài 59: Chức năng Refresh Token**
+
+### **Mục tiêu**
+
+Xây dựng chức năng refresh access token
+
+### **Database Query Strategy**
+
+#### **Phương án 1: Nested Join**
+
+```sql
+-- RefreshToken → User → Role
+SELECT rt.*, u.*, r.*
+FROM refresh_tokens rt
+JOIN users u ON rt.userId = u.id
+JOIN roles r ON u.roleId = r.id
+WHERE rt.token = ?
+```
+
+#### **Phương án 2: Sequential Queries**
+
+```typescript
+// 1. Tìm RefreshToken
+const refreshToken = await findRefreshToken(token)
+
+// 2. Từ userId tìm User + Role
+const user = await findUserWithRole(refreshToken.userId)
+```
+
+**🎯 Lựa chọn:** Sử dụng phương án 1 (JOIN) để tối ưu performance
+
+### **Parallel Processing với Promise.all**
+
+#### **3 tác vụ có thể chạy song song:**
+
+```typescript
+const [$updateDevice, $deleteOldRefreshToken, $newTokens] = await Promise.all([
+  // 1. Cập nhật thông tin Device
+  updateDevice({
+    deviceId,
+    userAgent,
+    ip,
+    lastActive: new Date(),
+    isActive: true,
+  }),
+
+  // 2. Xóa RefreshToken cũ
+  deleteRefreshToken(oldToken),
+
+  // 3. Generate tokens mới
+  generateTokens({ userId, roleId, roleName }),
+])
+```
+
+#### **💡 Naming Convention:**
+
+- Biến sử dụng `Promise.all` prefix với `$`
+- Phân biệt với biến thông thường
+- Dễ đọc, dễ maintain
+
+### **Token Expiration Strategy**
+
+#### **Yêu cầu đặc biệt:**
+
+```typescript
+// RefreshToken mới sử dụng expiration của RefreshToken cũ
+const newRefreshToken = generateRefreshToken({
+  ...payload,
+  exp: oldRefreshToken.exp, // Giữ nguyên thời gian hết hạn
+})
+```
+
+**🎯 Lý do:** Duy trì session time consistency
+
+---
+
+## 🎯 **Bài 60: Chức năng Logout**
+
+### **Mục tiêu**
+
+Thực hiện chức năng đăng xuất an toàn
+
+### **Authentication Requirements**
+
+#### **Bearer Token Validation:**
+
+```typescript
+@Post('logout')
+@UseGuards(AccessTokenGuard) // Yêu cầu xác thực
+async logout(
+  @ActiveUser() user: ActiveUserData,
+  @Headers('authorization') authHeader: string,
+) {
+  const token = this.extractTokenFromHeader(authHeader);
+  return this.authService.logout(user.userId, token);
+}
+```
+
+### **Logout Process**
+
+#### **Các bước thực hiện:**
+
+1. **Validate AccessToken:** Đảm bảo token hợp lệ
+2. **Extract userId:** Từ decoded token
+3. **Cleanup:**
+   ```typescript
+   await Promise.all([
+     // Xóa RefreshToken khỏi database
+     this.deleteRefreshTokenByUserId(userId),
+
+     // Đánh dấu Device inactive (optional)
+     this.updateDeviceStatus(deviceId, { isActive: false }),
+
+     // Blacklist AccessToken (nếu cần)
+     this.addToBlacklist(accessToken),
+   ])
+   ```
+
+### **Security Considerations**
+
+#### **Token Blacklisting (Optional):**
+
+- **Pros:** Ngăn chặn sử dụng token đã logout
+- **Cons:** Tăng complexity, cần storage cho blacklist
+- **Alternative:** Dựa vào expiration time ngắn của AccessToken
+
+#### **Device Management:**
+
+- Đánh dấu device `isActive = false`
+- Lưu thời gian logout
+- Theo dõi pattern đăng nhập bất thường
+
+---
+
+## 🎯 **Bài 61: Return message cho sendOTP và tạo Decorator @IsPublic**
+
+### **Mục tiêu**
+
+Tối ưu response cho sendOTP và tạo decorator cho public endpoints
+
+### **Response Optimization cho sendOTP**
+
+#### **Trước:**
+
+```typescript
+// Không có response message rõ ràng
+return { success: true }
+```
+
+#### **Sau:**
+
+```typescript
+return {
+  success: true,
+  message: 'OTP đã được gửi đến email của bạn',
+  expiresIn: '5 phút',
+  type: 'REGISTER',
+}
+```
+
+### **@IsPublic Decorator**
+
+#### **Vấn đề:**
+
+- Một số endpoints không cần authentication
+- Cần cách đánh dấu public endpoints
+- Tránh áp dụng guards không cần thiết
+
+#### **Implementation:**
+
+```typescript
+// decorators/is-public.decorator.ts
+import { SetMetadata } from '@nestjs/common'
+
+export const IS_PUBLIC_KEY = 'isPublic'
+export const IsPublic = () => SetMetadata(IS_PUBLIC_KEY, true)
+```
+
+#### **Sử dụng trong Controller:**
+
+```typescript
+@Controller('auth')
+export class AuthController {
+  @Post('register')
+  @IsPublic() // Không cần authentication
+  async register(@Body() body: RegisterDTO) {
+    return this.authService.register(body)
+  }
+
+  @Post('otp')
+  @IsPublic() // Public endpoint
+  async sendOTP(@Body() body: SendOTPDTO) {
+    return this.authService.sendOTP(body)
+  }
+
+  @Get('profile')
+  // Cần authentication (không có @IsPublic)
+  async getProfile(@ActiveUser() user: ActiveUserData) {
+    return this.authService.getProfile(user.userId)
+  }
+}
+```
+
+#### **Guard Integration:**
+
+```typescript
+// guards/auth.guard.ts
+@Injectable()
+export class AuthGuard implements CanActivate {
+  constructor(private reflector: Reflector) {}
+
+  canActivate(context: ExecutionContext): boolean {
+    // Kiểm tra xem endpoint có được đánh dấu @IsPublic không
+    const isPublic = this.reflector.getAllAndOverride<boolean>(IS_PUBLIC_KEY, [
+      context.getHandler(),
+      context.getClass(),
+    ])
+
+    if (isPublic) {
+      return true // Skip authentication
+    }
+
+    // Thực hiện authentication bình thường
+    return this.validateToken(context)
+  }
+}
+```
+
+### **Lợi ích**
+
+- ✅ **Rõ ràng:** Dễ phân biệt public vs protected endpoints
+- ✅ **Maintainable:** Dễ quản lý và cập nhật
+- ✅ **Performance:** Không áp dụng guards không cần thiết
+- ✅ **Security:** Tránh quên bảo vệ sensitive endpoints
+
+---
+
+## 🎯 **Bài 62: Bài tập OAuth 2.0 với Google**
+
+### **Mục tiêu**
+
+Tìm hiểu và chuẩn bị cho tích hợp Google OAuth 2.0
+
+### **OAuth 2.0 Flow Overview**
+
+```
+1. User click "Login with Google"
+2. Redirect to Google Authorization Server
+3. User login + consent on Google
+4. Google redirect back with authorization code
+5. Exchange code for access token
+6. Use access token to get user info
+7. Create/login user in our system
+```
+
+### **Chuẩn bị**
+
+- 📋 Google Cloud Console project
+- 🔑 OAuth 2.0 credentials
+- 🌐 Authorized redirect URIs
+- 📱 Client ID và Client Secret
+
+---
+
+## 🎯 **Bài 63: Tạo dự án trên Google Console Cloud**
+
+### **Mục tiêu**
+
+Setup Google Cloud project cho OAuth integration
+
+### **Các bước thực hiện**
+
+#### **1. Tạo Project:**
+
+- Truy cập [Google Cloud Console](https://console.cloud.google.com)
+- Tạo project mới hoặc chọn project existing
+- Enable Google+ API
+
+#### **2. Configure OAuth Consent Screen:**
+
+- **Application name:** Tên ứng dụng của bạn
+- **Authorized domains:** Domain của website
+- **Scopes:** email, profile, openid
+
+#### **3. Create OAuth 2.0 Credentials:**
+
+- **Application type:** Web application
+- **Name:** Tên cho credential
+- **Authorized JavaScript origins:**
+  ```
+  http://localhost:3000 (development)
+  https://yourdomain.com (production)
+  ```
+- **Authorized redirect URIs:**
+  ```
+  http://localhost:3000/auth/google/callback
+  https://yourdomain.com/auth/google/callback
+  ```
+
+#### **4. Lấy Credentials:**
+
+```bash
+# Environment variables
+GOOGLE_CLIENT_ID=your_client_id_here
+GOOGLE_CLIENT_SECRET=your_client_secret_here
+GOOGLE_REDIRECT_URI=http://localhost:3000/auth/google/callback
+```
+
+### **⚠️ Lưu ý bảo mật**
+
+- 🔒 **Client Secret:** Không expose ra frontend
+- 🌐 **Redirect URI:** Phải chính xác 100%
+- 🛡️ **Domain verification:** Cần verify domain cho production
+
+---
+
+## 🎯 **Bài 64: Tạo Google Authorized URL bằng googleapis**
+
+### **Mục tiêu**
+
+Sử dụng thư viện `googleapis` để tạo URL đăng nhập Google
+
+### **Installation**
+
+```bash
+npm install googleapis
+npm install @types/google-auth-library
+```
+
+### **Implementation**
+
+#### **1. Setup Google OAuth Client:**
+
+```typescript
+import { google } from 'googleapis'
+
+export class GoogleService {
+  private oauth2Client
+
+  constructor() {
+    this.oauth2Client = new google.auth.OAuth2(
+      process.env.GOOGLE_CLIENT_ID,
+      process.env.GOOGLE_CLIENT_SECRET,
+      process.env.GOOGLE_REDIRECT_URI,
+    )
+  }
+}
+```
+
+#### **2. Generate Authorization URL:**
+
+```typescript
+async generateAuthUrl(ip: string, userAgent: string): Promise<string> {
+  // Tạo state để truyền thông tin client
+  const state = Buffer.from(
+    JSON.stringify({ userAgent, ip })
+  ).toString('base64');
+
+  const authUrl = this.oauth2Client.generateAuthUrl({
+    access_type: 'offline',
+    scope: ['profile', 'email'],
+    state: state, // Truyền IP và UserAgent
+    prompt: 'consent'
+  });
+
+  return authUrl;
+}
+```
+
+#### **3. Controller Implementation:**
+
+```typescript
+@Get('google')
+@IsPublic()
+async googleAuth(
+  @GetClientIp() ip: string,
+  @GetUserAgent() userAgent: string
+): Promise<{ url: string }> {
+  const url = await this.googleService.generateAuthUrl(ip, userAgent);
+  return { url };
+}
+```
+
+### **Flow hoạt động**
+
+#### **Tại sao cần Browser → Server → Google?**
+
+1. **Browser request đến Server:** Lấy IP và UserAgent
+2. **Server tạo URL với state:** Chứa thông tin client
+3. **Browser redirect đến Google:** Với URL đã có state
+4. **Google redirect về Server:** Kèm state gốc + auth code
+5. **Server xử lý login:** Có đầy đủ thông tin cần thiết
+
+#### **State Management:**
+
+```typescript
+// Encode state
+const state = Buffer.from(
+  JSON.stringify({
+    userAgent: 'Mozilla/5.0...',
+    ip: '192.168.1.1',
+  }),
+).toString('base64')
+
+// Decode state (trong callback)
+const decoded = JSON.parse(Buffer.from(state, 'base64').toString())
+```
+
+### **Security Benefits**
+
+- 🛡️ **State verification:** Ngăn chặn CSRF attacks
+- 📍 **IP tracking:** Phát hiện đăng nhập bất thường
+- 🖥️ **Device fingerprinting:** Theo dõi thiết bị
+
+### **Kết quả**
+
+✅ **Hoàn thành:** Tạo Google Authorization URL thành công  
+⏭️ **Tiếp theo:** Tích hợp Frontend để test chức năng
+
+---
+
+## 🎯 **Bài 65: Source Frontend Vite React để test chức năng Login với Google**
+
+### **Mục tiêu**
+
+Tạo frontend đơn giản để test Google OAuth flow
+
+### **Frontend Setup**
+
+#### **1. Vite React Project:**
+
+```bash
+npm create vite@latest frontend -- --template react-ts
+cd frontend
+npm install
+npm install axios
+```
+
+#### **2. OAuth Component:**
+
+```typescript
+// components/GoogleLogin.tsx
+import { useState } from 'react';
+import axios from 'axios';
+
+export default function GoogleLogin() {
+  const [loading, setLoading] = useState(false);
+
+  const handleGoogleLogin = async () => {
+    setLoading(true);
+    try {
+      // 1. Lấy Google Auth URL từ server
+      const response = await axios.get('http://localhost:3000/auth/google');
+      const { url } = response.data;
+
+      // 2. Redirect đến Google
+      window.location.href = url;
+    } catch (error) {
+      console.error('Login failed:', error);
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div>
+      <button onClick={handleGoogleLogin} disabled={loading}>
+        {loading ? 'Redirecting...' : 'Login with Google'}
+      </button>
+    </div>
+  );
+}
+```
+
+#### **3. Callback Handler:**
+
+```typescript
+// components/OAuthCallback.tsx
+import { useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
+
+export default function OAuthCallback() {
+  const location = useLocation();
+
+  useEffect(() => {
+    // URL sẽ có dạng: /auth/oauth-google-callback?code=...&state=...
+    const urlParams = new URLSearchParams(location.search);
+    const code = urlParams.get('code');
+    const state = urlParams.get('state');
+
+    if (code) {
+      // Process login với server
+      handleGoogleCallback(code, state);
+    }
+  }, [location]);
+
+  const handleGoogleCallback = async (code: string, state: string) => {
+    try {
+      const response = await axios.post('http://localhost:3000/auth/google/callback', {
+        code,
+        state
+      });
+
+      const { accessToken, refreshToken } = response.data;
+
+      // Lưu tokens
+      localStorage.setItem('accessToken', accessToken);
+      localStorage.setItem('refreshToken', refreshToken);
+
+      // Redirect đến dashboard
+      window.location.href = '/dashboard';
+    } catch (error) {
+      console.error('Callback failed:', error);
+    }
+  };
+
+  return <div>Processing login...</div>;
+}
+```
+
+### **Complete Flow**
+
+```
+1. User clicks "Login with Google" → Frontend
+2. Frontend calls GET /auth/google → Backend
+3. Backend returns Google Auth URL → Frontend
+4. Frontend redirects to Google → Google
+5. User login on Google → Google
+6. Google redirects to callback → Backend
+7. Backend processes & redirects → Frontend callback page
+8. Frontend gets tokens from URL → Complete
+```
+
+### **Kết quả**
+
+✅ **Hoàn thành:** Frontend test environment cho Google OAuth  
+🔄 **Flow:** Browser → Server → Google → Server → Frontend callback

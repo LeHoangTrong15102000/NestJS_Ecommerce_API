@@ -1,109 +1,410 @@
-# Khoá học NestJS Super - API Ecommerce toàn diện nhất hiện tại
+# Khóa học NestJS Super - API Ecommerce toàn diện nhất hiện tại
 
-## Bài 43 Tích hợp ZodValidation và Serialization
+---
 
-- Muốn custom một cái zoValidation thì chúng ta cần tạo riêng một cái file để mà custom được cái ValidationPipe đó
+## 🎯 **Bài 43: Tích hợp ZodValidation và Serialization**
 
-- Những cái lỗi validation như thế này chúng ta mong muốn là trả về `mã lỗi` là `422` -> Bây giờ chúng ta sẽ sử dụng `CustomValidationPipe` -> Thì cần phải chuyển cái `array` lỗi mà Zod trả về thành một `string`
+### **Mục tiêu**
 
-- Và sử dụng thêm `ZodSerializationInterceptor` cho `output validation` nữa luôn cho nó đủ bộ -> Serilization thì chúng ta chỉ lược bỏ những cái field không cần thiết thôi không cần phải validate từng cái field
+Tùy chỉnh ZodValidation và thêm Serialization cho output
 
-- Nếu mà bỏ cái `omit password` đi mà nó không trả về `password` thì có nghĩa là nó đã work rồi thì giờ chúng ta đã `Serialization` được output trả về rồi.
+### **Yêu cầu kỹ thuật**
 
-- Khi mà dự liệu mà chúng ta trả về cho người dùng mà ko có `strict()` thì khi dự liệu gửi về từ người dùng mà nó có dư hay gì đó thì nó vẫn không gây ra lỗi.
+#### **1. Custom ZodValidation**
 
-- Khi mà có lỗi(sử dụng method strict() trong zod) mà chúng ta đang muốn biết là lỗi gì khi mà kết quả trả về từ việc `Serialization output` bị lỗi -> Vẫn có cách để mà xử lý cái vấn đề bị lỗi đó -> Thì chúng ta sẽ tạo ra một cái `exceptionFilter` để mà xem kết quả trả về bị lỗi thì cụ thể sẽ là bị lỗi gì. -> Nên là khi muốn thêm `strict()` hay không thì cũng cần phải cân nhắc rất là kĩ
+- 📋 **Nhiệm vụ:** Tạo riêng file custom ValidationPipe
+- 🎯 **Mục tiêu:** Trả về mã lỗi `422` cho validation errors
+- 🔧 **Thực hiện:** Chuyển array lỗi của Zod thành string
 
-## Bài 44 Hạn chế Try-Catch với CatchEverythingFilter
+#### **2. ZodSerializationInterceptor**
 
-- Thì chúng ta có thẻ sử dụng cái func built-in có sẵn của NestJS đó là `CatchEverythingFilter`
+- 📋 **Nhiệm vụ:** Thêm output validation
+- 🎯 **Mục tiêu:** Lược bỏ những field không cần thiết (như password)
+- ✅ **Kết quả:** Serialization thành công khi không trả về password
 
-## Bài 45 Áp dụng Repository Pattern
+#### **3. Strict Mode trong Zod**
 
-- Đã thực hiện việc áp dụng Repository Pattern vào trong dự án rồi
+- ⚠️ **Lưu ý với strict():**
+  - **Có strict():** Dữ liệu gửi từ user có dư field sẽ gây lỗi
+  - **Không strict():** Dữ liệu dư sẽ được bỏ qua không gây lỗi
+  - **Cân nhắc:** Cần cân nhắc kỹ khi sử dụng `strict()`
 
-## Bài 46 Phân tích flow OTP code và khai báo endpoint
+#### **4. Exception Handling**
 
-- Phân tích cái flow OTP code và triển khai nó thôi
+- 🛠️ **Giải pháp:** Tạo `exceptionFilter` để xử lý lỗi Serialization output
+- 📊 **Mục đích:** Xem cụ thể lỗi gì khi kết quả trả về bị lỗi
 
-- Để tránh trường hợp mà người dùng spam email giả hoặc là tài khoản không đúng, nên là chúng ta sẽ xác thực email trước khi mà người dùng đăng ký để mà tiết kiệm được tài nguyên.
+---
 
-- Nên là cái chỗ nhập mã OTP code để mà xác thực email sẽ có một cái button nhập vào để mà send OTP code qua email của người dùng luôn(tránh email rác từ người dùng quá nhiều), Với trước khi mà nhấn đăng ký thì cần phải check cái mã code để mà xem cái mã đó có đúng hay không hay là có còn hạn sử dụng hay không
+## 🎯 **Bài 44: Hạn chế Try-Catch với CatchEverythingFilter**
 
-- Phân tích một tí xíu về cái `VerificationCode` Schema
+### **Giải pháp tối ưu**
 
-- Để mà migration không bị vấn đề gì thì chúng ta cần phải xóa hết dự liệu của `VerificationCode` đi thì nó sẽ không có bị xóa hết dữ liệu của database khi mà chúng ta `migration` đi, trong trường hợp mà chúng ta không có item nào cả thì `migration` nó bình thường
+- 🔧 **Công cụ:** Sử dụng built-in `CatchEverythingFilter` của NestJS
+- 💡 **Lợi ích:** Giảm thiểu việc sử dụng try-catch thủ công
+- ✨ **Kết quả:** Code sạch hơn, xử lý lỗi tập trung
 
-- `expiresAt` chúng ta muốn là sau bao nhiêu phút đó thì cái OTP nó sẽ hết hạn nên là chúng ta cần khai báo thêm env nữa
+---
 
-- Để mà xử lý mấy cái giây giờ cho nó tiện thì chúng ta sẽ cài đặt thư viện là `ms` để mà xử lý cho nó tiện, thì cái thằng thư viện này nó sẽ `convert string` thời gian ra thành `milisecond`
+## 🎯 **Bài 45: Áp dụng Repository Pattern**
 
-- Qua `AuthModel` khai báo `Schema VerificationCode`.
+### **Kết quả**
 
-- Thì bây giờ chúng ta sẽ khai báo cái `Endpoint` cho cái VerificationCode như thế nào -> Ví dụ như bây giờ ta khai báo 2 cái endpoint `sendOtpRegister` và `sendOtpForgotPassword` thì nó lại không hay cho lắm, vì 2 cái này làm cùng nhiệm vụ mà chúng ta làm thành 2 cái `Endpoint` thì nó không hay cho lắm -> Thì chỉ thiết kế một cái `OTPendpoint` có URL là `/auth/otp` và body của nó là người dùng sẽ gửi lên cái `email` và `type`.
+✅ **Trạng thái:** Đã hoàn thành việc áp dụng Repository Pattern vào dự án
 
-- Nếu email đã tồn tại rồi thì thông báo là email đã tồn tại còn nếu email chưa tồn tại thì mới send OTP đến cho người dùng. -> Chúng ta có thể viết một cái hàm là `findUserByEmail` nhưng mà chúng ta suy nghĩ thêm là cái func này sẽ được sử dụng ở khá nhiều nơi -> Nên là không nên khai báo nó ở trong cái `AuthRepo`, nếu muốn import chéo hay gì đấy thì chúng ta khai báo nó ở trong `SharedModule` rồi từ đó import vào
+### **Lợi ích**
 
-- Thằng `Shared` chỉ nên import quanh quanh của cái thằng `SharedModule` mà thôi không nên import từ một module khác ở bên ngoài để khi mà thằng module đó bị xóa thì thằng `SharedModule` sẽ không bị ảnh hưởng -> Nên là cần phải tách biệt nó ra
+- 🔄 **Tách biệt:** Logic business và data access
+- 🧪 **Testing:** Dễ dàng mock data cho unit test
+- 🔧 **Bảo trì:** Code dễ maintain và mở rộng
 
-## Bài 47 Code logic tạo OTP khi đăng ký
+---
 
-- Thực hiện code logic cho tạo OTP khi mà đăng ký thành công
+## 🎯 **Bài 46: Phân tích flow OTP code và khai báo endpoint**
 
-- Chúng ta không muốn throw ra một `UnprocessableEntity` hơn là `ConflictException` để mà chỉ ra cái field nào là cái field lỗi trong quá trình gửi `OTP`
+### **Mục tiêu**
 
-- Sau này mấy cái lỗi chung chung như thế này sẽ gom lại để mà tái sử dụng được
+Phân tích và triển khai flow OTP code cho hệ thống
 
-- Bởi vì cái `VerificationCodeRepo` chúng ta chỉ có thực hiện vài bước thôi đó là tạo và xóa thôi nên là chúng ta sẽ đưa nó vào `AuthRepo` luôn.
+### **Chiến lược chống spam**
 
-- Khi mà người ta nhấn gửi lại cái code chúng ta cần cập nhật lại cái code chứ không phải là tạo mới cái code đó -> Nên là cần phải chỉnh sửa lại ở trong cái `AuthRepo` của chúng ta `(thì lúc này cái code cũ nó sẽ bị vô hiệu hóa đi)`
+🛡️ **Bảo vệ hệ thống:**
 
-- Tạm thời đã hoàn thành được việc đăng kí OTP -> Còn logic verifyOTP sẽ để ở những lần sau
+- **Vấn đề:** Người dùng spam email giả hoặc tài khoản không đúng
+- **Giải pháp:** Xác thực email trước khi đăng ký để tiết kiệm tài nguyên
 
-## Bài 48 Cập nhật xác thực OTP cho chức năng đăng ký
+### **Flow OTP Design**
 
-- Cập nhật xác thực OTP cho chức năng đăng ký -> Sẽ thực hiện cập nhật OTP cho API `register` của chúng ta, thiếu cái chứng năng `verify` cái mã `code` của chúng ta là nó có đúng hay không và nó đã hết hạn hay chưa -> Thì cần phải query đến với database nhưng mà để mà query đến `database` thì cần phải query những trường mà được đánh index thì nó mới nhanh được -> Do chúng ta có để index là theo cụm `([code , email, type])` thì cần phải tìm theo cái cụm này thì nó mới nhanh được.
+```
+1. User nhập email → Kiểm tra email hợp lệ
+2. Gửi OTP code qua email → User nhận mã
+3. User nhập OTP code → Xác thực mã
+4. Cho phép đăng ký → Hoàn tất quy trình
+```
 
-- Đã thực hiện xác thực code `VerificationCode` khi mà người dùng đăng ký thành công
+### **VerificationCode Schema Analysis**
 
-## Bài 49 Gửi OTP đến email bằng Resend
+#### **Cấu trúc dữ liệu:**
 
-- Gửi OTP đến email bằng Resend -> Trong phần này chúng ta sẽ thực hiện việc gửi email đến người dùng bằng `Resend`
+- `email`: Email người dùng
+- `code`: Mã OTP (6 số)
+- `type`: Loại OTP (REGISTER, FORGOT_PASSWORD)
+- `expiresAt`: Thời gian hết hạn
+- `createdAt`: Thời gian tạo
 
-## Bài 50 Xác thực domain trên Resend
+#### **Cấu hình thời gian:**
 
-- Xác thực domain trên Resend -> Sẽ thực hiện việc xác thực domain trên `resend`
+```typescript
+// Environment variable
+OTP_EXPIRES_IN=5m  // 5 phút
 
-## Bài 51 Gửi email bằng template HTML
+// Sử dụng thư viện 'ms' để convert
+const expiresIn = ms(process.env.OTP_EXPIRES_IN); // Convert string → milliseconds
+```
 
-- Gửi email bằng template HTML
+### **API Endpoint Design**
 
-## Bài 52 Giới thiệu về React email
+#### **Thiết kế tối ưu:**
 
-- Giới thiệu về React email cho việc gửi email của người dùng
+❌ **Không nên:**
 
-## Bài 53 Sử dụng React email làm email template
+```
+POST /auth/sendOtpRegister
+POST /auth/sendOtpForgotPassword
+```
 
-- Sử dụng React email làm email template cho dự án
+✅ **Nên sử dụng:**
 
-- Sử dụng React Email để mà làm template thì nó sẽ hay hơn cái việc mà chúng ta sử dụng `handlebar`
+```
+POST /auth/otp
+Body: {
+  "email": "user@example.com",
+  "type": "REGISTER" | "FORGOT_PASSWORD"
+}
+```
 
-- Có thể render cái component mình thằng cái email string sau đó chúng ta chỉ cần sử dụng ở trong cái `EmailService` của chúng ta là được
+### **Logic xử lý:**
 
-- Bên `Resend` chúng ta không cần phải chuyển đổi nó thành HTML làm gì mà chúng ta chỉ cần đưa nguyên cái component vào là được luôn
+```typescript
+if (type === 'REGISTER') {
+  // Kiểm tra email đã tồn tại chưa
+  if (emailExists) {
+    throw new ConflictException('Email đã tồn tại')
+  }
+  // Gửi OTP
+} else if (type === 'FORGOT_PASSWORD') {
+  // Xử lý quên mật khẩu
+}
+```
 
-- Chúng ta đã sử dụng React-Email để mà gửi email thành công rồi nên là khi mà cần chỉnh sửa một cái gì đó thì chúng ta chỉ cần vào cái `jsx` của React chỉnh sửa lại là được mà thôi. -> Quá là tiện lợi cho mọi thứ
+### **Shared Module Strategy**
 
-## Bài 54 Tư duy về thiết kế Authentication và Authorization cho website
+🏗️ **Kiến trúc:**
 
-- Tiếp đến cái vấn đề tiếp theo là học cách về tư duy thiết kế `Authentication` và `Authorization` cho cái website của chúng ta
+- **findUserByEmail:** Đặt trong SharedModule (dùng chung nhiều nơi)
+- **Nguyên tắc:** SharedModule chỉ import dependencies của chính nó
+- **Lợi ích:** Tránh circular dependency, dễ maintain
 
-- Flow `refreshToken` chúng ta sẽ kiểm tra là cái RT có hợp lệ hay không nếu mà hợp lệ thì chúng ta sẽ cập nhật `userAgent`, `ip`, `lastActive`, `isActive=true` cho Device
+---
 
-- Chúng ta muốn cái database của chúng ta giảm gánh nặng hơn thì chúng ta chấp nhận sẽ không query xuống database để mà logout thiết bị ngay lập tức
+## 🎯 **Bài 47: Code logic tạo OTP khi đăng ký**
 
-## Bài 55 Thêm model Device và hướng dẫn migrate
+### **Implementation Details**
 
-- Thực hiện thêm model `Device` và migrate cái Device đó vào `Prisma model`, Thì chỉ có những kiểu là `Scala Type` thì nó mới ảnh hưởng tới cái quá trình chúng ta migration dữ liệu vì những thằng này nó sẽ tạo ra `column` ở bên trong một cái table
+#### **Error Handling Strategy**
 
-- Khi mà thêm một table mới vào thì cũng ko ảnh hưởng đến quá trình `migration` chỉ khi nào xóa hoặc cập nhật table mới thì mới ảnh hưởng đến quá trình `migration` mà thôi
+- 🎯 **Mục tiêu:** Sử dụng `UnprocessableEntity` thay vì `ConflictException`
+- 📋 **Lý do:** Chỉ rõ field nào bị lỗi trong quá trình gửi OTP
+- 🔄 **Tương lai:** Gom các lỗi chung để tái sử dụng
+
+#### **Repository Organization**
+
+- 📁 **Quyết định:** Đưa `VerificationCodeRepo` vào `AuthRepo`
+- 🎯 **Lý do:** Chỉ thực hiện vài thao tác cơ bản (create, delete)
+- ⚡ **Lợi ích:** Giảm complexity, code gọn gàng hơn
+
+#### **Logic cập nhật OTP**
+
+```typescript
+// Khi người dùng nhấn "Gửi lại mã"
+// → Cập nhật code cũ thay vì tạo mới
+// → Code cũ bị vô hiệu hóa
+await updateVerificationCode({
+  email,
+  type,
+  newCode: generateNewOTP(),
+  expiresAt: new Date(Date.now() + OTP_EXPIRES_IN),
+})
+```
+
+### **Kết quả**
+
+✅ **Hoàn thành:** Logic đăng ký OTP  
+⏳ **Tiếp theo:** Logic verify OTP (bài sau)
+
+---
+
+## 🎯 **Bài 48: Cập nhật xác thực OTP cho chức năng đăng ký**
+
+### **Mục tiêu**
+
+Thêm tính năng verify OTP code cho API register
+
+### **Database Query Optimization**
+
+#### **Index Strategy:**
+
+```prisma
+// Composite Index để query nhanh
+@@index([code, email, type])
+```
+
+#### **Query Logic:**
+
+```typescript
+// Phải tìm theo cụm index để tận dụng performance
+const verification = await findVerificationCode({
+  code,
+  email,
+  type,
+  expiresAt: { gt: new Date() }, // Chưa hết hạn
+})
+```
+
+### **Validation Process**
+
+1. **Tìm kiếm:** Query theo composite index `(code, email, type)`
+2. **Kiểm tra hạn:** `expiresAt > now()`
+3. **Xác thực:** Code có đúng không
+4. **Cleanup:** Xóa code sau khi verify thành công
+
+### **Kết quả**
+
+✅ **Hoàn thành:** Xác thực VerificationCode khi đăng ký thành công
+
+---
+
+## 🎯 **Bài 49: Gửi OTP đến email bằng Resend**
+
+### **Mục tiêu**
+
+Tích hợp service gửi email với Resend
+
+### **Setup Resend**
+
+```typescript
+// Environment
+RESEND_API_KEY = your_api_key_here
+
+// Service Implementation
+import { Resend } from 'resend'
+
+const resend = new Resend(process.env.RESEND_API_KEY)
+```
+
+### **Email Template**
+
+- 📧 **Sender:** your-app@domain.com
+- 🎯 **Subject:** "Mã xác thực OTP"
+- 📝 **Content:** HTML template với mã OTP
+
+---
+
+## 🎯 **Bài 50: Xác thực domain trên Resend**
+
+### **Domain Verification**
+
+- 🌐 **Mục tiêu:** Xác thực domain để gửi email từ domain riêng
+- 🔧 **Quy trình:** Thêm DNS records theo hướng dẫn Resend
+- ✅ **Kết quả:** Có thể gửi email từ địa chỉ chuyên nghiệp
+
+---
+
+## 🎯 **Bài 51: Gửi email bằng template HTML**
+
+### **HTML Template Strategy**
+
+- 📄 **Format:** Sử dụng HTML template cho email đẹp mắt
+- 🎨 **Design:** Responsive, professional looking
+- 🔧 **Variables:** Dynamic content với OTP code
+
+---
+
+## 🎯 **Bài 52: Giới thiệu về React email**
+
+### **React Email Overview**
+
+- ⚛️ **Technology:** React-based email template system
+- 💡 **Lợi ích:** Component-based, reusable, maintainable
+- 🛠️ **So sánh:** Tốt hơn Handlebars template
+
+---
+
+## 🎯 **Bài 53: Sử dụng React email làm email template**
+
+### **Implementation**
+
+#### **Setup React Email:**
+
+```bash
+npm install react-email
+npm install @react-email/components
+```
+
+#### **Template Component:**
+
+```tsx
+// emails/otp.tsx
+import { Html, Head, Body, Container, Text } from '@react-email/components'
+
+export default function OTPEmail({ code }: { code: string }) {
+  return (
+    <Html>
+      <Head />
+      <Body>
+        <Container>
+          <Text>Mã OTP của bạn là: {code}</Text>
+        </Container>
+      </Body>
+    </Html>
+  )
+}
+```
+
+#### **Integration với Resend:**
+
+```typescript
+import { render } from '@react-email/render'
+import OTPEmail from '../emails/otp'
+
+// Render component thành HTML string
+const htmlContent = render(OTPEmail({ code: otpCode }))
+
+// Hoặc truyền trực tiếp component (Resend hỗ trợ)
+await resend.emails.send({
+  from: 'sender@domain.com',
+  to: userEmail,
+  subject: 'Mã xác thực OTP',
+  react: OTPEmail({ code: otpCode }),
+})
+```
+
+### **Lợi ích**
+
+- ⚡ **Tiện lợi:** Chỉnh sửa template dễ dàng trong JSX
+- 🔄 **Reusable:** Component có thể tái sử dụng
+- 🎨 **Professional:** Email đẹp mắt, responsive
+
+### **Kết quả**
+
+✅ **Hoàn thành:** Sử dụng React Email để gửi email thành công
+
+---
+
+## 🎯 **Bài 54: Tư duy về thiết kế Authentication và Authorization**
+
+### **Authentication Flow Design**
+
+#### **RefreshToken Flow:**
+
+```
+1. Client gửi RefreshToken → Server
+2. Server validate RT → Kiểm tra hợp lệ
+3. Nếu hợp lệ → Cập nhật Device info:
+   - userAgent
+   - ip
+   - lastActive
+   - isActive = true
+4. Trả về AccessToken mới
+```
+
+#### **Database Load Optimization:**
+
+- 🎯 **Chiến lược:** Chấp nhận không logout thiết bị ngay lập tức
+- 💡 **Lý do:** Giảm gánh nặng database
+- ⚖️ **Trade-off:** Performance vs Real-time logout
+
+#### **Security Considerations:**
+
+- 🔐 **Device tracking:** Theo dõi thiết bị đăng nhập
+- 📍 **IP monitoring:** Phát hiện đăng nhập bất thường
+- ⏰ **Session management:** Quản lý phiên làm việc hiệu quả
+
+---
+
+## 🎯 **Bài 55: Thêm model Device và hướng dẫn migrate**
+
+### **Device Model Design**
+
+#### **Schema Structure:**
+
+```prisma
+model Device {
+  id          String   @id @default(cuid())
+  userId      String
+  deviceId    String   @unique
+  userAgent   String?
+  ip          String?
+  lastActive  DateTime
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  user        User     @relation(fields: [userId], references: [id])
+
+  @@map("devices")
+}
+```
+
+#### **Migration Impact:**
+
+- ✅ **Thêm table mới:** Không ảnh hưởng migration
+- ⚠️ **Scalar types:** Chỉ ảnh hưởng khi thêm/sửa columns
+- 🔧 **Best practice:** Chỉ lo lắng khi xóa/cập nhật table existing
+
+### **Key Points:**
+
+- 📊 **Tracking:** Theo dõi thiết bị người dùng
+- 🔄 **Session:** Quản lý phiên đăng nhập
+- 🛡️ **Security:** Phát hiện đăng nhập bất thường

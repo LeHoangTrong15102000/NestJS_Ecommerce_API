@@ -8,6 +8,9 @@
   "scripts": {
     "init-seed-data": "ts-node initialScript/index.ts",
     "create-permissions": "ts-node initialScript/create-permissions.ts",
+    "add-languages": "ts-node initialScript/add-languages.ts",
+    "add-brands": "ts-node initialScript/add-brands.ts",
+    "add-languages-brands-data": "ts-node initialScript/add-sample-data.ts",
     "email:dev": "email dev",
     "email:build": "email build",
     "email:export": "email export",
@@ -23,8 +26,8 @@
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
     "test:e2e": "jest --config ./test/jest-e2e.json",
-    "test:unit": "jest --testPathPattern=spec.ts --testPathIgnorePatterns=e2e",
-    "test:integration": "jest test/integration",
+    "test:unit": "jest --testPathPattern=spec.ts --testPathIgnorePatterns=e2e --testPathIgnorePatterns=integration",
+    "test:integration": "jest --config ./test/jest-integration.json",
     "test:ci": "jest --coverage --ci --reporters=default --reporters=jest-junit"
   },
   "dependencies": {
@@ -38,6 +41,7 @@
     "@prisma/client": "^6.5.0",
     "@react-email/components": "0.0.33",
     "bcrypt": "^5.1.1",
+    "bcryptjs": "^3.0.2",
     "date-fns": "^4.1.0",
     "dotenv": "^16.4.7",
     "googleapis": "^146.0.0",
@@ -63,6 +67,7 @@
     "@swc/cli": "^0.6.0",
     "@swc/core": "^1.10.7",
     "@types/bcrypt": "^5.0.2",
+    "@types/bcryptjs": "^3.0.0",
     "@types/express": "^5.0.0",
     "@types/jest": "^29.5.14",
     "@types/mime-types": "^2.1.4",

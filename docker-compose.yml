@@ -23,18 +23,53 @@ services:
     ports:
       - '3000:3000'
     environment:
-      DATABASE_URL: postgresql://ecom_user:ecom_password@postgres:5432/ecom_db
+      # Database cho Docker - GHI ĐÈ file .env
+      DATABASE_URL: postgresql://ecom_user:ecom_password@postgres:5432/ecom_db?schema=public
+
+      # App Configuration - GHI ĐÈ file .env
+      APP_NAME: 'NestJS Ecommerce Platform Docker'
       NODE_ENV: development
-      JWT_SECRET: your-super-secret-jwt-key-for-development
-      JWT_EXPIRES_IN: 7d
       PORT: 3000
+
+      # JWT Configuration - GHI ĐÈ file .env
+      ACCESS_TOKEN_SECRET: hoc_lap_trinh_access_token_secret_docker
+      ACCESS_TOKEN_EXPIRES_IN: 15m
+      REFRESH_TOKEN_SECRET: hoc_lap_trinh_refresh_token_secret_docker
+      REFRESH_TOKEN_EXPIRES_IN: 7d
+      SECRET_API_KEY: hoc_lap_trinh_secret_api_key_docker
+
+      # Admin Default User - GHI ĐÈ file .env
+      ADMIN_NAME: Le Hoang Trong
+      ADMIN_PASSWORD: lehoangtrongkhoahocnestjs
+      ADMIN_EMAIL: langtupro0460@gmail.com
+      ADMIN_PHONENUMBER: 0909090909
+
+      # OTP Configuration - GHI ĐÈ file .env
+      OTP_EXPIRES_IN: 5m
+      RESEND_API_KEY: re_XkxvWgqV_6y7dGNhwnvDPddk3SKQzBa7w_docker
+
+      # Google OAuth - GHI ĐÈ file .env
+      GOOGLE_CLIENT_ID: 103312636453-17j1h7gg1og0a4jbomunecuhk2c7mu95.apps.googleusercontent.com
+      GOOGLE_CLIENT_SECRET: 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_docker
+      GOOGLE_REDIRECT_URI: http://localhost:3000/auth/google/callback
+      GOOGLE_CLIENT_REDIRECT_URI: http://localhost:3300/oauth-google-callback
+
+      # Media Prefix - GHI ĐÈ file .env
+      PREFIX_STATIC_ENDPOINT: http://localhost:3000/media/static
+
+      # AWS S3 Configuration - GHI ĐÈ file .env
+      S3_REGION: hcm
+      S3_ACCESS_KEY_ID: 4Q53ALTPATVEUK4Z24Y7
+      S3_SECRET_ACCESS_KEY: 9TFg82EBxe5ygYojehsBHTshuTrMqXkha6NdxDDN
+      S3_BUCKET_NAME: ecommerce-super-nestjs
     depends_on:
       - postgres
     networks:
       - ecom-network
     volumes:
-      - ./uploads:/app/uploads # Nếu có file uploads
-      - ./.env:/app/.env # Mount file .env
+      - ./uploads:/app/uploads
+      # Mount specific folders thay vì .env file
+      - ./prisma:/app/prisma
 
   # Redis (nếu cần cache)
   redis:

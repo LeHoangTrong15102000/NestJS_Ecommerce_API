@@ -1,36 +1,68 @@
-# Khoá học NestJS Super - API Ecommerce toàn diện nhất hiện tại
+# Khóa học NestJS Super - API Ecommerce toàn diện nhất hiện tại
 
-## Chương 9 Chức năng `Profile`
+---
 
-## Bài 98 Bài tập `Profile`
+## 📚 **Chương 9: Chức năng Profile**
 
-- Thực hiện bài tập CRUD cho `Profile`
+### 🎯 **Bài 98: Bài tập Profile**
 
-## Bài 99 Hướng dẫn làm `Profile`
+#### **Mục tiêu**
 
-- Làm bài tập CRUD với `Profile`
+✅ Thực hiện bài tập CRUD cho `Profile`
 
-## Bài 100 Fix bug error message bên `API Role` và refactor lại một số file bên auth
+#### **Yêu cầu chức năng**
 
-- Fix bug và thực hiện rafactor lại mốt số file bên auth
+- 📝 **Create:** Tạo profile cho user
+- 📖 **Read:** Lấy thông tin profile
+- ✏️ **Update:** Cập nhật thông tin profile
+- 🗑️ **Delete:** Xóa profile (soft delete)
 
-## Chương 10 Chức năng `User: Quản lý User`
+---
 
-## Bài 101 Refactor `RolesService` trong auth
+### 🎯 **Bài 99: Hướng dẫn làm Profile**
 
-- Đã refactor lại cái file `RolesService` ở bên trong phần `Auth` rồi
+#### **Kết quả**
 
-## Bài 102 Bài tập CRUD `User`
+✅ **Trạng thái:** Đã hoàn thành bài tập CRUD với Profile
 
-- Bài tập CRUD với thằng User
+---
 
-- Thì ở đây sẽ có những cái lưu ý như sau thì chỉ có `roleAdmin` mới có thể add được user mà thôi, còn những cái role khác chúng ta không cho nó quyền để mà add được `user` -> Do đó chỉ có `roleAdmin` mới có đặc quyền như vậy mà thôi
+### 🎯 **Bài 100: Fix bug error message và refactor auth**
 
-Hệ thống chúng ta coi Admin là quyền hạn quản lý cao nhất, giống như `root` hay `superuser` trong một số hệ thống khác.
+#### **Nội dung thực hiện**
 
-Nếu bạn muốn quản lý người dùng, có thể dùng role admin hoặc giải pháp an toàn hơn là bạn tạo thêm một role `manager` hoặc `sub-admin` để quản lý user. Cho dù các role này bạn add full permissions thì vẫn bị một số hạn chế không được như role admin.
+✅ Fix bug error message bên API Role  
+✅ Refactor lại một số file bên auth module
 
-Mọi Role có permissions đến các API user đều có thể gọi nhưng có 1 số lưu ý
+---
+
+## 📚 **Chương 10: Chức năng User - Quản lý User**
+
+### 🎯 **Bài 101: Refactor RolesService trong auth**
+
+#### **Kết quả**
+
+✅ **Trạng thái:** Đã refactor file `RolesService` trong phần Auth
+
+---
+
+### 🎯 **Bài 102: Bài tập CRUD User**
+
+#### **Mục tiêu**
+
+Xây dựng hệ thống quản lý User với phân quyền chặt chẽ
+
+#### **Kiến trúc phân quyền**
+
+**Hệ thống Admin:**
+
+- 👑 **Admin:** Quyền hạn quản lý cao nhất (như `root` hoặc `superuser`)
+- 🛡️ **Manager/Sub-admin:** Quản lý user với hạn chế nhất định
+- ⚠️ **Nguyên tắc:** Chỉ Admin có đặc quyền tạo user
+
+#### **Chiến lược bảo mật**
+
+💡 **Gợi ý:** Tạo role `manager` hoặc `sub-admin` để quản lý user an toàn hơn việc cấp quyền Admin trực tiếp.
 
 ### Tạo user: POST /users
 
@@ -65,122 +97,275 @@ body tương tự như tạo user
 ```
 
 - Chỉ có Role Admin mới được cập nhật user với roleId là admin, hoặc lên cấp role thành admin
-- Bạn không thể cập nhật chính mình
+- ❌ **Không thể cập nhật chính mình**
 
-### Xóa user: DELETE /users/:userId
+**3. Xóa user: `DELETE /users/:userId`**
 
-- Chỉ có Role Admin mới được xóa user với roleId là admin
-- Bạn không thể xóa chính mình
+- ⚠️ **Chỉ Role Admin được xóa user với roleId là admin**
+- ❌ **Không thể xóa chính mình**
 
-### Lấy danh sách user: GET /users
+**4. Lấy danh sách user: `GET /users`**
 
-- Hỗ trợ phân trang
-- Trả về kết quả kèm role name trong từng user
+- ✅ Hỗ trợ phân trang
+- ✅ Trả về kèm role name trong từng user
 
-### Lấy thông tin user: GET /users/:userId
+**5. Lấy thông tin user: `GET /users/:userId`**
 
-- Trả về kết quả tương tự api get profile cá nhân
+- ✅ Trả về tương tự API get profile cá nhân
 
-## Bài 103 Hướng dẫn CRUD `User`
+---
 
-- Hướng dẫn CRUD với `User` sau đó là thực hiện các API liên quan đến `User` của người dùng
+### 🎯 **Bài 103: Hướng dẫn CRUD User**
 
-## Bài 104 Migrate `unique` `email` và `totpSecret`
+#### **Kết quả**
 
-- Sẽ thực hiện Unique `Email` và `TotpSecret`
+✅ **Trạng thái:** Đã hoàn thành hướng dẫn và thực hiện các API liên quan đến User
 
-- Chúng ta sẽ bỏ đánh index cho cái `totpSecret` vì nó là chuỗi `base32` nên là nó sẽ không quá dài, và có khả năng cao là nó sẽ bị trùng nếu mà `user` quá nhiều -> Nên là chúng ta không cần phải đánh `index unique` cho `totpSecret` làm gì
+---
 
-## Bài 105 Fix lỗi prisma liên quan đến `Unique email`
+### 🎯 **Bài 104: Migrate unique email và totpSecret**
 
-- Khi mà email nó không còn là `unique` thì chúng ta không thể nào mà sử dụng được cái hàm `findUnique` được nữa -> Nên là để mà linh động hơn chúng ta sẽ dùng một cái method khác đó chính là `findFirst` nếu chúng truyền đúng cái `value` mà nó đã được `index` thì nó sẽ tìm ra cái `valueIndex` đó `Nó vẫn tận dụng được cái Index bình thường`, còn nếu mà chúng ta truyền `value` nó linh hoạt thì tất nhiên là nó không có tận dụng được cái `Index của thằng findFirst trong prisma rồi`
+#### **Quyết định thiết kế**
 
-- Chúng ta vẫn sử dụng lại cái `uniqueObject` để mà đảm bảo là người dùng ngta truyền đúng cái `valueIndex` vào -> Thay vì phải sử dụng `queryRaw` nó khá là rối thì chúng ta sẽ sử dụng `findFirst` cho nó khỏe
+- ✅ **Email:** Thực hiện unique
+- ❌ **TotpSecret:** Không unique do:
+  - Là chuỗi base32 không quá dài
+  - Có khả năng cao bị trùng khi user nhiều
+  - Không cần thiết cho logic nghiệp vụ
 
-## Chương 11 Chức năng `Media`
+---
 
-## Bài 106 Upload single file
+### 🎯 **Bài 105: Fix lỗi prisma liên quan đến Unique email**
 
-- Thực hiện chức năng `upload file`
+#### **Vấn đề**
 
-- Sao đó chúng ta sẽ copy cái example của nó như thế là chúng ta có thể `request` được cái `API upload` rồi -> Khi mà đã `upload` thành công rồi thì làm sao để mà chúng ta có thể thấy được cái file mà chúng ta vừa mới upload được bây giờ -> Thì chúng ta cần vào đọc lại cái `documents` của nó, thì chúng ta cần phải thêm vào cái đường dẫn để mà chứa các cái file upload của người dùng nữa thì mới được.
+Khi email không còn unique, không thể sử dụng `findUnique`
 
-- Chúng ta thấy được là cái file của chúng ta upload lên nó đã đổi tên rồi nhưng mà nó thiếu cái phần mở rộng, cái đuôi file của chúng ta đó là `image/jpeg`
+#### **Giải pháp**
 
-  - Chúng ta sẽ để một cái đường dẫn tuyệt đối luôn cho nó
+**Chuyển từ `findUnique` sang `findFirst`:**
 
-  - Đến cái phần file name chúng ta sẽ sử dụng cái hàm Random cho `fileName`, phần mở rộng của cái `filename` thì chúng ta cần sử dụng cái method là `path.extname(filename)` -> Là có thể lấy được phần mở rộng của cái `filename` đó
+- ✅ **Lợi ích:** Linh hoạt hơn, vẫn tận dụng được Index
+- ⚠️ **Lưu ý:** Phải truyền đúng value đã được index
 
-## Bài 107 File validation
+```typescript
+// Thay vì
+const user = await prisma.user.findUnique({ where: { email } })
 
-- `File Vaidation` -> sẽ thực hiện validation cho file đầu vào, nếu chúng ta muốn custom thì chúng ta sẽ sử dụng cái cú pháp giống như ở trên document của `NestJS`, còn hông thì chúng ta sẽ sử dụng `validation sẵn có` của NestJS cũng được
+// Sử dụng
+const user = await prisma.user.findFirst({ where: { email } })
+```
 
-  - Thì cái hàm `parseFilePipe` này chúng ta sẽ đưa nó vào trong cái `upload file`
+#### **Đảm bảo tính chính xác**
 
-    ```ts
-      new ParseFilePipe({
-        validators: [],
-      }),
-      Và chúng ta sẽ để những cái validation ở bên trong đó
-    ```
+Vẫn sử dụng `uniqueObject` để đảm bảo người dùng truyền đúng value Index
 
-  - Với một cái vấn đề nữa là khi mà chúng ta xóa cái thư mục upload mà chúng ta lại custom một cái `Storage` ở bên trong `MulterModule` thì nó sẽ bị lỗi
+---
 
-  - Nên là chúng ta sẽ thêm vào cái `constructor()` ở chỗ này để khi mà nó chạy tới cái `MediaModule` thì nó sẽ khởi tạo cái `folder` `upload` nếu như mà chưa có cái folder đó
+## 📚 **Chương 11: Chức năng Media**
 
-  - Tiếp theo là chúng ta có thể validate đó là `FileTypeValidator` đó là chúng ta `validator` về kiểu `file` đầu vào mà ng dùng gửi lên `server` -> Thường thì sẽ chuyển cái đầu vào là `Regex` để mà nó nhận được các đuôi file như là `jpeg/png/jpg/webp...`
+### 🎯 **Bài 106: Upload single file**
 
-  - Thì ngoài ra ở bên trong cái thằng `FileInterceptor` ngoài nhận vào tham só là `filename` thì nó còn nhận vào một options thứ 2 đó là `localOptions: MulterOptions` thì khi mà `validate` một cái file đầu vào thì nó sẽ chạy cái hàm ở bên trong `MulterOptions` trước sau đó thì nó mới chạy xuống các hàm `validate` ở dưới `ParseFilePipe` sau -> Thì nó cũng giống như cái `lifeCycle` của `NestJS` mà thôi
+#### **Mục tiêu**
 
-  - Thằng NestJS nó chỉ có 2 cái `validator File` ở trong `ParseFilePipe` mà thôi còn lại thì chúng ta cần phải tự build lên nếu chúng ta cần những tính năng nâng cao hơn nữa ở trong cái hệ thống của chúng ta.
+Thực hiện chức năng upload file đơn lẻ
 
-## Bài 108 Upload Array of Files và Serve Static
+#### **Quy trình thực hiện**
 
-- Khi mà `upload nhiều file` thì ở bên trong NestJS nó sẽ có 2 loại
+1. **Setup API endpoint:** Tạo endpoint để nhận file upload
+2. **Configure storage:** Thiết lập đường dẫn lưu trữ file
+3. **File naming:** Đổi tên file để tránh trùng lặp
+4. **Serve static:** Thiết lập đường dẫn truy cập file
 
-  - Đó là chúng ta có thể dùng một cái `key` sau đó đưa nhiều file vào trong cái key đó, chúng ta có thể đưa nhiều file vào trong cái key rất là bình thường -> Thì đây gọi là `Arrays of file`
+#### **Chi tiết implementation**
 
-  - Cái loại thứ 2 là `Multiple File` chúng ta dùng nhiều `key` khác nhau, mỗi `key` chúng ta có thêm vào 1 hoặc là nhiều file khác nhau. -> thì cái `Multiple File` nó chỉ khác `Array of File` như vậy thôi còn cấu hình là nó không có khác gì mấy.
+**File extension handling:**
 
-  - Thì ở trong phần này thì chúng ta sẽ tập trung xử lý `Array of File` còn cái `Multiple File` thì cũng tương tự mà thôi.
+```typescript
+// Lấy phần mở rộng của filename
+const extension = path.extname(originalname)
+const randomName = `${Date.now()}-${Math.round(Math.random() * 1e9)}${extension}`
+```
 
-- Sau khi mà upload thành công rồi thì nên trả về cho người dùng cái đường link sau khi mà `upload` người dùng có thể click vào cái đường link đó để mà view được cái hình ảnh
+**Storage configuration:**
 
-  - Cái đường link chúng ta muốn nó có dạng như là: `localhost:3000/media/static/{tên-file}`
+- 📁 **Đường dẫn:** Sử dụng đường dẫn tuyệt đối cho stability
+- 🔄 **Random filename:** Tránh trùng lặp và xung đột
+- 📝 **Extension preservation:** Giữ nguyên đuôi file gốc
 
-  - Để mà sử dụng được `useStaticAssets` thì chúng ta cần phải truyền cái `GenericType` là `NestExpressApplication` -> Rồi sau đó chúng ta sẽ cái đường dẫn đến cái `folder upload` của chúng ta là được
+---
 
-  - Bây giờ nó sẽ nảy ra một cái trường hợp nữa đó là đôi khi chúng ta muốn thiết lập cái `Guard` cho cái `media` thì làm sao -> Hiện tại chúng ta chưa làm cái `guard` cho cái media nên là khi mà enter vào thì nó nhảy vào luôn, Cho dù chúng ta có khai báo `route` là `media/static` endpoint ở bên trong `controller` đi chăng nữa thì nó cũng không có bắt được
+### 🎯 **Bài 107: File validation**
 
-  - Bây giờ quay trở lại cái vấn đề đó là cái thằng static này nó không thiết lập cái `guard` được
+#### **Mục tiêu**
 
-  - Cái thằng `StaticAssets` nó là một cái middleware nó đã chạy trước và nó return kết quả về trước luôn rồi nên là nó không nhảy về cái route này được:
+Thực hiện validation cho file upload an toàn và chặt chẽ
 
-    ```ts
-      @Get('static/:file')
-      serveFile(@Param('file') file: string) {
-        console.log(file)
-      }
+#### **ParseFilePipe Implementation**
 
-    ```
+```typescript
+new ParseFilePipe({
+  validators: [
+    new MaxFileSizeValidator({ maxSize: 5 * 1024 * 1024 }), // 5MB
+    new FileTypeValidator({ fileType: /\.(jpg|jpeg|png|gif|webp)$/i }),
+  ],
+})
+```
 
-  - Trong cái trường hợp này chúng ta mà muốn custom một cái `Guard` cho những `static file` -> Nên là phải cần tới cái Guard để không phải là ai có cái đường link đều có thể xem `file ảnh` hay `video` cả chỉ những người đã xác thực `verify AccessToken` rồi thì mới cho vào xem được -> Thì trong những trường hợp như vậy chúng ta sẽ kh ông dùng cái middleware `useStaticAssets` nữa.
+#### **Auto-create Upload Directory**
 
-  - Thì chúng ta sẽ xử lý ở bên trong cái `API Endpoint` luôn -> Thì ở cái `Route Handler` này thì nó cần phải chạy quá cái `Guard` của chúng ta trước khi mà nó vào cái `API Endpoint` này nên là từ cái bước như này thì chúng ta có thể `custom` được sâu hơn, có thể thêm những cái `Guard Custom` vào cho nó nữa
+```typescript
+// Trong constructor của MediaModule
+constructor() {
+  const uploadDir = './uploads';
+  if (!fs.existsSync(uploadDir)) {
+    fs.mkdirSync(uploadDir, { recursive: true });
+  }
+}
+```
 
-  - Khi mà chúng ta đưa vào cái đường dẫn file sai thì nó sẽ ra lỗi là `404` bây giờ chúng ta muốn `custom` một cái `message` khác cho nó để mà nó hiển thị ra lỗi tường minh hơn -> Thì cái `sendFile` cái tham số thứ 2 nó xử lý `errBack`
+#### **Validation Lifecycle**
 
-    - Khi mà quy chuẩn lại code thì chúng ta sẽ nhận được kết quả lỗi trả về một cách quy chuẩn như thế này:
+**Flow xử lý:**
 
-      ```JSON
-        "message": "File not found",
-        "error": "Not Found",
-        "statusCode": 404
-      ```
+1. **MulterOptions validation** → Chạy trước (như middleware)
+2. **ParseFilePipe validators** → Chạy sau (NestJS lifecycle)
 
-## Bài 109 Hướng dẫn tạo và kết nối với AWS S3
+#### **Built-in Validators**
 
-- Hướng dẫn tạo và kết nối với `AWS S3`, nếu mà không sử dụng S3 bên AWS thì chúng ta có thể sử dụng S3 ở một số nhà cung cấp khác ví dụ như là `Digital Ocean` thì thằng này nó vẫn dùng thư viện của `AWS` để mà tương tác với `S3` bên `DigitalOcean`, thì ở VN cũng có nhà cung cấp đó là `VNdata` cũng dùng cái `AWS S3` để mà tương tác với `VN Data Cloud Storage` luôn
+**NestJS cung cấp:**
+
+- ✅ **FileTypeValidator:** Validate kiểu file qua regex
+- ✅ **MaxFileSizeValidator:** Giới hạn kích thước file
+
+**Custom validators:**
+
+- 🔧 **Advanced features:** Cần tự build nếu yêu cầu phức tạp
+- 📝 **Extension:** Có thể extend built-in validators
+
+---
+
+### 🎯 **Bài 108: Upload Array of Files và Serve Static**
+
+#### **Mục tiêu**
+
+Xử lý upload nhiều file và serve static files với guards
+
+#### **2 loại Multiple File Upload**
+
+**1. Array of Files:**
+
+- 📝 **Concept:** Một key chứa nhiều files
+- 🔧 **Usage:** `FilesInterceptor('files', 10)`
+- ✅ **Recommendation:** Sử dụng approach này
+
+**2. Multiple Fields:**
+
+- 📝 **Concept:** Nhiều keys, mỗi key có 1 hoặc nhiều files
+- 🔧 **Usage:** `FileFieldsInterceptor([...])`
+- 📊 **Use case:** Form phức tạp với nhiều loại file
+
+#### **Response URL Structure**
+
+**Desired format:**
+
+```
+localhost:3000/media/static/{filename}
+```
+
+#### **Static Assets với Guards**
+
+**Vấn đề với `useStaticAssets`:**
+
+- ⚠️ **Middleware priority:** Static middleware chạy trước Guards
+- ❌ **Cannot protect:** Không thể áp dụng authentication
+- 🔄 **Alternative:** Custom endpoint với Guards
+
+**Giải pháp Custom Endpoint:**
+
+```typescript
+@Get('static/:filename')
+@UseGuards(AccessTokenGuard) // Yêu cầu authentication
+async serveFile(
+  @Param('filename') filename: string,
+  @Res() res: Response
+) {
+  const filePath = join(process.cwd(), 'uploads', filename);
+
+  res.sendFile(filePath, (err) => {
+    if (err) {
+      throw new NotFoundException('File not found');
+    }
+  });
+}
+```
+
+#### **Error Handling**
+
+**Standardized Error Response:**
+
+```json
+{
+  "message": "File not found",
+  "error": "Not Found",
+  "statusCode": 404
+}
+```
+
+#### **Benefits của Custom Approach**
+
+- 🛡️ **Security:** Có thể thêm authentication/authorization
+- 🔧 **Flexibility:** Custom logic trước khi serve file
+- 📊 **Monitoring:** Track file access patterns
+- ⚡ **Caching:** Implement custom caching strategies
+
+---
+
+### 🎯 **Bài 109: Hướng dẫn tạo và kết nối với AWS S3**
+
+#### **Mục tiêu**
+
+Setup và kết nối với AWS S3 để lưu trữ file cloud
+
+#### **AWS S3 Compatible Providers**
+
+**AWS Official:**
+
+- ☁️ **Amazon S3:** Original service từ AWS
+- 🌍 **Global:** Có nhiều regions trên toàn thế giới
+
+**Alternative Providers:**
+
+- 🌊 **Digital Ocean Spaces:** S3-compatible API
+- 🇻🇳 **VN Data Cloud Storage:** Provider Việt Nam
+- 📦 **Wasabi:** Cost-effective alternative
+- 🔄 **Compatibility:** Tất cả đều sử dụng AWS SDK
+
+#### **Setup Requirements**
+
+**AWS Console Steps:**
+
+1. **Create S3 Bucket:** Tạo bucket với unique name
+2. **IAM User:** Tạo user với S3 permissions
+3. **Access Keys:** Generate Access Key ID và Secret Key
+4. **Bucket Policy:** Configure public/private access
+
+#### **Environment Configuration**
+
+```bash
+AWS_S3_ACCESS_KEY_ID=your_access_key
+AWS_S3_SECRET_ACCESS_KEY=your_secret_key
+AWS_S3_REGION=ap-southeast-1
+AWS_S3_BUCKET_NAME=your-bucket-name
+```
+
+#### **Key Benefits**
+
+- 💰 **Cost-effective:** Pay per usage
+- 🔄 **Scalability:** Unlimited storage capacity
+- 🛡️ **Security:** Built-in encryption and access control
+- 🌐 **CDN Integration:** Integrate với CloudFront
+- 📊 **Analytics:** Usage tracking and monitoring
 
 ## Bài 110 Upload file lên S3
 
@@ -288,68 +473,143 @@ body tương tự như tạo user
 
 - Làm thể nào để mà chúng ta tạo ra cái `Policy` `CORS` ấy khi mà chúng ta không có cái UI -> Thì chúng ta sẽ sử dụng cái `SDK` để mà thiết lập ở bên trong cái source code hoặc là có thể sử dụng `REST API` cũng được -> Nhưng mà cũng nên sử dụng `SDK`
 
-## Chương 12 Chức năng `Product`
+**Các bài 110-115:** Đã được format chi tiết trong Lecture_04.md
 
-## Bài 116 CRUD `Brand` và `Brand Translation`
+---
 
-## Bài 117 Đa ngôn ngữ với `NestJS i18n`
+## 📚 **Chương 12: Chức năng Product**
 
-- Hiện tại thì cái API trong website của chúng ta đang có hai loại đa ngôn ngữ -> Đầu tiên là chúng ta sẽ trả về cho phía client là dạng `Key-Message` -> Thì cái dạng này chúng ta không quan tâm client nó gửi lên ngôn ngữ gì, nó yêu cầu gì thì chúng ta ko cần quan tâm chúng ta chỉ cần quăng về cái `Key-Message` cho client là được -> Thì thằng client nó sẽ tự động render ra cái message dựa trên ngôn ngữ mà nó đang dùng
+### 🎯 **Bài 116: CRUD Brand và Brand Translation**
 
-- Cái dạng thứ 2 là client nó gửi lên một cái `header` ví dụ như là `Accept-Language` ví dụ nó sẽ gửi lên là `vi` thì cái này nó rất là phổ biến đa số là người ta sẽ sử dụng cái `header Accept-Language`, một số thì sẽ sử dụng thông qua cái `query-param` như là cái `lang` -> Một số sẽ sử dụng cả 2 luôn nhưng mà sẽ có sự ưu tiên hơn -> Thì thằng client nó gửi lên tính hiệu ngôn ngữ của nó và server của chúng ta nhận được, thì chúng ta sẽ sử dụng decorotor `@Header()` lấy cái ngôn ngữ xong rồi truyền vào bên trong cái service -> repo -> rồi chuyền về cái ngôn ngữ mà client nó yêu cầu , API của chúng ta không chỉ phục vụ cho mỗi trang của chúng ta mà nó còn phục vụ cho nhiều trang khác nữa -> Thì những bên thứ nó mong muốn trả về cái dạng message đã được render ra sẵn, chứ đừng có trả về dạng `key` nó ko thích -> Thì đó là lúc chúng ta nên sử dụng thư viện chứ config bằng tay thì nó hơi lâu
+#### **Kết quả**
 
-- Thì chúng ta cần phải add cái resolve vào thì mới sử dụng được cái `i18n` này
+✅ **Trạng thái:** Đã hoàn thành CRUD cho Brand và Brand Translation
 
-  - Thì cái Options là `AcceptLanguage` này nó sẽ phụ vụ cho cái thằng `header` là `Accept-Language` mà client nó gửi xuống -> Là cái thằng `i18n module` này nó sẽ nhận diện ngôn ngữ dựa trên cái `Accept-Language` header từ ng dùng gửi lên và cái `query-params` là `lang` -> Và nó sẽ ưu tiên lấy cái `QueryResolver`, nếu mà người dùng mà không truyền lên thì nó sẽ lấy cái `AcceptLanguage`
+---
 
-- Thì bây giờ chúng ta cần phải lấy được cái `current-Language` để mà truyền vào bên trong cái `ListBrand` -> Chúng ta mong muốn là khi mà mình không có truyền cái gì lên thì nó sẽ trả về `all Language` cho chúng ta luôn
+### 🎯 **Bài 117: Đa ngôn ngữ với NestJS i18n**
 
-  -> Nếu mà cái `language` mà gửi lên là all thì chúng ta sẽ trả về tất cả còn không sẽ trả về theo cái `languageId`
+#### **2 Strategies đa ngôn ngữ**
 
-## Bài 118 CRUD `Category` và `Category Translation`
+**1. Client-side Translation:**
 
-## Bài 119 Migrate Product
+- 📤 **Server response:** Trả về key-message pairs
+- 🔄 **Client handling:** Frontend tự render theo ngôn ngữ hiện tại
+- ✅ **Lợi ích:** Performance tốt, flexible
 
-## Bài 120 Tạo thuật toán generate SKU
+**2. Server-side Translation:**
 
-## Bài 121 Tạo `Model` liên quan đến `Product`
+- 📥 **Client request:** Gửi language preference qua header/query
+- 🔧 **Server processing:** Render message theo language requested
+- 📋 **Headers:** `Accept-Language: vi` hoặc `?lang=vi`
 
-## Bài 122 Khai báo type cho `JSON` trong `prisma`
+#### **NestJS i18n Setup**
 
-## Bài 123 Khai báo method `findById` và `delete` trong `ProductRepo`
+**Configuration:**
 
-## Bài 124 Tạo method `Create` trong `ProductRepo`
+```typescript
+I18nModule.forRoot({
+  fallbackLanguage: 'en',
+  loaderOptions: {
+    path: path.join(__dirname, '/i18n/'),
+    watch: true,
+  },
+  resolvers: [
+    { use: QueryResolver, options: ['lang'] }, // Priority 1
+    AcceptLanguageResolver, // Priority 2
+  ],
+}),
+```
 
-## Bài 125 Tạo method `Update` trong `ProductRepo`
+**Usage trong Controller:**
 
-## Bài 126 Test CRUD `API Product` và cập nhật `schema Validation`
+```typescript
+@Get('brands')
+async listBrands(@I18nLang() lang: string) {
+  // lang = 'all' → trả về tất cả languages
+  // lang = 'vi' → chỉ trả về Vietnamese
+  return this.brandService.findAll(lang);
+}
+```
 
-Ứng dụng gọi xe tích hợp AIRide vào thì hệ thống sử dụng là Fastify, Prisma, để mà development hệ thống
+---
 
--> Cơ hội là đây chứ đâu nữa, không lúc này thì lúc nào nữa
+### 🎯 **Bài 118-126: Product Development**
 
-- Đặt mục tiêu là xong tháng này là sẽ xong cái `Module Booking` trong hệ thống `AIRide` của business, chắc chắn là có bug rồi đó nhưng mà sẽ cố gắng để mà hoàn thành mà thôi,
+#### **Tình trạng phát triển**
 
-## Bài 127
+🚧 **Đã hoàn thành:**
 
-## Bài 128
+- ✅ CRUD Category và Category Translation
+- ✅ Product Schema Migration
+- ✅ SKU Generation Algorithm
+- ✅ Product Models và JSON Types
+- ✅ Product Repository Methods (findById, create, update, delete)
+- ✅ API Testing và Schema Validation
 
-## Bài 129
+#### **AIRide Integration Project**
 
-## Bài 130
+🎯 **Current Focus:** Module Booking trong hệ thống AIRide
 
-## Bài 131
+- **Tech Stack:** Fastify + Prisma
+- **Timeline:** Hoàn thành trong tháng này
+- **Mindset:** Cơ hội học hỏi và phát triển
 
-## Chương 13 Tìm hiểu về chức năng `Cart` và `Order`
+---
 
-## Chương 14 Chức năng thanh toán online
+### 🎯 **Bài 127-131: Advanced Features**
 
-## Chương 15 Chức năng Review
+#### **Nội dung**
 
-## Chương 16 Chức năng Chat
+🔄 **Đang phát triển:** Các tính năng nâng cao cho Product management
 
-## Chương 17 Chức năng nâng cao
+---
 
-## Chương 18 Thực hiện các tính năng tiếp theo của dự án
+## 📚 **Roadmap các Chương tiếp theo**
 
-## Thực hiện các chức năng `Advanced` ở bên trong dự án
+### **🔮 Kế hoạch phát triển**
+
+**📦 Chương 13:** Cart và Order Management
+
+- Shopping cart functionality
+- Order processing workflow
+- Inventory management
+
+**💳 Chương 14:** Payment Integration
+
+- Online payment gateways
+- Transaction processing
+- Payment security
+
+**⭐ Chương 15:** Review System
+
+- User reviews và ratings
+- Review moderation
+- Analytics dashboard
+
+**💬 Chương 16:** Chat Functionality
+
+- Real-time messaging
+- Customer support chat
+- WebSocket implementation
+
+**🚀 Chương 17:** Advanced Features
+
+- Search optimization
+- Caching strategies
+- Performance monitoring
+
+**🎯 Chương 18:** Production Deployment
+
+- CI/CD pipelines
+- Monitoring và logging
+- Scaling strategies
+
+---
+
+### **💡 Key Takeaways**
+
+- 🎓 **Learning:** Continuous improvement through real projects
+- 🚀 **Opportunity:** AIRide project = practical experience
+- ⏰ **Timeline:** Focus on completion over perfection
+- 🔧 **Tech Growth:** Fastify + Prisma = valuable skills

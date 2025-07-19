@@ -1,6 +1,5 @@
 import { Injectable } from '@nestjs/common'
-import { OAuth2Client } from 'google-auth-library'
-import { google } from 'googleapis'
+import { google, Auth } from 'googleapis'
 import { GoogleAuthStateType } from 'src/routes/auth/auth.model'
 import envConfig from 'src/shared/config'
 import { AuthRepository } from './auth.repo'
@@ -13,7 +12,7 @@ import { SharedRoleRepository } from 'src/shared/repositories/shared-role.repo'
 
 @Injectable()
 export class GoogleService {
-  private oauth2Client: OAuth2Client
+  private oauth2Client: Auth.OAuth2Client
   constructor(
     private readonly authRepository: AuthRepository,
     private readonly hashingService: HashingService,

@@ -28,6 +28,29 @@
 
 ## Project setup
 
+### 📦 Sample Data Scripts
+
+Để tự động tạo dữ liệu mẫu cho database:
+
+```bash
+# Tạo tất cả dữ liệu mẫu (Languages + Brands)
+npm run add-sample-data
+
+# Hoặc chạy từng bước riêng lẻ:
+npm run add-languages  # Thêm 15 ngôn ngữ
+npm run add-brands     # Thêm 10 thương hiệu nổi tiếng với bản dịch đa ngôn ngữ
+```
+
+📋 **Dữ liệu được tạo:**
+
+- ✅ 15 ngôn ngữ phổ biến (vi, en, zh, ja, ko, fr, de, es, it, ru, pt, ar, hi, th, id)
+- ✅ 10 thương hiệu nổi tiếng (Apple, Samsung, Nike, Adidas, Sony, LG, Coca-Cola, Microsoft, Google, Tesla)
+- ✅ 40+ bản dịch thương hiệu cho các ngôn ngữ khác nhau
+
+📖 **Chi tiết:** Xem [docs/SAMPLE_DATA_SCRIPTS.md](docs/SAMPLE_DATA_SCRIPTS.md)
+
+### 🛠️ Installation
+
 ```bash
 $ npm install
 ```
