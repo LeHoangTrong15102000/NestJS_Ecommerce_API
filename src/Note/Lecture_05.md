@@ -376,7 +376,6 @@ AWS_S3_BUCKET_NAME=your-bucket-name
 - Thì để mà kết nối với S3 thì chúng ta cần phải cài đặt 2 cái thư viện đó là `@aws-sdk/client-s3` và thư viện đó là `@aws-sdk/lib-storage`
 
 - Cái `filename` là cái mà nó sẽ đưa vào cái `s3 Bucket` này
-
   - Cái `Key` sẽ là một cái đường dẫn - dẫn tới cái file của chúng ta ở trong cái `Bucket`, ví dụ như cái `Key` của chúng ta là `images/123.png` thì `images` là cái folder
 
   - `Body` nó có thể nhận vào là `buffer` hoặc là `readable` cái kiểu của nó có thể là `ReadableStreamOptionalType` | `BlobOptionalType` -> Sẽ sử dụng cái method là `readFileSync` nó sẽ đọc cái file bằng cái đường dẫn -> Khi mà đọc thì nó sẽ trả về `buffer` thì nó sẽ phù hợp với kiểu dữ liệu cửa thằng `Body`
@@ -388,17 +387,14 @@ AWS_S3_BUCKET_NAME=your-bucket-name
 - Bây giờ chúng ta sẽ không `uploadFile` lên trên máy nữa mà chúng ta sẽ upload lên S3 luôn -> Nên là ở hàm `uploadFile` chúng ta sẽ đẩy lên S3 luôn
 
 - Khi mà upload file thành công thì nó sẽ trả về `Key` và `Location`
-
   - `Location` sẽ dẫn đến cái đường link sau khi mà chúng ta đã `upload` lên -> Thì bây giờ chúng ta sẽ trả về cái `Location` này cho người dùng
 
   - Vấn đề bây giờ là chúng ta chưa có thể xem được cái đường dẫn file được lưu trong `AWS S3` mà thôi nên là bây giờ chúng ta sẽ config để mà coi được cái đó
-
     - Việc đầu tiên là cần `Edit S3 block Public Access settings`
 
     - Và sau đó là cứ làm theo hướng dẫn như ở trên `docs` của thằng `AWS` là được mà thôi
 
   -> Và sau đó khi mà nhấn vào cái đường link thì chúng ta đã có thể coi được cái tấm ảnh với cái đường dẫn trên server của `AWS S3` rồi
-
   - Tại sao khi mà chúng ta nhấn vào cái đường link trên `AWS` thì nó lại `down` luôn cả cái `file` về luôn hoặc là nó không có view cái ảnh đúng -> Do là khi chung ta upload một cái file ảnh lên trên mà chúng ta không truyền cái `contentType: mimetype` vào nên là nó tự động download cái file đó về khi mà chúng ta nhấn vào cái đường dẫn của file đó
 
   - Chúng ta vẫn còn thiếu một bước đó là xóa cái file ở thư mục `upload` của dự án sau khi mà đã `upload` lên `S3 Bucket` luôn, nên là chúng ta sẽ xử lý cái vấn đề đó ở bên trong cái `MediaService` luôn.
@@ -406,7 +402,6 @@ AWS_S3_BUCKET_NAME=your-bucket-name
 ## Bài 111 Fix bug upload file nhưng không xóa file
 
 - Sẽ fix bug cái vấn đề đó là `Upload file` nhưng mà không xóa cái `file` của chúng ta
-
   - Nếu chúng ta upload file bị fail ngay tại cái bước `FilesInterceptor` thì nó sẽ không có cái `file` trong upload là đúng, còn nếu nó mà fail ở bên trong cái `ParseFilePipe` thì nó xuất hiện cái file trong thư mục `upload` thì đây rõ ràng là bug rồi
 
   - `FilesInterceptor` là của multer xử lý -> Sau khi mà nó qua được cái `FilesInterceptor` rồi thì nó sẽ tới cái thằng `ParseFilePipe` thì cái cách để mà fix được trong cái trường hợp này là chúng ta sẽ can thiệp vào bên trong cái `ParseFilePipe` nhưng mà đây là một cái `build-in` của NestJS rồi -> Nên là chúng ta sẽ tạo ra một cái `class` mới kế thừa cái `class - ParseFilePipe` đó
@@ -418,9 +413,7 @@ AWS_S3_BUCKET_NAME=your-bucket-name
 ## Bài 112 Upload file với `Presigned URL`
 
 - Thực hiện `Upload file` với `Presigned URL` -> Chúng ta sẽ sử dụng cái kĩ thuật này để mà upload ảnh lên trên S3 hoặc là các `Storage` khác
-
   - Client -> Server -> S3 -> Thì cái `flow` này thì `server` là một nơi trung gian chứa cái file tạm -> Thì cái `flow` này chúng ta sẽ toàn quyền quản lí được cái file đó, cũng như là `validate` được cái `request` mà từ `client` gửi lên `server` nó có đủ quyền hạn hay không
-
     - Nhưng mà nhược diểm đó là nó sẽ tăng cái gánh nặng lên trên `server` -> Nếu như mà nhiều người cùng upload thì `server` chúng ta nó sẽ sập là chắc chắn, cùng với đó là server của chúng ta nó không đủ dung lượng để mà lưu trữ
 
   - Client -> S3 -> Nếu mà sử dụng cái trường hợp này thì chúng ta cần phải cung cấp `SECRET_KEY` và `ACCESS_KEY` nhưng mà cung cấp 2 cái giá trị là điều không nên cho thằng client rồi -> Kẻ gian nó sẽ lợi dụng và phá cái hệ thống của chúng ta -> Cho nên cái phương án này là không được.
@@ -428,7 +421,6 @@ AWS_S3_BUCKET_NAME=your-bucket-name
     -> Vì vậy chúng ta cần cung cấp cái giải pháp để mà trung hòa được 2 cái thằng ở trên -> Đó là chúng ta sẽ sử dụng `Presigned URL`
 
   - Client -> Server để lấy `presigned URL` của `AWS S3`, với cái presigned URL này AWS nó cho phép chúng ta config cái thời gian sử dụng của Presigned URL là bao nhiêu giây đó, trong thời gian đó thì thằng client cần phải gửi file lên trên S3, nếu mà hết thời gian đó thì client nó không sử dụng được nữa, thì nó đảm bảo được việc là `Client` -> gửi trực tiếp lên trên S3 mà không thông qua `Server`, giảm workload lên server
-
     - Nhược điểm đó chính là cái S3 không có khả năng `validate` cái `file`, không có khả năng `validate` cái `request` -> Vì thể chúng ta để cái `presigned url` ngắn để mà khi thằng `client` nó nhận về thì nó phải `upload` ngay -> Sau này đi làm đa số đều sử dụng cái kĩ thuật này cả
 
   - Client -> Server để lấy Presigned URL ->
@@ -442,26 +434,24 @@ AWS_S3_BUCKET_NAME=your-bucket-name
   -> Sau đó sẽ trả về cho người dùng là `PresignedURL`
 
   -> Thì sau khi mà thực hiện cái `method` `getPresignedUrl` thì chúng ta sẽ lấy được cái `PresignedURL` đó -> Thì lúc này chúng ta sẽ sử dụng cái `PresignedUrl` đó để mà `upload`, khi mà chúng ta random một cái file là `jpg` thì chúng ta cũng phải cần lấy một file đuôi `jpg` để mà `upload` lên theo
-
   - Thì khi mà upload lên `AWS` thì nó không cho phép chúng ta sử dụng cái `Auth` nào hết nên là chúng ta sẽ sử dụng cái `No Auth` ở phần upload lên người dùng, cái Method để mà upload thì chúng ta sử dụng method là `PUT`, và cái body chúng ta gửi lên thì chúng ta sẽ chọn `Binary` -> Thì cái `link` chính là cái `PresignedUrl` của chúng ta -> Thì cái link nó sẽ trả về như thế này cho chúng ta `https://ecommerce-super-nestjs.s3.ap-southeast-1.amazonaws.com/e001301b-245b-49f1-952c-be74426e9de1.jpg`
 
 - Nên là ở cái method `getPresignedUrl` chúng ta sẽ return về cái link cho `client` luôn -> Oke đó chính là lý do mà chúng ta cần phải trả về cái `url` cho người dùng -> Lưu ý rằng là cái này chỉ upload được một file mà thôi, để mà upload dược nhiều file thì chúng ta cần phải get ra nhiều cái `PresignedURL` khác nhau
 
-## Bài 113 Dùng React upload file với `Presigned URL`
+### Bài 113 Dùng React upload file với `Presigned URL`
 
 - Dùng React để demo việc upload hình ảnh lên phía `AWS S3` cho người dùng
 
-## Bài 114 Validate file khi dùng `Presigned URL`
+### Bài 114 Validate file khi dùng `Presigned URL`
 
 - Sẽ có 2 cách để mà giải quyết phần nào đấy cái `issue` này
-
   - Cách đầu tiền là sử dụng `AWS lambda` tưởng tượng nó như là một cái func chạy trên `AWS` -> Mỗi là mà chúng ta `upload file` -> thì nó sẽ chạy để mà nó kiểm tra cái file đấy có đúng cái định dạng yêu cầu hay không, nếu mà sai thì nó sẽ xóa cái file đó
 
   - Cách thứ 2 là chúng ta sẽ validate cái `filesize` tại cái bước mà nó gọi đến cái server để mà lấy -> Thì ở đây client cần phải truyền lên cái `filesize` thì với cái cách này chúng ta có thể validate được cái filename và filesize -> Nhưng mà cách này nó sẽ không hiểu quả hơn là cách sử dụng `func lambda` ở trên vì thằng client có thể fake được cái `filesize`, nói chung là xác suất đó cũng thấp mà thôi, quan trong là chúng ta giải quyết được phần nào đó
 
     -> Tóm lại thì khi mà thằng client nó gọi tới để mà lấy cái `presignedUrl` thì chúng ta sẽ `validate` cái `file size` ngay tại cái bước đó
 
-## Bài 115 Hướng dẫn dùng S3 storage của `VN Data`
+### Bài 115 Hướng dẫn dùng S3 storage của `VN Data`
 
 - Thực hiện upload file với `S3 Storage` của `VN Data`
 
@@ -472,6 +462,147 @@ AWS_S3_BUCKET_NAME=your-bucket-name
   -> Đã cấu hình xong và chạy được cái `Cloud S3 Storage` của `VNData` rồi
 
 - Làm thể nào để mà chúng ta tạo ra cái `Policy` `CORS` ấy khi mà chúng ta không có cái UI -> Thì chúng ta sẽ sử dụng cái `SDK` để mà thiết lập ở bên trong cái source code hoặc là có thể sử dụng `REST API` cũng được -> Nhưng mà cũng nên sử dụng `SDK`
+
+### Bài 120
+
+- Người dùng thì họ sẽ mua trên cái SKU chứ cái Variant và VariantOption nó đâu có bị ảnh hưởng gì đâu và chúng ta chỉ có thể sắp xếp theo cái kiểu thằng nào tạo trước thằng nào tạo sau thì chúng ta sẽ sắp xếp chứ chúng ta không thể sắp xếp theo cái kiểu tùy biến được
+- Ví dụ chúng ta sắp xếp các cái thằng Variant ở bên trong Product thì chúng ta cần phải có cái trường ở bên trong cái model Product -> Thì chúng ta cần phải có cái trường gọi là `VariantOrder` thì cái giá trị này sẽ là một cái mảng Array chứa các `Id` của thằng Variant thì khi mà trả về cái danh sách `variant` cho người dùng thì chúng ta cần phải sắp xếp lại cái `variant` dựa trên cái `VariantOrder` ở bên trong Product vậy, và khi ở cái thằng `VariantOptions` thì chúng ta cũng cần phải có thêm cho nó cái `VariantOptionsOrder` thì cái chỗ này nó lại làm cho chúng ta phức tạp hơn rồi đấy, nhưng mà khi chúng ta sử dụng với cái thằng `MongoDB` thì nó giải quyết khá là nhanh vì nó có hỗ trợ `JSON` cho chúng ta, và cũng may mắn là cái thằng Postgresql nó cũng hỗ trợ JSON nên là ở cái chỗ này chúng ta sẽ làm theo cái kiểu là JSON chứ không làm theo kiểu quan hệ giữa `Variant` và `VariantOptions` nữa
+
+- Tiếp theo cần phải cập nhật đó là `productId` và `languageId` nó phải là unique khi mà deletedAt nó là null cùng với đó ở bên trong cái model SKU thì cái `value` và `productId` nó cũng phải là unique khi mà `deletedAt` là null -> Thì các cái thằng này thì chúng ta cần phải chỉnh sửa thông quá cái file `migration` của chúng ta mà thôi
+
+- Trong postgresql nó có hỗ trợ JSON và JSONB nhưng mặc định thì cái thằng prisma nó sẽ chọn JSONB vì JSONB nó có nhiều cái mới hơn.
+
+### Bài 121 Tạo thuật toán generate SKU
+
+### Bài 122 Tạo model liên quan Product
+
+### Bài 123 Khai báo type cho JSON trong prisma
+
+### Bài 124 Tạo method findById và delete trong ProductRepo
+
+### Bài 125 Tạo method create trong ProductRepo
+
+### Bài 126 Tạo method update trong ProductRepo
+
+### Bài 127 Test CRUD cho API Product và cập nhật schema validate
+
+### Bài 128 Cập nhật create-permissions tự động thêm permissions cho seller
+
+### Bài 129 [P1] Refactor Product - Cập nhật product repo
+
+### Bài 130 [P2] Refactor Product - Tách product ra product và manage product
+
+### Bài 131 Test API Product và fix bug isPublic
+
+### Bài 132 Filter Product
+
+### Bài 133 orderBy và sortBy Product
+
+## 📚 **Chương 13: Chức năng Cart và Order**
+
+### Bài 134 Migrate CartItem và khai báo cart zod schema
+
+### Bài 135 Tạo Repo Service Controller cho Cart
+
+### Bài 136 Gom nhóm CartItem theo shop
+
+### Bài 137 Cập nhật createdById của SKU
+
+### Bài 138 Sử dụng các function của Postgresql để gom nhóm CartItem
+
+### Bài 139 Migrate Order và ProductSKUSnapshot
+
+### Bài 140 Fix bug thêm cùng sản phẩm vào Cart và sắp xếp CartItem
+
+### Bài 141 Tạo model dto error Order
+
+### Bài 142 Tạo list order
+
+### Bài 143 Tạo Order
+
+### Bài 144 Detail và Cancel Order
+
+### Bài 145 Validate cộng dồn quantity CartItem vượt quá stock khi add cart
+
+## 📚 **Chương 14: Chức năng thanh toán online**
+
+### Bài 146 Giới thiệu flow và khai báo Model Payment
+
+### Bài 147 Tạo Webhook API Payment Receiver
+
+### Bài 148 Bảo vệ webhook bằng API Key
+
+### Bài 149 Setup Redis và BullMQ để làm Queue
+
+### Bài 150 Tạo Producer và Consumer cho Queue
+
+### Bài 151 Tự động tính năng tự động cancel payment sau 24h không thanh toán
+
+### Bài 152 Xóa job cancel payment khi thanh toán thành công
+
+### Bài 153 Rollback update khi mà Queue bị lỗi
+
+### Bài 154 Đăng ký sepay và liên kết bank
+
+### Bài 155 Cài đặt Webhook Sepay
+
+## 📚 **Chương 15: Websocket**
+
+### Bài 156 Implement Websocket vào dự án
+
+### Bài 157 Namespace trong Websocket
+
+### Bài 158 Custom Websocket Adapter
+
+### Bài 159 Lifecycle và middleware Websocket
+
+### Bài 160 Lưu Socket Id vào bên trong database
+
+### Bài 161 Emit sự kiện về cho client khi mà thanh toán thành công
+
+### Bài 162 Emit đén nhiều client bằng Room
+
+### Bài 163 Sử dụng Redis Adapter cho multiple server
+
+## 📚 **Chương 16: Chương nâng cao**
+
+### Bài 164 Swagger
+
+### Bài 165 Rate Limit
+
+### Bài 166 Migrate Review
+
+### Bài 167 Logic Review
+
+### Bài 168 Dùng CronJob tự xóa refreshToken hết hạn
+
+### Bài 169 Fix lỗi unique email code type trên VerificationCode
+
+### Bài 170 Cache role khi validate permissions
+
+### Bài 171 Xóa cache khi cập nhật hoặc là sửa role permission
+
+### Bài 172 Redis caching
+
+### Bài 173 Sử dụng Postgresql trên DigitalOcean
+
+### Bài 174 Helmet
+
+### Bài 175 Logger
+
+### Bài 176 Logger với Pino
+
+### Bài 177 Giả lập với Race Condition
+
+### Bài 178 Thực hành Pessimistic lock trên terminal
+
+### Bài 179 Thực hành Pessimistic lock trên mã nguồn dự án
+
+### Bài 180 Thực hành Optimistic lock trên mã nguồn dự án
+
+### Bài 181 Sử dụng RedLock
+
+### Bài 182 So sánh 3 kỹ thuật lock
 
 **Các bài 110-115:** Đã được format chi tiết trong Lecture_04.md
 
