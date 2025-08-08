@@ -18,6 +18,8 @@ import { AcceptLanguageResolver, I18nModule, QueryResolver } from 'nestjs-i18n'
 import path from 'path'
 import { BrandModule } from 'src/routes/brand/brand.module'
 import { BrandTranslationModule } from 'src/routes/brand/brand-translation/brand-translation.module'
+import { ProductModule } from 'src/routes/product/product.module'
+import { ProductTranslationModule } from 'src/routes/product/product-translation/product-translation.module'
 
 // console.log(path.resolve('src/i18n/'))
 
@@ -43,6 +45,8 @@ import { BrandTranslationModule } from 'src/routes/brand/brand-translation/brand
     MediaModule,
     BrandModule,
     BrandTranslationModule,
+    ProductModule,
+    ProductTranslationModule,
   ],
   controllers: [AppController],
   providers: [
