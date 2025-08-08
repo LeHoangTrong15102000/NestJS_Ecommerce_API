@@ -81,6 +81,15 @@ export const GetProductsQuerySchema = z.object({
   categories: z.array(z.coerce.number().int().positive()).optional(),
   minPrice: z.coerce.number().positive().optional(),
   maxPrice: z.coerce.number().positive().optional(),
+  createdById: z.coerce.number().int().positive().optional(),
+})
+
+/**
+ * Dành cho Admin và Seller
+ */
+export const GetManageProductsQuerySchema = GetProductsQuerySchema.extend({
+  isPublic: z.coerce.boolean().optional(),
+  createdById: z.coerce.number().int().positive(),
 })
 
 export const GetProductsResSchema = z.object({
@@ -158,6 +167,7 @@ export type VariantsType = z.infer<typeof VariantsSchema>
 export type GetProductsResType = z.infer<typeof GetProductsResSchema>
 export type GetProductsQueryType = z.infer<typeof GetProductsQuerySchema>
 export type GetProductDetailResType = z.infer<typeof GetProductDetailResSchema>
+export type GetManageProductsQueryType = z.infer<typeof GetManageProductsQuerySchema>
 export type CreateProductBodyType = z.infer<typeof CreateProductBodySchema>
 export type GetProductParamsType = z.infer<typeof GetProductParamsSchema>
 export type UpdateProductBodyType = z.infer<typeof UpdateProductBodySchema>
