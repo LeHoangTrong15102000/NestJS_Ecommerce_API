@@ -3,6 +3,8 @@ import { AppModule } from 'src/app.module'
 import { HTTPMethod, RoleName } from 'src/shared/constants/role.constant'
 import { PrismaService } from 'src/shared/services/prisma.service'
 
+const SellerModule = ['AUTH', 'MEDIA', 'MANAGE-PRODUCT', 'PRODUCT-TRANSLATION', 'PROFILE']
+const ClientModule = ['AUTH', 'MEDIA', 'PROFILE', 'CART', 'ORDERS', 'REVIEWS']
 const prisma = new PrismaService()
 
 async function bootstrap() {
@@ -89,25 +91,20 @@ async function bootstrap() {
       deletedAt: null,
     },
   })
-  // Ưu tiên tính dễ đọc hơn là hiệu suất truy vấn
-  const adminRole = await prisma.role.findFirstOrThrow({
-    where: {
-      name: RoleName.Admin,
-      deletedAt: null,
-    },
-  })
-  // Cập nhật lại các permissions trong Admin Role
-  await prisma.role.update({
-    where: {
-      id: adminRole.id,
-    },
-    data: {
-      permissions: {
-        // Sẽ lấy ra một array các object id -> Thì khi mà getDetailRole của AdminRole thì prisma nó sẽ tự động map tới đối tượng permission dựa theo cái `id`
-        set: updatedPermissionsInDb.map((item) => ({ id: item.id })),
-      },
-    },
-  })
+
+  const adminPermissionIds = updatedPermissionsInDb.map((item) => ({ id: item.id }))
+  const sellerPermissionIds = updatedPermissionsInDb
+    .filter((item) => SellerModule.includes(item.module))
+    .map((item) => ({ id: item.id }))
+  const clientPermissionIds = updatedPermissionsInDb
+    .filter((item) => ClientModule.includes(item.module))
+    .map((item) => ({ id: item.id }))
+
+  await Promise.all([
+    updateRole(adminPermissionIds, RoleName.Admin),
+    updateRole(sellerPermissionIds, RoleName.Seller),
+    updateRole(clientPermissionIds, RoleName.Client),
+  ])
 
   // console.log(availableRoutes) // Nó sẽ list Available Routes có sẵn hiện tại của chúng ta
   // Sẽ tiến hành add vào trong database
@@ -120,6 +117,28 @@ async function bootstrap() {
 
   //  Khi mà nó chạy xong hết và nó sẽ thoát ra
   process.exit(0)
+}
+
+const updateRole = async (permissionIds: { id: number }[], roleName: string) => {
+  // Ưu tiên tính dễ đọc hơn là hiệu suất truy vấn
+  const role = await prisma.role.findFirstOrThrow({
+    where: {
+      name: roleName,
+      deletedAt: null,
+    },
+  })
+  // Cập nhật lại các permissions trong Admin Role
+  await prisma.role.update({
+    where: {
+      id: role.id,
+    },
+    data: {
+      permissions: {
+        // Sẽ lấy ra một array các object id -> Thì khi mà getDetailRole của AdminRole thì prisma nó sẽ tự động map tới đối tượng permission dựa theo cái `id`
+        set: permissionIds,
+      },
+    },
+  })
 }
 
 bootstrap()
