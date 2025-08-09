@@ -1,0 +1,909 @@
+{
+  "info": {
+    "name": "NestJS Ecommerce API (Full)",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_postman_id": "e1f0f0b8-0000-4000-8000-collection-full"
+  },
+  "item": [
+    {
+      "name": "Languages",
+      "item": [
+        {
+          "name": "List",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "http://localhost:3000/languages",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3000",
+              "path": ["languages"]
+            }
+          }
+        },
+        {
+          "name": "Detail",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "http://localhost:3000/languages/en",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3000",
+              "path": ["languages", "en"]
+            }
+          }
+        },
+        {
+          "name": "Create",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{accessToken}}" }
+            ],
+            "url": {
+              "raw": "http://localhost:3000/languages",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3000",
+              "path": ["languages"]
+            },
+            "body": { "mode": "raw", "raw": "{\n  \"id\": \"jp\",\n  \"name\": \"日本語\"\n}" }
+          }
+        },
+        {
+          "name": "Update",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{accessToken}}" }
+            ],
+            "url": {
+              "raw": "http://localhost:3000/languages/en",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3000",
+              "path": ["languages", "en"]
+            },
+            "body": { "mode": "raw", "raw": "{\n  \"name\": \"English\"\n}" }
+          }
+        },
+        {
+          "name": "Delete",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
+            "url": {
+              "raw": "http://localhost:3000/languages/en",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3000",
+              "path": ["languages", "en"]
+            }
+          }
+        }
+      ]
+    },
+
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Login",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": {
+              "raw": "http://localhost:3000/auth/login",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3000",
+              "path": ["auth", "login"]
+            },
+            "body": { "mode": "raw", "raw": "{\n  \"email\": \"admin@example.com\",\n  \"password\": \"Admin@123\"\n}" }
+          }
+        },
+        {
+          "name": "Refresh Token",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": {
+              "raw": "http://localhost:3000/auth/refresh-token",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3000",
+              "path": ["auth", "refresh-token"]
+            },
+            "body": { "mode": "raw", "raw": "{\n  \"refreshToken\": \"{{refreshToken}}\"\n}" }
+          }
+        }
+      ]
+    },
+
+    {
+      "name": "Users",
+      "item": [
+        {
+          "name": "List",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
+            "url": {
+              "raw": "http://localhost:3000/users?page=1&limit=10",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3000",
+              "path": ["users"],
+              "query": [
+                { "key": "page", "value": "1" },
+                { "key": "limit", "value": "10" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Detail",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
+            "url": {
+              "raw": "http://localhost:3000/users/1",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3000",
+              "path": ["users", "1"]
+            }
+          }
+        },
+        {
+          "name": "Create",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{accessToken}}" }
+            ],
+            "url": {
+              "raw": "http://localhost:3000/users",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3000",
+              "path": ["users"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"user1@example.com\",\n  \"name\": \"User 1\",\n  \"phoneNumber\": \"0900000001\",\n  \"avatar\": null,\n  \"status\": \"ACTIVE\",\n  \"password\": \"User@123\",\n  \"roleId\": 2\n}"
+            }
+          }
+        },
+        {
+          "name": "Update",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{accessToken}}" }
+            ],
+            "url": {
+              "raw": "http://localhost:3000/users/1",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3000",
+              "path": ["users", "1"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"user1@example.com\",\n  \"name\": \"User 1\",\n  \"phoneNumber\": \"0900000001\",\n  \"avatar\": null,\n  \"status\": \"ACTIVE\",\n  \"password\": \"User@123\",\n  \"roleId\": 2\n}"
+            }
+          }
+        },
+        {
+          "name": "Delete",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
+            "url": {
+              "raw": "http://localhost:3000/users/1",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3000",
+              "path": ["users", "1"]
+            }
+          }
+        }
+      ]
+    },
+
+    {
+      "name": "Profile",
+      "item": [
+        {
+          "name": "Get Profile",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
+            "url": {
+              "raw": "http://localhost:3000/profile",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3000",
+              "path": ["profile"]
+            }
+          }
+        },
+        {
+          "name": "Update Profile",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{accessToken}}" }
+            ],
+            "url": {
+              "raw": "http://localhost:3000/profile",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3000",
+              "path": ["profile"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Admin\",\n  \"phoneNumber\": \"0909\",\n  \"avatar\": null\n}"
+            }
+          }
+        },
+        {
+          "name": "Change Password",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{accessToken}}" }
+            ],
+            "url": {
+              "raw": "http://localhost:3000/profile/change-password",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3000",
+              "path": ["profile", "change-password"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"password\": \"Admin@123\",\n  \"newPassword\": \"Admin@1234\",\n  \"confirmNewPassword\": \"Admin@1234\"\n}"
+            }
+          }
+        }
+      ]
+    },
+
+    {
+      "name": "Permissions",
+      "item": [
+        {
+          "name": "List",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
+            "url": {
+              "raw": "http://localhost:3000/permissions?page=1&limit=10",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3000",
+              "path": ["permissions"],
+              "query": [
+                { "key": "page", "value": "1" },
+                { "key": "limit", "value": "10" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Detail",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
+            "url": {
+              "raw": "http://localhost:3000/permissions/1",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3000",
+              "path": ["permissions", "1"]
+            }
+          }
+        },
+        {
+          "name": "Create",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{accessToken}}" }
+            ],
+            "url": {
+              "raw": "http://localhost:3000/permissions",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3000",
+              "path": ["permissions"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"GET-/products\",\n  \"path\": \"/products\",\n  \"method\": \"GET\",\n  \"description\": \"List products\",\n  \"module\": \"PRODUCTS\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Update",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{accessToken}}" }
+            ],
+            "url": {
+              "raw": "http://localhost:3000/permissions/1",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3000",
+              "path": ["permissions", "1"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"GET-/products\",\n  \"path\": \"/products\",\n  \"method\": \"GET\",\n  \"description\": \"List products\",\n  \"module\": \"PRODUCTS\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Delete",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
+            "url": {
+              "raw": "http://localhost:3000/permissions/1",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3000",
+              "path": ["permissions", "1"]
+            }
+          }
+        }
+      ]
+    },
+
+    {
+      "name": "Roles",
+      "item": [
+        {
+          "name": "List",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
+            "url": {
+              "raw": "http://localhost:3000/roles?page=1&limit=10",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3000",
+              "path": ["roles"],
+              "query": [
+                { "key": "page", "value": "1" },
+                { "key": "limit", "value": "10" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Detail",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
+            "url": {
+              "raw": "http://localhost:3000/roles/1",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3000",
+              "path": ["roles", "1"]
+            }
+          }
+        },
+        {
+          "name": "Create",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{accessToken}}" }
+            ],
+            "url": {
+              "raw": "http://localhost:3000/roles",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3000",
+              "path": ["roles"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"SELLER\",\n  \"description\": \"Seller role\",\n  \"isActive\": true\n}"
+            }
+          }
+        },
+        {
+          "name": "Update",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{accessToken}}" }
+            ],
+            "url": {
+              "raw": "http://localhost:3000/roles/1",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3000",
+              "path": ["roles", "1"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"SELLER\",\n  \"description\": \"Seller role\",\n  \"isActive\": true,\n  \"permissionIds\": [1,2,3]\n}"
+            }
+          }
+        },
+        {
+          "name": "Delete",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
+            "url": {
+              "raw": "http://localhost:3000/roles/1",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3000",
+              "path": ["roles", "1"]
+            }
+          }
+        }
+      ]
+    },
+
+    {
+      "name": "Brands",
+      "item": [
+        {
+          "name": "List",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "http://localhost:3000/brands?page=1&limit=10",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3000",
+              "path": ["brands"],
+              "query": [
+                { "key": "page", "value": "1" },
+                { "key": "limit", "value": "10" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Detail",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "http://localhost:3000/brands/1",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3000",
+              "path": ["brands", "1"]
+            }
+          }
+        },
+        {
+          "name": "Create",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{accessToken}}" }
+            ],
+            "url": {
+              "raw": "http://localhost:3000/brands",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3000",
+              "path": ["brands"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Apple\",\n  \"logo\": \"https://logo.clearbit.com/apple.com\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Update",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{accessToken}}" }
+            ],
+            "url": {
+              "raw": "http://localhost:3000/brands/1",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3000",
+              "path": ["brands", "1"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Apple\",\n  \"logo\": \"https://logo.clearbit.com/apple.com\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Delete",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
+            "url": {
+              "raw": "http://localhost:3000/brands/1",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3000",
+              "path": ["brands", "1"]
+            }
+          }
+        }
+      ]
+    },
+
+    {
+      "name": "Brand Translations",
+      "item": [
+        {
+          "name": "Create",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{accessToken}}" }
+            ],
+            "url": {
+              "raw": "http://localhost:3000/brand-translations",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3000",
+              "path": ["brand-translations"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"brandId\": 1,\n  \"languageId\": \"vi\",\n  \"name\": \"Apple\",\n  \"description\": \"Mô tả thương hiệu\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Detail",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "http://localhost:3000/brand-translations/1",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3000",
+              "path": ["brand-translations", "1"]
+            }
+          }
+        },
+        {
+          "name": "Update",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{accessToken}}" }
+            ],
+            "url": {
+              "raw": "http://localhost:3000/brand-translations/1",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3000",
+              "path": ["brand-translations", "1"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"brandId\": 1,\n  \"languageId\": \"vi\",\n  \"name\": \"Apple\",\n  \"description\": \"Mô tả thương hiệu\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Delete",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
+            "url": {
+              "raw": "http://localhost:3000/brand-translations/1",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3000",
+              "path": ["brand-translations", "1"]
+            }
+          }
+        }
+      ]
+    },
+
+    {
+      "name": "Categories",
+      "item": [
+        {
+          "name": "List Categories",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "http://localhost:3000/categories?lang=vi",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3000",
+              "path": ["categories"],
+              "query": [{ "key": "lang", "value": "vi" }]
+            }
+          }
+        },
+        {
+          "name": "Get Category Detail",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "http://localhost:3000/categories/1?lang=vi",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3000",
+              "path": ["categories", "1"],
+              "query": [{ "key": "lang", "value": "vi" }]
+            }
+          }
+        },
+        {
+          "name": "Create Category",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{accessToken}}" }
+            ],
+            "url": {
+              "raw": "http://localhost:3000/categories",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3000",
+              "path": ["categories"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Gaming\",\n  \"logo\": null,\n  \"parentCategoryId\": null\n}"
+            }
+          }
+        }
+      ]
+    },
+
+    {
+      "name": "Category Translations",
+      "item": [
+        {
+          "name": "Create Category Translation",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{accessToken}}" }
+            ],
+            "url": {
+              "raw": "http://localhost:3000/category-translations",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3000",
+              "path": ["category-translations"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"categoryId\": 1,\n  \"languageId\": \"vi\",\n  \"name\": \"Điện thoại\",\n  \"description\": \"Danh mục điện thoại\"\n}"
+            }
+          }
+        }
+      ]
+    },
+
+    {
+      "name": "Products (Public)",
+      "item": [
+        {
+          "name": "List Products",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "http://localhost:3000/products?lang=vi&page=1&limit=10",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3000",
+              "path": ["products"],
+              "query": [
+                { "key": "lang", "value": "vi" },
+                { "key": "page", "value": "1" },
+                { "key": "limit", "value": "10" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Product Detail",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "http://localhost:3000/products/1?lang=vi",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3000",
+              "path": ["products", "1"],
+              "query": [{ "key": "lang", "value": "vi" }]
+            }
+          }
+        }
+      ]
+    },
+
+    {
+      "name": "Manage Products",
+      "item": [
+        {
+          "name": "Create Product",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{accessToken}}" }
+            ],
+            "url": {
+              "raw": "http://localhost:3000/manage-product/products",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3000",
+              "path": ["manage-product", "products"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"publishedAt\": null,\n  \"name\": \"Sample Product\",\n  \"basePrice\": 100,\n  \"virtualPrice\": 120,\n  \"brandId\": 1,\n  \"images\": [\"https://example.com/img.jpg\"],\n  \"variants\": [{\"value\":\"Color\",\"options\":[\"Red\",\"Blue\"]}],\n  \"categories\": [1],\n  \"skus\": [\n    { \"value\": \"Red\", \"price\": 100, \"stock\": 10, \"image\": \"https://example.com/red.jpg\" },\n    { \"value\": \"Blue\", \"price\": 100, \"stock\": 10, \"image\": \"https://example.com/blue.jpg\" }\n  ]\n}"
+            }
+          }
+        }
+      ]
+    },
+
+    {
+      "name": "Media",
+      "item": [
+        {
+          "name": "Upload Images (local)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
+            "url": {
+              "raw": "http://localhost:3000/media/images/upload",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3000",
+              "path": ["media", "images", "upload"]
+            }
+          }
+        },
+        {
+          "name": "Serve File (public)",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "http://localhost:3000/media/static/sample.jpg",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3000",
+              "path": ["media", "static", "sample.jpg"]
+            }
+          }
+        },
+        {
+          "name": "Get Presigned URL",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": {
+              "raw": "http://localhost:3000/media/images/upload/presigned-url",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3000",
+              "path": ["media", "images", "upload", "presigned-url"]
+            },
+            "body": { "mode": "raw", "raw": "{\n  \"filename\": \"image.jpg\",\n  \"filesize\": 500000\n}" }
+          }
+        }
+      ]
+    },
+
+    {
+      "name": "Payments",
+      "item": [
+        {
+          "name": "Create",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{accessToken}}" }
+            ],
+            "url": {
+              "raw": "http://localhost:3000/payments",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3000",
+              "path": ["payments"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"orderId\": \"ORDER123\",\n  \"amount\": 100000,\n  \"currency\": \"VND\",\n  \"method\": \"CREDIT_CARD\",\n  \"metadata\": {\n    \"note\": \"test\"\n  }\n}"
+            }
+          }
+        },
+        {
+          "name": "Process",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
+            "url": {
+              "raw": "http://localhost:3000/payments/1/process",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3000",
+              "path": ["payments", "1", "process"]
+            }
+          }
+        },
+        {
+          "name": "Detail",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
+            "url": {
+              "raw": "http://localhost:3000/payments/1",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3000",
+              "path": ["payments", "1"]
+            }
+          }
+        },
+        {
+          "name": "List",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
+            "url": {
+              "raw": "http://localhost:3000/payments?page=1&limit=10",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3000",
+              "path": ["payments"],
+              "query": [
+                { "key": "page", "value": "1" },
+                { "key": "limit", "value": "10" }
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "variable": [
+    { "key": "accessToken", "value": "" },
+    { "key": "refreshToken", "value": "" }
+  ]
+}
