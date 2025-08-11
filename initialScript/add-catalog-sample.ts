@@ -6,10 +6,45 @@ import { PrismaService } from 'src/shared/services/prisma.service'
 
 const prisma = new PrismaService()
 
+const clearExistingData = async () => {
+  console.log('🧹 Bắt đầu xóa dữ liệu cũ...')
+
+  try {
+    // Xóa dữ liệu theo thứ tự để tránh lỗi foreign key
+    const deleteResults = await Promise.all([
+      prisma.productTranslation.deleteMany({}),
+      prisma.sKU.deleteMany({}),
+      prisma.product.deleteMany({}),
+      prisma.categoryTranslation.deleteMany({}),
+      prisma.category.deleteMany({}),
+      prisma.brandTranslation.deleteMany({}),
+      prisma.brand.deleteMany({}),
+      prisma.language.deleteMany({}),
+    ])
+
+    console.log('✅ Đã xóa dữ liệu cũ thành công:')
+    console.log(`   - Product Translations: ${deleteResults[0].count}`)
+    console.log(`   - SKUs: ${deleteResults[1].count}`)
+    console.log(`   - Products: ${deleteResults[2].count}`)
+    console.log(`   - Category Translations: ${deleteResults[3].count}`)
+    console.log(`   - Categories: ${deleteResults[4].count}`)
+    console.log(`   - Brand Translations: ${deleteResults[5].count}`)
+    console.log(`   - Brands: ${deleteResults[6].count}`)
+    console.log(`   - Languages: ${deleteResults[7].count}`)
+  } catch (error) {
+    console.error('❌ Lỗi khi xóa dữ liệu cũ:', error)
+    throw error
+  }
+}
+
 const addCatalogSample = async () => {
   console.log('🚀 Bắt đầu thêm dữ liệu mẫu cho Language → Brand → Category → Product...\n')
 
   try {
+    // Xóa dữ liệu cũ trước khi tạo mới
+    await clearExistingData()
+    console.log('')
+
     console.log('📝 BƯỚC 1: Thêm Language...')
     await addLanguages()
     console.log('✅ Hoàn thành Language\n')
