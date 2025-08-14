@@ -215,7 +215,7 @@ export class ProductRepo {
         },
         skus: {
           createMany: {
-            data: skus,
+            data: skus.map((sku) => ({ ...sku, createdById })),
           },
         },
       },

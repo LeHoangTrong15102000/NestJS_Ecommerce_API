@@ -344,7 +344,7 @@ const addProducts = async () => {
         variants: input.variants as unknown as { value: string; options: string[] }[],
         publishedAt: input.published ? new Date() : null,
         categories: { connect: categoryIds.map((id) => ({ id })) },
-        skus: { createMany: { data: input.skus } },
+        skus: { createMany: { data: input.skus.map((sku) => ({ ...sku, createdById: 1 })) } },
         createdById: 1,
       },
     })
