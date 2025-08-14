@@ -102,6 +102,8 @@ export const GetOrderParamsSchema = z
   })
   .strict()
 
+export const CancelOrderBodySchema = z.object({})
+
 export type GetOrderListResType = z.infer<typeof GetOrderListResSchema>
 export type GetOrderListQueryType = z.infer<typeof GetOrderListQuerySchema>
 export type GetOrderDetailResType = z.infer<typeof GetOrderDetailResSchema>

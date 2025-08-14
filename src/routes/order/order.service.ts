@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common'
-import { CreateOrderBodyType, GetOrderListQueryType, GetOrderListResType } from 'src/routes/order/order.model'
+
+import { CreateOrderBodyType, GetOrderListQueryType } from 'src/routes/order/order.model'
 import { OrderRepo } from 'src/routes/order/order.repo'
 
 @Injectable()
@@ -12,5 +13,13 @@ export class OrderService {
 
   async create(userId: number, body: CreateOrderBodyType) {
     return this.orderRepo.create(userId, body)
+  }
+
+  cancel(userId: number, orderId: number) {
+    return this.orderRepo.cancel(userId, orderId)
+  }
+
+  detail(userId: number, orderId: number) {
+    return this.orderRepo.detail(userId, orderId)
   }
 }
