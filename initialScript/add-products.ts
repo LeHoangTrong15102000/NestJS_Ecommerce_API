@@ -345,6 +345,7 @@ const addProducts = async () => {
         publishedAt: input.published ? new Date() : null,
         categories: { connect: categoryIds.map((id) => ({ id })) },
         skus: { createMany: { data: input.skus } },
+        createdById: 1,
       },
     })
     createdProducts += 1
