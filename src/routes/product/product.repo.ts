@@ -3,7 +3,6 @@ import { Prisma } from '@prisma/client'
 import {
   CreateProductBodyType,
   GetProductDetailResType,
-  GetProductsQueryType,
   GetProductsResType,
   UpdateProductBodyType,
 } from 'src/routes/product/product.model'
