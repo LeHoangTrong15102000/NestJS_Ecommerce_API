@@ -21,6 +21,7 @@ import { BrandTranslationModule } from 'src/routes/brand/brand-translation/brand
 import { ProductModule } from 'src/routes/product/product.module'
 import { ProductTranslationModule } from 'src/routes/product/product-translation/product-translation.module'
 import { CartModule } from 'src/routes/cart/cart.module'
+import { OrderModule } from 'src/routes/order/order.module'
 
 // console.log(path.resolve('src/i18n/'))
 
@@ -49,6 +50,7 @@ import { CartModule } from 'src/routes/cart/cart.module'
     ProductModule,
     ProductTranslationModule,
     CartModule,
+    OrderModule,
   ],
   controllers: [AppController],
   providers: [
