@@ -99,6 +99,7 @@ model User {
   updatedUserTranslations     UserTranslation[]     @relation("UserTranslationUpdatedBy")
   userTranslations            UserTranslation[]     @relation("User")
   Order                       Order[]
+  Websocket                   Websocket[]
 
   @@index([deletedAt])
 }
@@ -417,6 +418,13 @@ model Order {
 
   @@index([deletedAt])
   @@index([status, deletedAt])
+}
+
+model Websocket {
+  id        String   @id
+  userId    Int
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  createdAt DateTime @default(now())
 }
 
 model Review {
