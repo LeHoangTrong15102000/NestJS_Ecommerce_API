@@ -22,6 +22,7 @@ import { ProductModule } from 'src/routes/product/product.module'
 import { ProductTranslationModule } from 'src/routes/product/product-translation/product-translation.module'
 import { CartModule } from 'src/routes/cart/cart.module'
 import { OrderModule } from 'src/routes/order/order.module'
+import { WebsocketModule } from 'src/websockets/websocket.module'
 
 // console.log(path.resolve('src/i18n/'))
 
@@ -37,6 +38,7 @@ import { OrderModule } from 'src/routes/order/order.module'
       resolvers: [{ use: QueryResolver, options: ['lang'] }, AcceptLanguageResolver],
       typesOutputPath: path.resolve('src/generated/i18n.generated.ts'),
     }),
+    WebsocketModule,
     SharedModule,
     AuthModule,
     LanguageModule,
