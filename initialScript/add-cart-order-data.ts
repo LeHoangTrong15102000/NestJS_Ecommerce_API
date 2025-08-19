@@ -3,6 +3,7 @@ import { OrderStatus } from 'src/shared/constants/order.constant'
 import { UserStatus } from 'src/shared/constants/auth.constant'
 import { HashingService } from 'src/shared/services/hashing.service'
 import { RoleName } from 'src/shared/constants/role.constant'
+import { PaymentStatus } from 'src/shared/constants/payment.constant'
 
 const prisma = new PrismaService()
 const hashingService = new HashingService()
@@ -376,7 +377,23 @@ export const addCartOrderData = async () => {
         }
 
         // Tạo order cho mỗi shop
-        for (const [shopId, items] of itemsByShop) {
+        for (const [shopId, items] of itemsByShop.entries()) {
+          // Tính tổng tiền cho order
+          let totalAmount = 0
+          for (const cartItem of items) {
+            const sku = skus.find((s) => s.id === cartItem.skuId)
+            totalAmount += (sku?.price || 0) * cartItem.quantity
+          }
+
+          // Tạo payment trước
+          const payment = await prisma.payment.create({
+            data: {
+              status: [PaymentStatus.PENDING, PaymentStatus.SUCCESS, PaymentStatus.FAILED][
+                Math.floor(Math.random() * 3)
+              ],
+            },
+          })
+
           const order = await prisma.order.create({
             data: {
               userId: customer.id,
@@ -389,6 +406,7 @@ export const addCartOrderData = async () => {
                 address: `${123 + i} Đường ABC, Quận ${i + 1}, TP.HCM`,
               },
               shopId: shopId,
+              paymentId: payment.id,
               createdById: customer.id,
             },
           })
@@ -451,6 +469,7 @@ export const addCartOrderData = async () => {
       cartItems: await prisma.cartItem.count(),
       orders: await prisma.order.count({ where: { deletedAt: null } }),
       productSnapshots: await prisma.productSKUSnapshot.count(),
+      payments: await prisma.payment.count(),
     }
 
     console.log(`✅ Tổng số users: ${finalStats.users}`)
@@ -461,6 +480,7 @@ export const addCartOrderData = async () => {
     console.log(`✅ Tổng số cart items: ${finalStats.cartItems}`)
     console.log(`✅ Tổng số orders: ${finalStats.orders}`)
     console.log(`✅ Tổng số product snapshots: ${finalStats.productSnapshots}`)
+    console.log(`✅ Tổng số payments: ${finalStats.payments}`)
 
     console.log('\n🎉 HOÀN THÀNH! Đã thêm tất cả dữ liệu mẫu cho Cart và Order thành công!')
 
