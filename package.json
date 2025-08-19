@@ -14,6 +14,7 @@
     "add-categories": "ts-node initialScript/add-categories.ts",
     "add-products": "ts-node initialScript/add-products.ts",
     "add-catalog-sample": "ts-node initialScript/add-catalog-sample.ts",
+    "add-cart-order-data": "ts-node initialScript/add-cart-order-data.ts",
     "email:dev": "email dev",
     "email:build": "email build",
     "email:export": "email export",
