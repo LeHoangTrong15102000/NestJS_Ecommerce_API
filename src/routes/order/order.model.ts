@@ -1,34 +1,7 @@
 import { OrderStatus } from 'src/shared/constants/order.constant'
 import { PaginationQuerySchema } from 'src/shared/models/request.model'
+import { OrderSchema, OrderStatusSchema } from 'src/shared/models/shared-order.model'
 import { z } from 'zod'
-
-const OrderStatusSchema = z.enum([
-  OrderStatus.PENDING_PAYMENT,
-  OrderStatus.PENDING_PICKUP,
-  OrderStatus.PENDING_DELIVERY,
-  OrderStatus.DELIVERED,
-  OrderStatus.RETURNED,
-  OrderStatus.CANCELLED,
-])
-
-export const OrderSchema = z.object({
-  id: z.number(),
-  userId: z.number(),
-  status: OrderStatusSchema,
-  receiver: z.object({
-    name: z.string(),
-    phone: z.string(),
-    address: z.string(),
-  }),
-  shopId: z.number().nullable(),
-
-  createdById: z.number().nullable(),
-  updatedById: z.number().nullable(),
-  deletedById: z.number().nullable(),
-  deletedAt: z.date().nullable(),
-  createdAt: z.date(),
-  updatedAt: z.date(),
-})
 
 export const ProductSKUSnapshotSchema = z.object({
   id: z.number(),

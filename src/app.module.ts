@@ -23,6 +23,7 @@ import { ProductTranslationModule } from 'src/routes/product/product-translation
 import { CartModule } from 'src/routes/cart/cart.module'
 import { OrderModule } from 'src/routes/order/order.module'
 import { WebsocketModule } from 'src/websockets/websocket.module'
+import { PaymentModule } from 'src/routes/payment/payment.module'
 
 // console.log(path.resolve('src/i18n/'))
 
@@ -53,6 +54,7 @@ import { WebsocketModule } from 'src/websockets/websocket.module'
     ProductTranslationModule,
     CartModule,
     OrderModule,
+    PaymentModule,
   ],
   controllers: [AppController],
   providers: [
