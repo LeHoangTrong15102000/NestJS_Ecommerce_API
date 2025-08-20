@@ -26,6 +26,7 @@ import { WebsocketModule } from 'src/websockets/websocket.module'
 import { PaymentModule } from 'src/routes/payment/payment.module'
 import { BullModule } from '@nestjs/bullmq'
 import envConfig from 'src/shared/config'
+import { PaymentConsumer } from 'src/queues/payment.consumer'
 
 // console.log(path.resolve('src/i18n/'))
 
@@ -91,6 +92,7 @@ import envConfig from 'src/shared/config'
     //   provide: APP_FILTER,
     //   useClass: CatchEverythingFilter,
     // },
+    PaymentConsumer, // test xem khi mà Order xong thì nó đưa vào cái Queue rồi nó có chạy cái hàm ở trong PaymentConsumer hay không
   ],
 })
 export class AppModule {}

@@ -26,3 +26,7 @@ export const generateRandomFileName = (filename: string) => {
   const ext = path.extname(filename)
   return `${uuidv4()}${ext}` // Như thế này là được
 }
+
+export const generateCancelPaymentJobId = (paymentId: number) => {
+  return `paymentId-${paymentId}`
+}

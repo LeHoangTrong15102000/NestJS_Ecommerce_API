@@ -540,6 +540,10 @@ AWS_S3_BUCKET_NAME=your-bucket-name
 
 ### Bài 150 Tạo Producer và Consumer cho Queue
 
+- Check coi thử là cái CancelPaymentJob khi mà chúng ta tạo ra cái Order thì nó đã được add vào bên trong cái Queue hay chưa -> Check kĩ cái chỗ này
+
+- Chúng ta cần phải setup cho nó chạy thử để xem là sau khoảng thời gian đó là nó có bị remove ra cái Queue hay không
+
 ### Bài 151 Tự động tính năng tự động cancel payment sau 24h không thanh toán
 
 ### Bài 152 Xóa job cancel payment khi thanh toán thành công
