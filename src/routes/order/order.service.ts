@@ -6,10 +6,7 @@ import { OrderRepo } from 'src/routes/order/order.repo'
 
 @Injectable()
 export class OrderService {
-  constructor(
-    private readonly orderRepo: OrderRepo,
-    private readonly orderProducer: OrderProducer,
-  ) {}
+  constructor(private readonly orderRepo: OrderRepo) {}
 
   async list(userId: number, query: GetOrderListQueryType) {
     return this.orderRepo.list(userId, query)
@@ -18,10 +15,7 @@ export class OrderService {
   async create(userId: number, body: CreateOrderBodyType) {
     const result = await this.orderRepo.create(userId, body)
     // Tạo order thành công thì tiến hành tạo cái Job
-    await this.orderProducer.addCancelPaymentJob(result.paymentId)
-    return {
-      data: result.orders,
-    }
+    return result
   }
 
   cancel(userId: number, orderId: number) {
