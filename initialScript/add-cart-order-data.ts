@@ -77,7 +77,7 @@ export const addCartOrderData = async () => {
 
     // Tạo khách hàng
     const clientUsers: any[] = []
-    for (let i = 1; i <= 3; i++) {
+    for (let i = 1; i <= 8; i++) {
       const hashedPassword = await hashingService.hash('User@123')
       let user = await prisma.user.findFirst({ where: { email: `customer${i}@example.com` } })
       if (!user) {
@@ -98,7 +98,7 @@ export const addCartOrderData = async () => {
 
     // Tạo sellers (shop owners)
     const sellerUsers: any[] = []
-    for (let i = 1; i <= 2; i++) {
+    for (let i = 1; i <= 4; i++) {
       const hashedPassword = await hashingService.hash('Seller@123')
       let user = await prisma.user.findFirst({ where: { email: `seller${i}@example.com` } })
       if (!user) {
@@ -123,7 +123,23 @@ export const addCartOrderData = async () => {
     console.log('\n🏷️ BƯỚC 3: Tạo brands mẫu...')
 
     const brands: any[] = []
-    const brandNames = ['Apple', 'Samsung', 'Xiaomi', 'Nike', 'Adidas']
+    const brandNames = [
+      'Apple',
+      'Samsung',
+      'Xiaomi',
+      'Nike',
+      'Adidas',
+      'Sony',
+      'LG',
+      'Canon',
+      'Dell',
+      'HP',
+      'Lenovo',
+      'Asus',
+      'MSI',
+      'Razer',
+      'Logitech',
+    ]
 
     for (const brandName of brandNames) {
       let brand = await prisma.brand.findFirst({ where: { name: brandName } })
@@ -146,6 +162,12 @@ export const addCartOrderData = async () => {
       { name: 'Thời trang', logo: SAMPLE_IMAGE_URL },
       { name: 'Gia dụng', logo: SAMPLE_IMAGE_URL },
       { name: 'Thể thao', logo: SAMPLE_IMAGE_URL },
+      { name: 'Sách', logo: SAMPLE_IMAGE_URL },
+      { name: 'Nhà cửa', logo: SAMPLE_IMAGE_URL },
+      { name: 'Làm đẹp', logo: SAMPLE_IMAGE_URL },
+      { name: 'Đồ chơi', logo: SAMPLE_IMAGE_URL },
+      { name: 'Ô tô', logo: SAMPLE_IMAGE_URL },
+      { name: 'Thực phẩm', logo: SAMPLE_IMAGE_URL },
     ]
 
     for (const catData of categoryData) {
@@ -241,6 +263,107 @@ export const addCartOrderData = async () => {
           { value: 'Dung lượng', options: ['128GB', '256GB'] },
         ],
       },
+      {
+        name: 'Sony WH-1000XM5',
+        basePrice: 8500000,
+        virtualPrice: 9500000,
+        brandId: brands.find((b) => b.name === 'Sony')?.id || brands[5].id,
+        categoryIds: [categories[0].id], // Điện tử
+        variants: [{ value: 'Màu sắc', options: ['Đen', 'Trắng', 'Xanh'] }],
+      },
+      {
+        name: 'LG OLED C3 65"',
+        basePrice: 35000000,
+        virtualPrice: 40000000,
+        brandId: brands.find((b) => b.name === 'LG')?.id || brands[6].id,
+        categoryIds: [categories[0].id], // Điện tử
+        variants: [{ value: 'Kích thước', options: ['55"', '65"', '77"'] }],
+      },
+      {
+        name: 'Canon EOS R6 Mark II',
+        basePrice: 45000000,
+        virtualPrice: 50000000,
+        brandId: brands.find((b) => b.name === 'Canon')?.id || brands[7].id,
+        categoryIds: [categories[0].id], // Điện tử
+        variants: [
+          { value: 'Màu sắc', options: ['Đen'] },
+          { value: 'Kit Lens', options: ['Có', 'Không'] },
+        ],
+      },
+      {
+        name: 'Dell XPS 13 Plus',
+        basePrice: 28000000,
+        virtualPrice: 32000000,
+        brandId: brands.find((b) => b.name === 'Dell')?.id || brands[8].id,
+        categoryIds: [categories[0].id], // Điện tử
+        variants: [
+          { value: 'CPU', options: ['i5', 'i7', 'i9'] },
+          { value: 'RAM', options: ['8GB', '16GB', '32GB'] },
+        ],
+      },
+      {
+        name: 'HP Spectre x360',
+        basePrice: 25000000,
+        virtualPrice: 29000000,
+        brandId: brands.find((b) => b.name === 'HP')?.id || brands[9].id,
+        categoryIds: [categories[0].id], // Điện tử
+        variants: [
+          { value: 'Màu sắc', options: ['Bạc', 'Đen', 'Xanh'] },
+          { value: 'Màn hình', options: ['13"', '14"', '15"'] },
+        ],
+      },
+      {
+        name: 'Lenovo ThinkPad X1 Carbon',
+        basePrice: 32000000,
+        virtualPrice: 36000000,
+        brandId: brands.find((b) => b.name === 'Lenovo')?.id || brands[10].id,
+        categoryIds: [categories[0].id], // Điện tử
+        variants: [
+          { value: 'CPU', options: ['i5', 'i7'] },
+          { value: 'RAM', options: ['8GB', '16GB'] },
+        ],
+      },
+      {
+        name: 'Asus ROG Strix G15',
+        basePrice: 22000000,
+        virtualPrice: 25000000,
+        brandId: brands.find((b) => b.name === 'Asus')?.id || brands[11].id,
+        categoryIds: [categories[0].id], // Điện tử
+        variants: [
+          { value: 'GPU', options: ['RTX 4060', 'RTX 4070', 'RTX 4080'] },
+          { value: 'RAM', options: ['16GB', '32GB'] },
+        ],
+      },
+      {
+        name: 'MSI GE76 Raider',
+        basePrice: 35000000,
+        virtualPrice: 40000000,
+        brandId: brands.find((b) => b.name === 'MSI')?.id || brands[12].id,
+        categoryIds: [categories[0].id], // Điện tử
+        variants: [
+          { value: 'GPU', options: ['RTX 4070', 'RTX 4080', 'RTX 4090'] },
+          { value: 'Màn hình', options: ['15.6"', '17.3"'] },
+        ],
+      },
+      {
+        name: 'Razer Blade 15',
+        basePrice: 38000000,
+        virtualPrice: 42000000,
+        brandId: brands.find((b) => b.name === 'Razer')?.id || brands[13].id,
+        categoryIds: [categories[0].id], // Điện tử
+        variants: [
+          { value: 'GPU', options: ['RTX 4060', 'RTX 4070', 'RTX 4080'] },
+          { value: 'Màn hình', options: ['QHD 165Hz', 'QHD 240Hz'] },
+        ],
+      },
+      {
+        name: 'Logitech MX Master 3S',
+        basePrice: 2500000,
+        virtualPrice: 3000000,
+        brandId: brands.find((b) => b.name === 'Logitech')?.id || brands[14].id,
+        categoryIds: [categories[0].id], // Điện tử
+        variants: [{ value: 'Màu sắc', options: ['Đen', 'Trắng', 'Xám'] }],
+      },
     ]
 
     for (const prodData of productData) {
@@ -330,8 +453,8 @@ export const addCartOrderData = async () => {
 
     // Mỗi khách hàng sẽ có một số items trong giỏ hàng
     for (const customer of clientUsers) {
-      // Random 3-5 items per customer
-      const numItems = Math.floor(Math.random() * 3) + 3
+      // Random 5-12 items per customer (tăng số lượng)
+      const numItems = Math.floor(Math.random() * 8) + 5
       const selectedSkus = skus.sort(() => 0.5 - Math.random()).slice(0, numItems)
 
       for (const sku of selectedSkus) {
@@ -339,7 +462,7 @@ export const addCartOrderData = async () => {
           data: {
             skuId: sku.id,
             userId: customer.id,
-            quantity: Math.floor(Math.random() * 3) + 1, // 1-3 quantity
+            quantity: Math.floor(Math.random() * 5) + 1, // 1-5 quantity (tăng số lượng)
           },
         })
         cartItems.push(cartItem)
@@ -353,104 +476,113 @@ export const addCartOrderData = async () => {
 
     const orders: any[] = []
 
-    // Tạo orders cho một số khách hàng
+    // Tạo orders cho tất cả khách hàng (tăng số lượng orders)
     for (let i = 0; i < clientUsers.length; i++) {
       const customer = clientUsers[i]
 
       // Lấy một số cart items của customer này để tạo order
       const customerCartItems = cartItems.filter((item) => item.userId === customer.id)
-      const orderCartItems = customerCartItems.slice(0, Math.floor(customerCartItems.length / 2))
+      // Tạo 2-4 orders cho mỗi customer
+      const numOrders = Math.floor(Math.random() * 3) + 2
 
-      if (orderCartItems.length > 0) {
-        // Group cart items by seller (shop)
-        const itemsByShop = new Map()
+      for (let orderIndex = 0; orderIndex < numOrders; orderIndex++) {
+        // Chia cart items thành các order khác nhau
+        const itemsPerOrder = Math.floor(customerCartItems.length / numOrders)
+        const startIndex = orderIndex * itemsPerOrder
+        const endIndex = orderIndex === numOrders - 1 ? customerCartItems.length : startIndex + itemsPerOrder
+        const orderCartItems = customerCartItems.slice(startIndex, endIndex)
 
-        for (const cartItem of orderCartItems) {
-          const sku = skus.find((s) => s.id === cartItem.skuId)
-          const product = products.find((p) => p.id === sku?.productId)
-          const shopId = sellerUsers[0].id // Simplified: all products belong to first seller
+        if (orderCartItems.length > 0) {
+          // Group cart items by seller (shop)
+          const itemsByShop = new Map()
 
-          if (!itemsByShop.has(shopId)) {
-            itemsByShop.set(shopId, [])
-          }
-          itemsByShop.get(shopId).push(cartItem)
-        }
-
-        // Tạo order cho mỗi shop
-        for (const [shopId, items] of itemsByShop.entries()) {
-          // Tính tổng tiền cho order
-          let totalAmount = 0
-          for (const cartItem of items) {
-            const sku = skus.find((s) => s.id === cartItem.skuId)
-            totalAmount += (sku?.price || 0) * cartItem.quantity
-          }
-
-          // Tạo payment trước
-          const payment = await prisma.payment.create({
-            data: {
-              status: [PaymentStatus.PENDING, PaymentStatus.SUCCESS, PaymentStatus.FAILED][
-                Math.floor(Math.random() * 3)
-              ],
-            },
-          })
-
-          const order = await prisma.order.create({
-            data: {
-              userId: customer.id,
-              status: [OrderStatus.PENDING_PAYMENT, OrderStatus.PENDING_PICKUP, OrderStatus.DELIVERED][
-                Math.floor(Math.random() * 3)
-              ],
-              receiver: {
-                name: customer.name,
-                phone: customer.phoneNumber,
-                address: `${123 + i} Đường ABC, Quận ${i + 1}, TP.HCM`,
-              },
-              shopId: shopId,
-              paymentId: payment.id,
-              createdById: customer.id,
-            },
-          })
-
-          // Tạo ProductSKUSnapshot cho order
-          for (const cartItem of items) {
+          for (const cartItem of orderCartItems) {
             const sku = skus.find((s) => s.id === cartItem.skuId)
             const product = products.find((p) => p.id === sku?.productId)
-            const productTranslation = await prisma.productTranslation.findFirst({
-              where: { productId: product?.id, languageId: 'vi' },
+            const shopId = sellerUsers[0].id // Simplified: all products belong to first seller
+
+            if (!itemsByShop.has(shopId)) {
+              itemsByShop.set(shopId, [])
+            }
+            itemsByShop.get(shopId).push(cartItem)
+          }
+
+          // Tạo order cho mỗi shop
+          for (const [shopId, items] of itemsByShop.entries()) {
+            // Tính tổng tiền cho order
+            let totalAmount = 0
+            for (const cartItem of items) {
+              const sku = skus.find((s) => s.id === cartItem.skuId)
+              totalAmount += (sku?.price || 0) * cartItem.quantity
+            }
+
+            // Tạo payment trước
+            const payment = await prisma.payment.create({
+              data: {
+                status: [PaymentStatus.PENDING, PaymentStatus.SUCCESS, PaymentStatus.FAILED][
+                  Math.floor(Math.random() * 3)
+                ],
+              },
             })
 
-            await prisma.productSKUSnapshot.create({
+            const order = await prisma.order.create({
               data: {
-                productId: product?.id || null,
-                productName: product?.name || 'Unknown Product',
-                productTranslations: productTranslation
-                  ? [
-                      {
-                        id: productTranslation.id,
-                        name: productTranslation.name,
-                        description: productTranslation.description,
-                        languageId: productTranslation.languageId,
-                      },
-                    ]
-                  : [],
-                skuPrice: sku?.price || 0,
-                image: sku?.image || pickRandom(SAMPLE_IMAGE_URLS),
-                skuValue: sku?.value || 'Unknown',
-                skuId: sku?.id || null,
-                orderId: order.id,
-                quantity: cartItem.quantity,
+                userId: customer.id,
+                status: [OrderStatus.PENDING_PAYMENT, OrderStatus.PENDING_PICKUP, OrderStatus.DELIVERED][
+                  Math.floor(Math.random() * 3)
+                ],
+                receiver: {
+                  name: customer.name,
+                  phone: customer.phoneNumber,
+                  address: `${123 + i} Đường ABC, Quận ${i + 1}, TP.HCM`,
+                },
+                shopId: shopId,
+                paymentId: payment.id,
+                createdById: customer.id,
+              },
+            })
+
+            // Tạo ProductSKUSnapshot cho order
+            for (const cartItem of items) {
+              const sku = skus.find((s) => s.id === cartItem.skuId)
+              const product = products.find((p) => p.id === sku?.productId)
+              const productTranslation = await prisma.productTranslation.findFirst({
+                where: { productId: product?.id, languageId: 'vi' },
+              })
+
+              await prisma.productSKUSnapshot.create({
+                data: {
+                  productId: product?.id || null,
+                  productName: product?.name || 'Unknown Product',
+                  productTranslations: productTranslation
+                    ? [
+                        {
+                          id: productTranslation.id,
+                          name: productTranslation.name,
+                          description: productTranslation.description,
+                          languageId: productTranslation.languageId,
+                        },
+                      ]
+                    : [],
+                  skuPrice: sku?.price || 0,
+                  image: sku?.image || pickRandom(SAMPLE_IMAGE_URLS),
+                  skuValue: sku?.value || 'Unknown',
+                  skuId: sku?.id || null,
+                  orderId: order.id,
+                  quantity: cartItem.quantity,
+                },
+              })
+            }
+
+            orders.push(order)
+
+            // Xóa cart items đã được order
+            await prisma.cartItem.deleteMany({
+              where: {
+                id: { in: items.map((item) => item.id) },
               },
             })
           }
-
-          orders.push(order)
-
-          // Xóa cart items đã được order
-          await prisma.cartItem.deleteMany({
-            where: {
-              id: { in: items.map((item) => item.id) },
-            },
-          })
         }
       }
     }
