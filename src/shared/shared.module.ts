@@ -13,6 +13,7 @@ import { SharedRoleRepository } from 'src/shared/repositories/shared-role.repo'
 import { S3Service } from 'src/shared/services/s3.service'
 import { SharedWebsocketRepository } from 'src/shared/repositories/shared-websocket.repo'
 import { PaymentAPIKeyGuard } from 'src/shared/guards/payment-api-key.guard'
+import { SharedPaymentRepository } from 'src/shared/repositories/shared-payment.repo'
 
 const sharedServices = [
   PrismaService,
@@ -24,6 +25,7 @@ const sharedServices = [
   S3Service,
   SharedRoleRepository,
   SharedWebsocketRepository,
+  SharedPaymentRepository,
 ]
 
 // Module này được coi là import toàn cục rồi, nên là những cái  Service shared chung thì chỉ cần import vào trong đây là được
