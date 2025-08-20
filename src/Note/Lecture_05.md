@@ -534,6 +534,10 @@ AWS_S3_BUCKET_NAME=your-bucket-name
 
 ### Bài 149 Setup Redis và BullMQ để làm Queue
 
+- Setup cái Redis và Queue để mà xoá cái order và cái payment của người dùng khi mà họ không thực hiện thanh toán cho cái đơn hàng của họ
+
+- Hướng dẫn setup trên redis local và redis cloud luôn
+
 ### Bài 150 Tạo Producer và Consumer cho Queue
 
 ### Bài 151 Tự động tính năng tự động cancel payment sau 24h không thanh toán

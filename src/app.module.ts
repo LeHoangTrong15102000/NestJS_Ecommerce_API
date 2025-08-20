@@ -24,11 +24,21 @@ import { CartModule } from 'src/routes/cart/cart.module'
 import { OrderModule } from 'src/routes/order/order.module'
 import { WebsocketModule } from 'src/websockets/websocket.module'
 import { PaymentModule } from 'src/routes/payment/payment.module'
+import { BullModule } from '@nestjs/bullmq'
+import envConfig from 'src/shared/config'
 
 // console.log(path.resolve('src/i18n/'))
 
 @Module({
   imports: [
+    BullModule.forRoot({
+      connection: {
+        host: envConfig.REDIS_HOST,
+        port: Number(envConfig.REDIS_PORT),
+        username: envConfig.REDIS_USERNAME,
+        password: envConfig.REDIS_PASSWORD,
+      },
+    }),
     I18nModule.forRoot({
       fallbackLanguage: 'en', // Nếu không có truyền cái gì lên thì nó sẽ tự động lấy là `en`
       loaderOptions: {
