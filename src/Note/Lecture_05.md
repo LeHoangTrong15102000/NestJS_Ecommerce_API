@@ -550,6 +550,10 @@ AWS_S3_BUCKET_NAME=your-bucket-name
 
 ### Bài 153 Rollback update khi mà Queue bị lỗi
 
+- Cái webhook khi mà nó gọi nhiều lần đi chăng nữa thì chúng ta cần đảm bảo là cái kết quả nó không thay đổi, chứ không phải là gọi nhiều lần chúng ta cứ cập nhật, cập nhật liên tục, chúng ta cập nhật cái stock của sản phẩm thì như vậy là không được
+
+- Cái vấn đề thứ 2 đó là ở cái việc mà khi mà cái webhook nó thực hiện thì không may cái cancel payment job nó bị lỗi thì nó có quăng ra lỗi như mà cái record của chúng ta nó đã được update rồi do đó ở chỗ này chúng ta cần phải xử lý lại cho nó đồng nhất về dữ liệu ở cái chỗ này thì mới được -> Nên là chúng ta muốn khi mà cái JobQueue nó bị lỗi thì cái webhook receiver chúng ta cũng sẽ hoàn tác lại.
+
 ### Bài 154 Đăng ký sepay và liên kết bank
 
 ### Bài 155 Cài đặt Webhook Sepay
