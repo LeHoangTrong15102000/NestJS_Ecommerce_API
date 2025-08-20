@@ -43,10 +43,11 @@ const configSchema = z.object({
   // VNDATA_CLOUD_STORAGE: z.string(),
   // S3_IMAGE_QUALITY: z.number(),
   ANTHROPIC_API_KEY: z.string(),
-  REDIS_HOST: z.string(),
-  REDIS_PORT: z.string(),
-  REDIS_USERNAME: z.string(),
-  REDIS_PASSWORD: z.string(),
+  // REDIS_HOST: z.string(),
+  // REDIS_PORT: z.string(),
+  // REDIS_USERNAME: z.string(),
+  // REDIS_PASSWORD: z.string(),
+  REDIS_URL: z.string(),
 })
 
 const configServer = configSchema.safeParse(process.env)
