@@ -7,7 +7,10 @@ import { WebsocketAdapter } from 'src/websockets/websocket.adapter'
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule)
   app.enableCors() // Enable CORS for all routes
-  app.useWebSocketAdapter(new WebsocketAdapter(app))
+  // app.useWebSocketAdapter(new WebsocketAdapter(app))
+  const websocketAdapter = new WebsocketAdapter(app)
+  await websocketAdapter.connectToRedis()
+  app.useWebSocketAdapter(websocketAdapter)
   // app.useStaticAssets(UPLOAD_DIR, {
   //   prefix: '/media/static',
   // })
