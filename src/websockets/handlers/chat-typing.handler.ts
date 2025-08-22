@@ -85,7 +85,7 @@ export class ChatTypingHandler {
       // Cleanup database typing indicators
       // Note: Database cleanup sẽ được handle bởi cleanup task
 
-      this.logger.debug(`Removed user ${userId} from all typing indicators`)
+      this.logger.log(`Removed user ${userId} from all typing indicators`)
     } catch (error) {
       this.logger.error(`Error removing user ${userId} from all typing:`, error)
     }
@@ -112,7 +112,7 @@ export class ChatTypingHandler {
       await this.chatService.cleanupExpiredTypingIndicators()
 
       // Redis tự cleanup với TTL, nhưng có thể force nếu cần
-      this.logger.debug('Cleaned up expired typing indicators')
+      this.logger.log('Cleaned up expired typing indicators')
     } catch (error) {
       this.logger.error('Error cleaning up typing indicators:', error)
     }
