@@ -24,6 +24,8 @@ import { CartModule } from 'src/routes/cart/cart.module'
 import { OrderModule } from 'src/routes/order/order.module'
 import { WebsocketModule } from 'src/websockets/websocket.module'
 import { PaymentModule } from 'src/routes/payment/payment.module'
+import { ConversationModule } from 'src/routes/conversation/conversation.module'
+import { SharedChatModule } from 'src/shared/modules/shared-chat.module'
 import { BullModule } from '@nestjs/bullmq'
 import envConfig from 'src/shared/config'
 import { PaymentConsumer } from 'src/queues/payment.consumer'
@@ -47,6 +49,7 @@ import { PaymentConsumer } from 'src/queues/payment.consumer'
       resolvers: [{ use: QueryResolver, options: ['lang'] }, AcceptLanguageResolver],
       typesOutputPath: path.resolve('src/generated/i18n.generated.ts'),
     }),
+    SharedChatModule,
     WebsocketModule,
     SharedModule,
     AuthModule,
@@ -63,6 +66,7 @@ import { PaymentConsumer } from 'src/queues/payment.consumer'
     CartModule,
     OrderModule,
     PaymentModule,
+    ConversationModule,
   ],
   controllers: [AppController],
   providers: [

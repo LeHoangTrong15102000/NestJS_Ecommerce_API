@@ -101,6 +101,14 @@ model User {
   Order                       Order[]
   Websocket                   Websocket[]
 
+  // Chat system relations - thêm mới cho hệ thống chat real-time
+  ownedConversations       Conversation[]        @relation("ConversationOwner")
+  conversationMembers      ConversationMember[]  @relation("ConversationMembers")
+  sentConversationMessages ConversationMessage[] @relation("SentConversationMessages")
+  messageReactions         MessageReaction[]     @relation("MessageReactions")
+  messageReadReceipts      MessageReadReceipt[]  @relation("MessageReadReceipts")
+  typingIndicators         TypingIndicator[]     @relation("TypingIndicators")
+
   @@index([deletedAt])
 }
 
@@ -512,4 +520,189 @@ enum HTTPMethod {
   PATCH
   OPTIONS
   HEAD
+}
+
+// ===== CHAT SYSTEM MODELS - HỆ THỐNG CHAT REAL-TIME =====
+
+// Conversation: Quản lý cuộc trò chuyện (1-1 hoặc nhóm)
+model Conversation {
+  id            String           @id @default(cuid())
+  type          ConversationType @default(DIRECT) // DIRECT or GROUP
+  name          String?          @db.VarChar(500) // Tên nhóm (null cho chat 1-1)
+  description   String? // Mô tả nhóm
+  avatar        String?          @db.VarChar(1000) // Avatar nhóm
+  ownerId       Int? // Chủ nhóm (null cho chat 1-1)
+  lastMessage   String? // Preview tin nhắn cuối
+  lastMessageAt DateTime? // Thời gian tin nhắn cuối
+  isArchived    Boolean          @default(false)
+  createdAt     DateTime         @default(now())
+  updatedAt     DateTime         @updatedAt
+
+  // Relations
+  owner            User?                 @relation("ConversationOwner", fields: [ownerId], references: [id], onDelete: SetNull)
+  members          ConversationMember[]
+  messages         ConversationMessage[]
+  typingIndicators TypingIndicator[]
+
+  @@index([lastMessageAt])
+  @@index([type])
+  @@index([ownerId])
+}
+
+// Thành viên trong cuộc trò chuyện
+model ConversationMember {
+  id             String           @id @default(cuid())
+  conversationId String
+  userId         Int
+  role           ConversationRole @default(MEMBER) // ADMIN, MODERATOR, MEMBER
+  joinedAt       DateTime         @default(now())
+  lastReadAt     DateTime? // Lần cuối đọc tin nhắn
+  unreadCount    Int              @default(0)
+  isActive       Boolean          @default(true) // Còn trong conversation không
+  isMuted        Boolean          @default(false)
+  mutedUntil     DateTime?
+
+  // Relations
+  conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  user         User         @relation("ConversationMembers", fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([conversationId, userId])
+  @@index([userId, isActive])
+  @@index([conversationId, isActive])
+}
+
+// Tin nhắn trong conversation
+model ConversationMessage {
+  id                 String      @id @default(cuid())
+  conversationId     String
+  fromUserId         Int
+  content            String? // Nội dung text (null cho attachment-only)
+  type               MessageType @default(TEXT) // TEXT, IMAGE, FILE, SYSTEM, etc.
+  replyToId          String? // Reply to message
+  isEdited           Boolean     @default(false)
+  editedAt           DateTime?
+  isDeleted          Boolean     @default(false)
+  deletedAt          DateTime?
+  deletedForEveryone Boolean     @default(false)
+  createdAt          DateTime    @default(now())
+  updatedAt          DateTime    @updatedAt
+
+  // Relations
+  conversation Conversation          @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  fromUser     User                  @relation("SentConversationMessages", fields: [fromUserId], references: [id], onDelete: Cascade)
+  replyTo      ConversationMessage?  @relation("MessageReplies", fields: [replyToId], references: [id], onDelete: SetNull)
+  replies      ConversationMessage[] @relation("MessageReplies")
+  attachments  MessageAttachment[]
+  reactions    MessageReaction[]
+  readReceipts MessageReadReceipt[]
+
+  @@index([conversationId, createdAt])
+  @@index([fromUserId])
+  @@index([replyToId])
+  @@index([type])
+}
+
+// File đính kèm tin nhắn
+model MessageAttachment {
+  id        String         @id @default(cuid())
+  messageId String
+  type      AttachmentType // IMAGE, VIDEO, AUDIO, DOCUMENT
+  fileName  String         @db.VarChar(500)
+  fileUrl   String         @db.VarChar(1000)
+  fileSize  Int? // Kích thước file (bytes)
+  mimeType  String?        @db.VarChar(100)
+  thumbnail String?        @db.VarChar(1000) // Thumbnail cho image/video
+  width     Int? // Chiều rộng (cho image/video)
+  height    Int? // Chiều cao (cho image/video)
+  duration  Int? // Thời lượng (cho audio/video) - seconds
+  createdAt DateTime       @default(now())
+
+  // Relations
+  message ConversationMessage @relation(fields: [messageId], references: [id], onDelete: Cascade)
+
+  @@index([messageId])
+  @@index([type])
+}
+
+// Emoji reactions cho tin nhắn
+model MessageReaction {
+  id        String   @id @default(cuid())
+  messageId String
+  userId    Int
+  emoji     String   @db.VarChar(10) // 👍, ❤️, 😂, etc.
+  createdAt DateTime @default(now())
+
+  // Relations
+  message ConversationMessage @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  user    User                @relation("MessageReactions", fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([messageId, userId, emoji])
+  @@index([messageId])
+  @@index([userId])
+}
+
+// Tracking ai đã đọc tin nhắn nào
+model MessageReadReceipt {
+  id        String   @id @default(cuid())
+  messageId String
+  userId    Int
+  readAt    DateTime @default(now())
+
+  // Relations
+  message ConversationMessage @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  user    User                @relation("MessageReadReceipts", fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([messageId, userId])
+  @@index([messageId])
+  @@index([userId])
+  @@index([readAt])
+}
+
+// Theo dõi ai đang gõ trong conversation nào
+model TypingIndicator {
+  id             String   @id @default(cuid())
+  conversationId String
+  userId         Int
+  startedAt      DateTime @default(now())
+  expiresAt      DateTime // Tự động hết hạn sau 10 giây
+
+  // Relations
+  conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  user         User         @relation("TypingIndicators", fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([conversationId, userId])
+  @@index([expiresAt])
+  @@index([conversationId])
+}
+
+// ===== CHAT SYSTEM ENUMS =====
+
+enum ConversationType {
+  DIRECT // Chat 1-1
+  GROUP // Chat nhóm
+}
+
+enum ConversationRole {
+  ADMIN // Quản trị viên nhóm
+  MODERATOR // Điều hành viên
+  MEMBER // Thành viên thường
+}
+
+enum MessageType {
+  TEXT // Tin nhắn text
+  IMAGE // Hình ảnh
+  VIDEO // Video
+  AUDIO // Audio/Voice message
+  FILE // File tài liệu
+  STICKER // Sticker/Emoji lớn
+  SYSTEM // Tin nhắn hệ thống (X joined group, etc.)
+  LOCATION // Chia sẻ vị trí
+  CONTACT // Chia sẻ liên hệ
+}
+
+enum AttachmentType {
+  IMAGE // Hình ảnh (.jpg, .png, .gif, etc.)
+  VIDEO // Video (.mp4, .mov, etc.)
+  AUDIO // Audio (.mp3, .wav, etc.)
+  DOCUMENT // Tài liệu (.pdf, .doc, .xlsx, etc.)
 }
