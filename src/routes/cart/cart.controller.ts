@@ -10,7 +10,7 @@ import {
   GetCartResDTO,
   UpdateCartItemBodyDTO,
 } from 'src/routes/cart/cart.dto'
-import { ZodSerializerDto } from 'nestjs-zod'
+import { ZodResponse } from 'nestjs-zod'
 import { PaginationQueryDTO } from 'src/shared/dtos/request.dto'
 
 @Controller('cart')
@@ -18,19 +18,19 @@ export class CartController {
   constructor(private readonly cartService: CartService) {}
 
   @Get()
-  @ZodSerializerDto(GetCartResDTO)
+  @ZodResponse({ type: GetCartResDTO })
   getCart(@ActiveUser('userId') userId: number, @Query() query: PaginationQueryDTO) {
     return this.cartService.getCart(userId, query)
   }
 
   @Post()
-  @ZodSerializerDto(CartItemDTO)
+  @ZodResponse({ type: CartItemDTO })
   addToCart(@Body() body: AddToCartBodyDTO, @ActiveUser('userId') userId: number) {
     return this.cartService.addToCart(userId, body)
   }
 
   @Put(':cartItemId')
-  @ZodSerializerDto(CartItemDTO)
+  @ZodResponse({ type: CartItemDTO })
   updateCartItem(
     @ActiveUser('userId') userId: number,
     @Param() param: GetCartItemParamsDTO,
@@ -44,7 +44,7 @@ export class CartController {
   }
 
   @Post('delete')
-  @ZodSerializerDto(MessageResDTO)
+  @ZodResponse({ type: MessageResDTO })
   deleteCart(@Body() body: DeleteCartBodyDTO, @ActiveUser('userId') userId: number) {
     return this.cartService.deleteCart(userId, body)
   }

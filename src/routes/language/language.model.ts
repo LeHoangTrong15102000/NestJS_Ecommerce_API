@@ -5,9 +5,9 @@ export const LanguageSchema = z.object({
   name: z.string().max(500),
   createdById: z.number().nullable(),
   updatedById: z.number().nullable(),
-  deletedAt: z.date().nullable(),
-  createdAt: z.date(),
-  updatedAt: z.date(),
+  deletedAt: z.iso.datetime().nullable(),
+  createdAt: z.iso.datetime(),
+  updatedAt: z.iso.datetime(),
 })
 
 // Thì phải chuyển thằng này thằng một cái object thì `ZodSerializerDto` nó mới biết được, với lại trong tương lai mình có làm thêm phân trang cho thằng này thì mình đâu có cần thay đổi cấu trúc array đi.

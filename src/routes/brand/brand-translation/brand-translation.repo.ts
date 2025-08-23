@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common'
+import { SerializeAll } from 'src/shared/decorators/serialize.decorator'
 import {
   GetBrandTranslationDetailResType,
   CreateBrandTranslationBodyType,
@@ -8,6 +9,7 @@ import {
 import { PrismaService } from 'src/shared/services/prisma.service'
 
 @Injectable()
+@SerializeAll()
 export class BrandTranslationRepo {
   constructor(private prismaService: PrismaService) {}
 
@@ -17,7 +19,7 @@ export class BrandTranslationRepo {
         id,
         deletedAt: null,
       },
-    })
+    }) as any
   }
 
   create({
@@ -32,10 +34,10 @@ export class BrandTranslationRepo {
         ...data,
         createdById,
       },
-    })
+    }) as any
   }
 
-  async update({
+  update({
     id,
     updatedById,
     data,
@@ -53,7 +55,7 @@ export class BrandTranslationRepo {
         ...data,
         updatedById,
       },
-    })
+    }) as any
   }
 
   delete(
@@ -66,21 +68,23 @@ export class BrandTranslationRepo {
     },
     isHard?: boolean,
   ): Promise<BrandTranslationType> {
-    return isHard
-      ? this.prismaService.brandTranslation.delete({
-          where: {
-            id,
-          },
-        })
-      : this.prismaService.brandTranslation.update({
-          where: {
-            id,
-            deletedAt: null,
-          },
-          data: {
-            deletedAt: new Date(),
-            deletedById,
-          },
-        })
+    return (
+      isHard
+        ? this.prismaService.brandTranslation.delete({
+            where: {
+              id,
+            },
+          })
+        : this.prismaService.brandTranslation.update({
+            where: {
+              id,
+              deletedAt: null,
+            },
+            data: {
+              deletedAt: new Date(),
+              deletedById,
+            },
+          })
+    ) as any
   }
 }

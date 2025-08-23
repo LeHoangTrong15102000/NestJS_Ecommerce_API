@@ -1,17 +1,17 @@
 import { UnprocessableEntityException } from '@nestjs/common'
-import { createZodValidationPipe } from 'nestjs-zod'
+import { createZodValidationPipe, ZodValidationException, ZodValidationPipe } from 'nestjs-zod'
 import { ZodError } from 'zod'
 
-const CustomZodValidationPipe = createZodValidationPipe({
+const CustomZodValidationPipe: typeof ZodValidationPipe = createZodValidationPipe({
   // Provide custom validation exception factory
   createValidationException: (error: ZodError) => {
-    console.log('Checkkkk error', error.errors)
+    console.log('Checkkkk error', error.issues)
     // Nếu mà cái path trả về là một cái  Array thì chúng ta sẽ join các giá trị bên trong `path` thành một cái chuỗi string
     return new UnprocessableEntityException(
-      error.errors.map((error) => {
+      error.issues.map((issue) => {
         return {
-          ...error,
-          path: error.path.join('.'),
+          ...issue,
+          path: issue.path.join('.'),
         }
       }),
     )

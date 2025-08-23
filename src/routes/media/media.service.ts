@@ -20,7 +20,7 @@ export class MediaService {
           })
           .then((res) => {
             // Chúng ta mong muốn nó là một cái object
-            return { url: res.Location }
+            return { url: String(res.Location) }
           })
       }),
     )

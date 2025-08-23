@@ -1,5 +1,5 @@
 import { Body, Controller, Delete, Get, Param, Post, Put, Query } from '@nestjs/common'
-import { ZodSerializerDto } from 'nestjs-zod'
+import { ZodResponse } from 'nestjs-zod'
 import {
   CreateCategoryBodyDTO,
   GetCategoryDetailResDTO,
@@ -19,20 +19,20 @@ export class CategoryController {
 
   @Get()
   @IsPublic()
-  @ZodSerializerDto(GetAllCategoriesResDTO)
+  @ZodResponse({ type: GetAllCategoriesResDTO })
   findAll(@Query() query: GetAllCategoriesQueryDTO) {
     return this.categoryService.findAll(query.parentCategoryId)
   }
 
   @Get(':categoryId')
   @IsPublic()
-  @ZodSerializerDto(GetCategoryDetailResDTO)
+  @ZodResponse({ type: GetCategoryDetailResDTO })
   findById(@Param() params: GetCategoryParamsDTO) {
     return this.categoryService.findById(params.categoryId)
   }
 
   @Post()
-  @ZodSerializerDto(GetCategoryDetailResDTO)
+  @ZodResponse({ type: GetCategoryDetailResDTO })
   create(@Body() body: CreateCategoryBodyDTO, @ActiveUser('userId') userId: number) {
     return this.categoryService.create({
       data: body,
@@ -41,7 +41,7 @@ export class CategoryController {
   }
 
   @Put(':categoryId')
-  @ZodSerializerDto(GetCategoryDetailResDTO)
+  @ZodResponse({ type: GetCategoryDetailResDTO })
   update(
     @Body() body: UpdateCategoryBodyDTO,
     @Param() params: GetCategoryParamsDTO,
@@ -55,7 +55,7 @@ export class CategoryController {
   }
 
   @Delete(':categoryId')
-  @ZodSerializerDto(MessageResDTO)
+  @ZodResponse({ type: MessageResDTO })
   delete(@Param() params: GetCategoryParamsDTO, @ActiveUser('userId') userId: number) {
     return this.categoryService.delete({
       id: params.categoryId,

@@ -1,12 +1,14 @@
 import { Injectable } from '@nestjs/common'
 import { DeviceType, RefreshTokenType, RegisterBodyType, VerificationCodeType } from 'src/routes/auth/auth.model'
 import { TypeOfVerificationCodeType } from 'src/shared/constants/auth.constant'
+import { SerializeAll } from 'src/shared/decorators/serialize.decorator'
 import { RoleType } from 'src/shared/models/shared-role.model'
 import { UserType } from 'src/shared/models/shared-user.model'
 import { WhereUniqueUserType } from 'src/shared/repositories/shared-user.repo'
 import { PrismaService } from 'src/shared/services/prisma.service'
 
 @Injectable()
+@SerializeAll()
 export class AuthRepository {
   constructor(private readonly prismaService: PrismaService) {}
 
@@ -23,7 +25,7 @@ export class AuthRepository {
         password: true,
         totpSecret: true,
       },
-    })
+    }) as any
   }
 
   // Hàm tạo user bao gồm cả role ở bên trong nữa
@@ -35,7 +37,7 @@ export class AuthRepository {
       include: {
         role: true,
       },
-    })
+    }) as any
   }
 
   // func tạo ra verificationCode
@@ -56,12 +58,12 @@ export class AuthRepository {
         code: payload.code,
         expiresAt: payload.expiresAt,
       },
-    })
+    }) as any
   }
 
   // func tìm ra verificationCode để mà xác thực
   // Trong đây do thằng type là enum nên là nên để cái type của VerificatioCode vào cho nó
-  async findUniqueVerificationCode(
+  findUniqueVerificationCode(
     uniqueValue:
       | { id: number }
       | {
@@ -74,42 +76,42 @@ export class AuthRepository {
   ): Promise<VerificationCodeType | null> {
     return this.prismaService.verificationCode.findUnique({
       where: uniqueValue,
-    })
+    }) as any
   }
 
   //  Tạo token ko dùng transaction
-  async createRefreshToken(data: { token: string; userId: number; expiresAt: Date; deviceId: number }) {
+  createRefreshToken(data: { token: string; userId: number; expiresAt: Date; deviceId: number }) {
     return this.prismaService.refreshToken.create({
       data,
     })
   }
 
-  async deleteRefreshToken(uniqueObject: { token: string }): Promise<RefreshTokenType> {
+  deleteRefreshToken(uniqueObject: { token: string }): Promise<RefreshTokenType> {
     // Sẽ trả về một bản ghi bị xóa dưới dạng object
     return this.prismaService.refreshToken.delete({
       where: uniqueObject,
-    })
+    }) as any
   }
 
-  async createDevice(
+  createDevice(
     data: Pick<DeviceType, 'userId' | 'userAgent' | 'ip'> & Partial<Pick<DeviceType, 'lastActive' | 'isActive'>>,
   ) {
     return this.prismaService.device.create({
       data,
-    })
+    }) as any
   }
 
-  async updateDevice(deviceId: number, data: Partial<DeviceType>): Promise<DeviceType> {
+  updateDevice(deviceId: number, data: Partial<DeviceType>): Promise<DeviceType> {
     return this.prismaService.device.update({
       where: {
         id: deviceId,
       },
       data,
-    })
+    }) as any
   }
 
   // Chỉnh sửa thêm deletedAt: null vào dể mà bên những service gọi tới không cần phải thêm vào
-  async findUniqueUserIncludeRole(uniqueObject: WhereUniqueUserType): Promise<(UserType & { role: RoleType }) | null> {
+  findUniqueUserIncludeRole(uniqueObject: WhereUniqueUserType): Promise<(UserType & { role: RoleType }) | null> {
     return this.prismaService.user.findFirst({
       where: {
         ...uniqueObject,
@@ -118,7 +120,7 @@ export class AuthRepository {
       include: {
         role: true,
       },
-    })
+    }) as any
     // return this.prismaService.user.findUnique({
     //   where: uniqueObject,
     //   include: {
@@ -128,7 +130,7 @@ export class AuthRepository {
   }
 
   // Thằng này nó sẽ không có throw ra lỗi vì nó tìm ko thấy thì nó sẽ trả về là null
-  async findUniqueRefreshTokenIncludeUserRole(uniqueObject: {
+  findUniqueRefreshTokenIncludeUserRole(uniqueObject: {
     token: string
   }): Promise<(RefreshTokenType & { user: UserType & { role: RoleType } }) | null> {
     return this.prismaService.refreshToken.findUnique({
@@ -141,10 +143,10 @@ export class AuthRepository {
           },
         },
       },
-    })
+    }) as any
   }
 
-  async updateDeviceWithTransaction(
+  updateDeviceWithTransaction(
     deviceId: number,
     data: Partial<DeviceType>,
     prisma?: PrismaService,
@@ -156,26 +158,26 @@ export class AuthRepository {
         id: deviceId,
       },
       data,
-    })
+    }) as any
   }
 
   // Tạo refreshToken có sử dụng transaction
-  async createRefreshTokenWithTransaction(
+  createRefreshTokenWithTransaction(
     data: { token: string; userId: number; deviceId: number; expiresAt: Date },
     prisma?: PrismaService,
   ): Promise<RefreshTokenType> {
     const db = prisma ?? this.prismaService
     return db.refreshToken.create({
       data,
-    })
+    }) as any
   }
 
   // Xóa refreshToken có sử dụng transaction
   async deleteRefreshTokenWithTransaction(token: string, prisma?: PrismaService): Promise<void> {
     const db = prisma ?? this.prismaService
-    await db.refreshToken.delete({
+    ;(await db.refreshToken.delete({
       where: { token },
-    })
+    })) as any
   }
 
   // // Update user
@@ -187,14 +189,14 @@ export class AuthRepository {
   // }
 
   // Delete verificationCode
-  async deleteVerificationCode(
+  deleteVerificationCode(
     uniqueValue:
       | { id: number }
       | { email_code_type: { email: string; code: string; type: TypeOfVerificationCodeType } },
   ) {
     return this.prismaService.verificationCode.delete({
       where: uniqueValue,
-    })
+    }) as any
   }
 
   // async findUse

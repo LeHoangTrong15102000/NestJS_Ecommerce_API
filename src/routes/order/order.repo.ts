@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common'
+import { SerializeAll } from 'src/shared/decorators/serialize.decorator'
 import { OrderStatus, Prisma } from '@prisma/client'
 import { OutOfStockSKUException } from 'src/routes/cart/cart.error'
 import {
@@ -22,6 +23,7 @@ import { isNotFoundPrismaError } from 'src/shared/helpers'
 import { PrismaService } from 'src/shared/services/prisma.service'
 
 @Injectable()
+@SerializeAll()
 export class OrderRepo {
   constructor(
     private readonly prismaService: PrismaService,
@@ -59,7 +61,7 @@ export class OrderRepo {
       limit,
       totalItems,
       totalPages: Math.ceil(totalItems / limit),
-    }
+    } as any
   }
 
   async create(
@@ -216,7 +218,7 @@ export class OrderRepo {
     return {
       paymentId,
       orders,
-    }
+    } as any
   }
 
   async detail(userId: number, orderid: number): Promise<GetOrderDetailResType> {
@@ -233,7 +235,7 @@ export class OrderRepo {
     if (!order) {
       throw OrderNotFoundException
     }
-    return order
+    return order as any
   }
 
   async cancel(userId: number, orderId: number): Promise<CancelOrderResType> {
@@ -259,7 +261,7 @@ export class OrderRepo {
           updatedById: userId,
         },
       })
-      return updatedOrder
+      return updatedOrder as any
     } catch (error) {
       if (isNotFoundPrismaError(error)) {
         throw OrderNotFoundException

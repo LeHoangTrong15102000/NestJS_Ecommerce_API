@@ -1,4 +1,5 @@
 import { BadRequestException, Injectable } from '@nestjs/common'
+import { SerializeAll } from 'src/shared/decorators/serialize.decorator'
 import { parse } from 'date-fns'
 import { WebhookPaymentBodyType } from 'src/routes/payment/payment.model'
 import { PaymentProducer } from 'src/routes/payment/payment.producer'
@@ -9,6 +10,7 @@ import { OrderIncludeProductSKUSnapshotType } from 'src/shared/models/shared-ord
 import { PrismaService } from 'src/shared/services/prisma.service'
 
 @Injectable()
+@SerializeAll()
 export class PaymentRepo {
   constructor(
     private readonly prismaService: PrismaService,
@@ -85,7 +87,7 @@ export class PaymentRepo {
       }
       const userId = payment.orders[0].userId
       const { orders } = payment
-      const totalPrice = this.getTotalPrice(orders)
+      const totalPrice = this.getTotalPrice(orders as any)
       if (totalPrice !== body.transferAmount) {
         throw new BadRequestException(`Price not match, expected ${totalPrice} but got ${body.transferAmount}`)
       }

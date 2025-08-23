@@ -130,12 +130,12 @@ export const ConversationMemberSchema = z.object({
   id: z.string(),
   userId: z.number(),
   role: z.enum(['ADMIN', 'MODERATOR', 'MEMBER']),
-  joinedAt: z.date(),
-  lastReadAt: z.date().nullable(),
+  joinedAt: z.iso.datetime(),
+  lastReadAt: z.iso.datetime().nullable(),
   unreadCount: z.number(),
   isActive: z.boolean(),
   isMuted: z.boolean(),
-  mutedUntil: z.date().nullable(),
+  mutedUntil: z.iso.datetime().nullable(),
   user: UserBasicSchema,
 })
 
@@ -150,7 +150,7 @@ export const MessageAttachmentSchema = z.object({
   width: z.number().nullable(),
   height: z.number().nullable(),
   duration: z.number().nullable(),
-  createdAt: z.date(),
+  createdAt: z.iso.datetime(),
 })
 
 export const MessageReactionSchema = z.object({
@@ -158,13 +158,13 @@ export const MessageReactionSchema = z.object({
   emoji: z.string(),
   userId: z.number(),
   user: UserBasicSchema,
-  createdAt: z.date(),
+  createdAt: z.iso.datetime(),
 })
 
 export const MessageReadReceiptSchema = z.object({
   id: z.string(),
   userId: z.number(),
-  readAt: z.date(),
+  readAt: z.iso.datetime(),
   user: UserBasicSchema,
 })
 
@@ -176,12 +176,12 @@ export const ConversationMessageSchema = z.object({
   type: z.enum(['TEXT', 'IMAGE', 'VIDEO', 'AUDIO', 'FILE', 'STICKER', 'SYSTEM', 'LOCATION', 'CONTACT']),
   replyToId: z.string().nullable(),
   isEdited: z.boolean(),
-  editedAt: z.date().nullable(),
+  editedAt: z.iso.datetime().nullable(),
   isDeleted: z.boolean(),
-  deletedAt: z.date().nullable(),
+  deletedAt: z.iso.datetime().nullable(),
   deletedForEveryone: z.boolean(),
-  createdAt: z.date(),
-  updatedAt: z.date(),
+  createdAt: z.iso.datetime(),
+  updatedAt: z.iso.datetime(),
   fromUser: UserBasicSchema,
   replyTo: z
     .lazy(() =>
@@ -209,10 +209,33 @@ export const ConversationSchema = z.object({
   avatar: z.string().nullable(),
   ownerId: z.number().nullable(),
   lastMessage: z.string().nullable(),
-  lastMessageAt: z.date().nullable(),
+  lastMessageAt: z.iso.datetime().nullable(),
   isArchived: z.boolean(),
-  createdAt: z.date(),
-  updatedAt: z.date(),
+  createdAt: z.iso.datetime(),
+  updatedAt: z.iso.datetime(),
+  owner: UserBasicSchema.nullable(),
+  members: z.array(ConversationMemberSchema),
+  // Computed fields for current user
+  unreadCount: z.number(),
+  isCurrentUserAdmin: z.boolean().optional(),
+  currentUserRole: z.enum(['ADMIN', 'MODERATOR', 'MEMBER']).nullable().optional(),
+  memberCount: z.number().optional(),
+  onlineMembers: z.array(z.number()).optional(),
+})
+
+// Schema cho service response (cho phép Date objects)
+export const ConversationServiceSchema = z.object({
+  id: z.string(),
+  type: z.enum(['DIRECT', 'GROUP']),
+  name: z.string().nullable(),
+  description: z.string().nullable(),
+  avatar: z.string().nullable(),
+  ownerId: z.number().nullable(),
+  lastMessage: z.string().nullable(),
+  lastMessageAt: z.union([z.date(), z.string()]).nullable(),
+  isArchived: z.boolean(),
+  createdAt: z.iso.datetime(),
+  updatedAt: z.iso.datetime(),
   owner: UserBasicSchema.nullable(),
   members: z.array(ConversationMemberSchema),
   // Computed fields for current user
@@ -274,9 +297,9 @@ export const MessageSearchResultSchema = z.object({
   }),
   facets: z
     .object({
-      byType: z.record(z.number()),
-      byUser: z.record(z.number()),
-      byConversation: z.record(z.number()),
+      byType: z.record(z.number(), z.number()),
+      byUser: z.record(z.number(), z.number()),
+      byConversation: z.record(z.number(), z.number()),
     })
     .optional(),
 })
@@ -285,8 +308,14 @@ export const TypingIndicatorSchema = z.object({
   conversationId: z.string(),
   userId: z.number(),
   user: UserBasicSchema,
-  startedAt: z.date(),
-  expiresAt: z.date(),
+  startedAt: z.iso.datetime(),
+  expiresAt: z.iso.datetime(),
+})
+
+// Schema cho response có message
+export const MessageResponseSchema = z.object({
+  message: z.string(),
+  data: z.any().optional(),
 })
 
 // ===== Export DTOs =====
@@ -310,8 +339,10 @@ export class GetMessagesQueryDTO extends createZodDto(GetMessagesQuerySchema) {}
 export class SearchMessagesQueryDTO extends createZodDto(SearchMessagesQuerySchema) {}
 
 export class ConversationResDTO extends createZodDto(ConversationSchema) {}
+export class ConversationServiceResDTO extends createZodDto(ConversationServiceSchema) {}
 export class ConversationsListResDTO extends createZodDto(ConversationsListSchema) {}
 export class ConversationMessageResDTO extends createZodDto(ConversationMessageSchema) {}
 export class MessagesListResDTO extends createZodDto(MessagesListSchema) {}
 export class MessageSearchResultResDTO extends createZodDto(MessageSearchResultSchema) {}
 export class TypingIndicatorResDTO extends createZodDto(TypingIndicatorSchema) {}
+export class MessageResponseDTO extends createZodDto(MessageResponseSchema) {}

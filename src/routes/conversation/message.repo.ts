@@ -1,8 +1,10 @@
 import { Injectable } from '@nestjs/common'
+import { SerializeAll } from 'src/shared/decorators/serialize.decorator'
 import { PrismaService } from 'src/shared/services/prisma.service'
 import { Prisma } from '@prisma/client'
 
 @Injectable()
+@SerializeAll()
 export class MessageRepository {
   constructor(private readonly prisma: PrismaService) {}
 

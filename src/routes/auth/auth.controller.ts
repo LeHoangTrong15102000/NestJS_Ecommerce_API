@@ -1,7 +1,7 @@
 import { Body, Controller, Get, HttpCode, HttpStatus, Ip, Post, Query, Req, Res } from '@nestjs/common'
 
 import { AuthService } from 'src/routes/auth/auth.service'
-import { ZodSerializerDto } from 'nestjs-zod'
+import { ZodResponse } from 'nestjs-zod'
 import {
   DisableTwoFactorBodyDTO,
   ForgotPasswordBodyDTO,
@@ -36,7 +36,7 @@ export class AuthController {
   @Post('register')
   // Sử dụng ZodSerializerDto để mà validation output của APIendpoint, nó sẽ chuẩn hóa dữ liệu, ví dụ như là RegisterRes chúng ta không muốn trả về `password` mà trong res lại có password thì nó sẽ báo lỗi và xử lý chỗ này
   // Nên là khi mà thêm ZodSerializerDto này vào thì nó sẽ chuẩn hóa dữ liệu(output) trả về cho chúng ta theo đúng cái class ví dụ `RegisterResDTO` mà chúng ta cung cấp
-  @ZodSerializerDto(RegisterResDTO)
+  @ZodResponse({ type: RegisterResDTO })
   // Ở controller này thì chúng ta cần phải khai báo DTO nhưng bên service thì cần phải dùng @type để mà biểu thị cái params
   @IsPublic()
   register(@Body() body: RegisterBodyDTO) {
@@ -44,7 +44,7 @@ export class AuthController {
   }
 
   @Post('otp')
-  @ZodSerializerDto(MessageResDTO)
+  @ZodResponse({ type: MessageResDTO })
   @IsPublic()
   sendOTP(@Body() body: SendOTPBodyDTO) {
     return this.authService.sendOTP(body)
@@ -52,7 +52,7 @@ export class AuthController {
 
   // Dùng Decorator userAgent và IP của người dùng
   @Post('login')
-  @ZodSerializerDto(LoginResDTO)
+  @ZodResponse({ type: LoginResDTO })
   @IsPublic()
   login(@Body() body: LoginBodyDTO, @UserAgent() userAgent: string, @Ip() ip: string) {
     return this.authService.login({
@@ -64,7 +64,7 @@ export class AuthController {
 
   // Khi mà mình không strict thì nếu dữ liệu trả về cho người dùng nó có bị dư hay cái gì đó thì nó vẫn không gây ra lỗi.
   @Post('refresh-token')
-  @ZodSerializerDto(RefreshTokenResDTO)
+  @ZodResponse({ type: RefreshTokenResDTO })
   @HttpCode(HttpStatus.OK)
   refreshToken(@Body() body: RefreshTokenBodyDTO, @UserAgent() userAgent: string, @Ip() ip: string) {
     return this.authService.refreshToken({
@@ -76,7 +76,7 @@ export class AuthController {
 
   @Post('logout')
   // Do thằng logout chỉ trả về message mà thôi
-  @ZodSerializerDto(MessageResDTO)
+  @ZodResponse({ type: MessageResDTO })
   logout(@Body() body: LogoutBodyDTO) {
     return this.authService.logout(body.refreshToken)
   }
@@ -85,7 +85,7 @@ export class AuthController {
   @Get('google-link')
   @IsPublic()
   // Thằng này trả về URL
-  @ZodSerializerDto(GetAuthorizationUrlResDTO)
+  @ZodResponse({ type: GetAuthorizationUrlResDTO })
   // Lấy vào cái userAgent và ip của người dùng
   getAuthorizationUrl(@UserAgent() userAgent: string, @Ip() ip: string) {
     return this.googleService.getAuthorizationUrl({ userAgent, ip })
@@ -121,7 +121,7 @@ export class AuthController {
 
   @Post('forgot-password')
   @IsPublic()
-  @ZodSerializerDto(MessageResDTO)
+  @ZodResponse({ type: MessageResDTO })
   forgotPassword(@Body() body: ForgotPasswordBodyDTO) {
     return this.authService.forgotPassword(body)
   }
@@ -136,13 +136,13 @@ export class AuthController {
 
   // Tại sao chúng ta không sử dụng method Get mà lại dùng method Post và truyền lên body rỗng là gì -> Vì Post mang ý nghĩa là tạo ra cái gì đó và Post cũng bảo mật hơn Get, vì Get có thể được kích hoạt thông qua URL trên trình duyệt, Post thì không, vấn đề đó thì kẻ tấn công có thể gởi cho ta một cái đường đẫn -> Sẽ kích hoạt cái API này thì điều đó nó sẽ không bảo mật
   @Post('2fa/enable')
-  @ZodSerializerDto(TwoFactorEnableResDTO)
+  @ZodResponse({ type: TwoFactorEnableResDTO })
   enableTwoFactorAuth(@Body() _: EmptyBodyDTO, @ActiveUser('userId') userId: number) {
     return this.authService.enableTwoFactorAuth(userId)
   }
 
   @Post('2fa/disable')
-  @ZodSerializerDto(MessageResDTO)
+  @ZodResponse({ type: MessageResDTO })
   disableTwoFactorAuth(@Body() body: DisableTwoFactorBodyDTO, @ActiveUser('userId') userId: number) {
     // Nếu mà truyền như thế này thì cái thằng userId nó nằm cùng object với body rồi
     return this.authService.disableTwoFactorAuth({

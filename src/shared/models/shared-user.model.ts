@@ -20,9 +20,9 @@ export const UserSchema = z.object({
   createdById: z.number().nullable(),
   updatedById: z.number().nullable(),
   deletedById: z.number().nullable(),
-  createdAt: z.date(),
-  updatedAt: z.date(),
-  deletedAt: z.date().nullable(),
+  createdAt: z.iso.datetime(),
+  updatedAt: z.iso.datetime(),
+  deletedAt: z.iso.datetime().nullable(),
 })
 
 /**
@@ -56,6 +56,28 @@ export const UpdateProfileResSchema = UserSchema.omit({
   totpSecret: true,
 })
 
+/**
+ * Áp dụng cho Response của api PUT('profile') và PUT('users/:userId') - cho phép null
+ */
+export const UpdateProfileResNullableSchema = z
+  .object({
+    id: z.number(),
+    email: z.string(),
+    name: z.string(),
+    phoneNumber: z.string(),
+    avatar: z.string().nullable(),
+    status: z.enum([UserStatus.ACTIVE, UserStatus.INACTIVE, UserStatus.BLOCKED]),
+    roleId: z.number(),
+    createdById: z.number().nullable(),
+    updatedById: z.number().nullable(),
+    deletedById: z.number().nullable(),
+    createdAt: z.iso.datetime(),
+    updatedAt: z.iso.datetime(),
+    deletedAt: z.iso.datetime().nullable(),
+  })
+  .nullable()
+
 export type UserType = z.infer<typeof UserSchema>
 export type GetUserProfileResType = z.infer<typeof GetUserProfileResSchema>
 export type UpdateProfileResType = z.infer<typeof UpdateProfileResSchema>
+export type UpdateProfileResNullableType = z.infer<typeof UpdateProfileResNullableSchema>

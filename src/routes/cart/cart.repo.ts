@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common'
+import { SerializeAll } from 'src/shared/decorators/serialize.decorator'
 import {
   InvalidQuantityException,
   NotFoundCartItemException,
@@ -21,6 +22,7 @@ import { Prisma } from '@prisma/client'
 import { isNotFoundPrismaError } from 'src/shared/helpers'
 
 @Injectable()
+@SerializeAll()
 export class CartRepo {
   constructor(private readonly prismaService: PrismaService) {}
 
@@ -75,7 +77,7 @@ export class CartRepo {
     ) {
       throw ProductNotFoundException
     }
-    return sku
+    return sku as any
   }
 
   async list({

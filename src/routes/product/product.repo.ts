@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common'
+import { SerializeAll } from 'src/shared/decorators/serialize.decorator'
 import { Prisma } from '@prisma/client'
 import {
   CreateProductBodyType,
@@ -11,6 +12,7 @@ import { ProductType } from 'src/shared/models/shared-product.model'
 import { PrismaService } from 'src/shared/services/prisma.service'
 
 @Injectable()
+@SerializeAll()
 export class ProductRepo {
   constructor(private readonly prismaService: PrismaService) {}
 
@@ -128,7 +130,7 @@ export class ProductRepo {
       page: page,
       limit: limit,
       totalPages: Math.ceil(totalItems / limit),
-    }
+    } as any
   }
 
   findById(productId: number): Promise<ProductType | null> {
@@ -137,7 +139,7 @@ export class ProductRepo {
         id: productId,
         deletedAt: null,
       },
-    })
+    }) as any
   }
 
   getDetail({
@@ -194,7 +196,7 @@ export class ProductRepo {
           },
         },
       },
-    })
+    }) as any
   }
 
   create({
@@ -243,7 +245,7 @@ export class ProductRepo {
           },
         },
       },
-    })
+    }) as any
   }
 
   async update({
@@ -343,7 +345,7 @@ export class ProductRepo {
       }),
     ])
 
-    return product
+    return product as any
   }
 
   async delete(
@@ -361,7 +363,7 @@ export class ProductRepo {
         where: {
           id,
         },
-      })
+      }) as any
     }
     const now = new Date()
     const [product] = await Promise.all([
@@ -396,6 +398,6 @@ export class ProductRepo {
         },
       }),
     ])
-    return product
+    return product as any
   }
 }

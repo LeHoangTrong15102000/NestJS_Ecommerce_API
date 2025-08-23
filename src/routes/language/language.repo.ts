@@ -1,8 +1,10 @@
 import { Injectable } from '@nestjs/common'
+import { SerializeAll } from 'src/shared/decorators/serialize.decorator'
 import { CreateLanguageBodyType, LanguageType, UpdateLanguageBodyType } from 'src/routes/language/language.model'
 import { PrismaService } from 'src/shared/services/prisma.service'
 
 @Injectable()
+@SerializeAll()
 export class LanguageRepo {
   constructor(private prismaService: PrismaService) {}
 
@@ -12,7 +14,7 @@ export class LanguageRepo {
         // Sẽ lọc theo cái deletedAt là null
         deletedAt: null,
       },
-    })
+    }) as any
   }
 
   findById(id: string): Promise<LanguageType | null> {
@@ -23,7 +25,7 @@ export class LanguageRepo {
         id, // Cái Id nó đã index được rồi,
         deletedAt: null, // find ra được rồi thì nó sẽ filter(thằng này nó có deletedAt là null hay không rồi thì nó mới trả về).
       },
-    })
+    }) as any
   }
 
   // Truyền thêm cái trường là createdById vào
@@ -33,7 +35,7 @@ export class LanguageRepo {
         ...data,
         createdById,
       },
-    })
+    }) as any
   }
 
   // Cũng thêm vào trường updatedById
@@ -56,25 +58,27 @@ export class LanguageRepo {
         ...data,
         updatedById,
       },
-    })
+    }) as any
   }
 
   delete(id: string, isHard?: boolean): Promise<LanguageType> {
-    return isHard
-      ? this.prismaService.language.delete({
-          where: {
-            id,
-          },
-        })
-      : this.prismaService.language.update({
-          where: {
-            id,
-            deletedAt: null,
-          },
-          // Cập nhật cái Date vào thực hiện xóa mềm cho nó là được
-          data: {
-            deletedAt: new Date(),
-          },
-        })
+    return (
+      isHard
+        ? this.prismaService.language.delete({
+            where: {
+              id,
+            },
+          })
+        : this.prismaService.language.update({
+            where: {
+              id,
+              deletedAt: null,
+            },
+            // Cập nhật cái Date vào thực hiện xóa mềm cho nó là được
+            data: {
+              deletedAt: new Date(),
+            },
+          })
+    ) as any
   }
 }

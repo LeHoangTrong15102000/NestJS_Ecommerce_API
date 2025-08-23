@@ -3,7 +3,7 @@ import { z } from 'zod'
 export const PaymentTransactionSchema = z.object({
   id: z.number(),
   gateway: z.string(),
-  transactionDate: z.date(),
+  transactionDate: z.iso.datetime(),
   accountNumber: z.string().nullable(),
   subAccount: z.string().nullable(),
   amountIn: z.number(),
@@ -13,7 +13,7 @@ export const PaymentTransactionSchema = z.object({
   transactionContent: z.string().nullable(),
   referenceNumber: z.string().nullable(),
   body: z.string().nullable(),
-  createdAt: z.date(),
+  createdAt: z.iso.datetime(),
 })
 
 /**

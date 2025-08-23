@@ -4,12 +4,12 @@ import { NestExpressApplication } from '@nestjs/platform-express'
 import { UPLOAD_DIR } from 'src/shared/constants/other.constant'
 import { WebsocketAdapter } from 'src/websockets/websocket.adapter'
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger'
-import { patchNestJsSwagger } from 'nestjs-zod'
+import { cleanupOpenApiDoc } from 'nestjs-zod'
 
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule)
   app.enableCors() // Enable CORS for all routes
-  patchNestJsSwagger()
+  // patchNestJsSwagger()
   const config = new DocumentBuilder()
     .setTitle('Ecommerce API')
     .setDescription('The API for the ecommerce application')
@@ -23,8 +23,8 @@ async function bootstrap() {
       'payment-api-key',
     )
     .build()
-  const documentFactory = () => SwaggerModule.createDocument(app, config)
-  SwaggerModule.setup('api', app, documentFactory, {
+  const documentFactory = SwaggerModule.createDocument(app, config)
+  SwaggerModule.setup('api', app, cleanupOpenApiDoc(documentFactory), {
     swaggerOptions: {
       persistAuthorization: true,
     },

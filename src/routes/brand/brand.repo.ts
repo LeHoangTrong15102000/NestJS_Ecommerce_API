@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common'
+import { SerializeAll } from 'src/shared/decorators/serialize.decorator'
 import {
   CreateBrandBodyType,
   GetBrandsResType,
@@ -11,6 +12,7 @@ import { PaginationQueryType } from 'src/shared/models/request.model'
 import { PrismaService } from 'src/shared/services/prisma.service'
 
 @Injectable()
+@SerializeAll()
 export class BrandRepo {
   constructor(private prismaService: PrismaService) {}
 
@@ -45,7 +47,7 @@ export class BrandRepo {
       page: pagination.page,
       limit: pagination.limit,
       totalPages: Math.ceil(totalItems / pagination.limit),
-    }
+    } as any
   }
 
   findById(id: number, languageId: string): Promise<BrandIncludeTranslationType | null> {
@@ -59,7 +61,7 @@ export class BrandRepo {
           where: languageId === ALL_LANGUAGE_CODE ? { deletedAt: null } : { deletedAt: null, languageId },
         },
       },
-    })
+    }) as any
   }
 
   create({
@@ -79,10 +81,10 @@ export class BrandRepo {
           where: { deletedAt: null },
         },
       },
-    })
+    }) as any
   }
 
-  async update({
+  update({
     id,
     updatedById,
     data,
@@ -105,7 +107,7 @@ export class BrandRepo {
           where: { deletedAt: null },
         },
       },
-    })
+    }) as any
   }
 
   delete(
@@ -118,21 +120,23 @@ export class BrandRepo {
     },
     isHard?: boolean,
   ): Promise<BrandType> {
-    return isHard
-      ? this.prismaService.brand.delete({
-          where: {
-            id,
-          },
-        })
-      : this.prismaService.brand.update({
-          where: {
-            id,
-            deletedAt: null,
-          },
-          data: {
-            deletedAt: new Date(),
-            deletedById,
-          },
-        })
+    return (
+      isHard
+        ? this.prismaService.brand.delete({
+            where: {
+              id,
+            },
+          })
+        : this.prismaService.brand.update({
+            where: {
+              id,
+              deletedAt: null,
+            },
+            data: {
+              deletedAt: new Date(),
+              deletedById,
+            },
+          })
+    ) as any
   }
 }

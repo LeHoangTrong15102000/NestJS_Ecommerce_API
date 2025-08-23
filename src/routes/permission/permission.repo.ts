@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common'
+import { SerializeAll } from 'src/shared/decorators/serialize.decorator'
 import {
   CreatePermissionBodyType,
   GetPermissionsQueryType,
@@ -9,6 +10,7 @@ import { PermissionType } from 'src/shared/models/shared-permission.model'
 import { PrismaService } from 'src/shared/services/prisma.service'
 
 @Injectable()
+@SerializeAll()
 export class PermissionRepo {
   constructor(private prismaService: PrismaService) {}
 
@@ -35,7 +37,7 @@ export class PermissionRepo {
       page: pagination.page,
       limit: pagination.limit,
       totalPages: Math.ceil(totalItems / pagination.limit),
-    }
+    } as any
   }
 
   findById(id: number): Promise<PermissionType | null> {
@@ -44,7 +46,7 @@ export class PermissionRepo {
         id,
         deletedAt: null,
       },
-    })
+    }) as any
   }
 
   create({
@@ -59,7 +61,7 @@ export class PermissionRepo {
         ...data,
         createdById,
       },
-    })
+    }) as any
   }
 
   update({
@@ -80,7 +82,7 @@ export class PermissionRepo {
         ...data,
         updatedById,
       },
-    })
+    }) as any
   }
 
   delete(
@@ -93,21 +95,23 @@ export class PermissionRepo {
     },
     isHard?: boolean,
   ): Promise<PermissionType> {
-    return isHard
-      ? this.prismaService.permission.delete({
-          where: {
-            id,
-          },
-        })
-      : this.prismaService.permission.update({
-          where: {
-            id,
-            deletedAt: null,
-          },
-          data: {
-            deletedAt: new Date(),
-            deletedById,
-          },
-        })
+    return (
+      isHard
+        ? this.prismaService.permission.delete({
+            where: {
+              id,
+            },
+          })
+        : this.prismaService.permission.update({
+            where: {
+              id,
+              deletedAt: null,
+            },
+            data: {
+              deletedAt: new Date(),
+              deletedById,
+            },
+          })
+    ) as any
   }
 }

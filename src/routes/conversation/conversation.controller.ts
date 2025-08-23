@@ -1,5 +1,5 @@
 import { Body, Controller, Delete, Get, Param, Post, Put, Query } from '@nestjs/common'
-import { ZodSerializerDto } from 'nestjs-zod'
+import { ZodResponse } from 'nestjs-zod'
 import { ConversationService } from './conversation.service'
 import { MessageService } from './message.service'
 import { ActiveUser } from 'src/shared/decorators/active-user.decorator'
@@ -19,10 +19,12 @@ import {
   GetMessagesQueryDTO,
   SearchMessagesQueryDTO,
   ConversationResDTO,
+  ConversationServiceResDTO,
   ConversationsListResDTO,
   ConversationMessageResDTO,
   MessagesListResDTO,
   MessageSearchResultResDTO,
+  MessageResponseDTO,
 } from './conversation.dto'
 
 @Controller('conversations')
@@ -35,38 +37,38 @@ export class ConversationController {
   // ===== CONVERSATION MANAGEMENT =====
 
   @Get()
-  @ZodSerializerDto(ConversationsListResDTO)
+  @ZodResponse({ type: ConversationsListResDTO as any })
   async getConversations(@ActiveUser('userId') userId: number, @Query() query: GetConversationsQueryDTO) {
     return this.conversationService.getUserConversations(userId, query)
   }
 
   @Get('stats')
-  @ZodSerializerDto(MessageResDTO)
+  @ZodResponse({ type: MessageResponseDTO })
   async getConversationStats(@ActiveUser('userId') userId: number) {
     const stats = await this.conversationService.getConversationStats(userId)
-    return { data: stats }
+    return { message: 'Thống kê cuộc trò chuyện', data: stats }
   }
 
   @Get(':conversationId')
-  @ZodSerializerDto(ConversationResDTO)
+  @ZodResponse({ type: ConversationServiceResDTO as any })
   async getConversation(@ActiveUser('userId') userId: number, @Param() params: ConversationParamsDTO) {
     return this.conversationService.getConversationById(params.conversationId, userId)
   }
 
   @Post('direct')
-  @ZodSerializerDto(ConversationResDTO)
+  @ZodResponse({ type: ConversationServiceResDTO as any })
   async createDirectConversation(@ActiveUser('userId') userId: number, @Body() body: CreateDirectConversationBodyDTO) {
     return this.conversationService.createDirectConversation(userId, body.recipientId)
   }
 
   @Post('group')
-  @ZodSerializerDto(ConversationResDTO)
+  @ZodResponse({ type: ConversationServiceResDTO as any })
   async createGroupConversation(@ActiveUser('userId') userId: number, @Body() body: CreateGroupConversationBodyDTO) {
     return this.conversationService.createGroupConversation(userId, body)
   }
 
   @Put(':conversationId')
-  @ZodSerializerDto(ConversationResDTO)
+  @ZodResponse({ type: ConversationServiceResDTO as any })
   async updateConversation(
     @ActiveUser('userId') userId: number,
     @Param() params: ConversationParamsDTO,
@@ -76,19 +78,19 @@ export class ConversationController {
   }
 
   @Post(':conversationId/archive')
-  @ZodSerializerDto(MessageResDTO)
+  @ZodResponse({ type: MessageResponseDTO })
   async archiveConversation(@ActiveUser('userId') userId: number, @Param() params: ConversationParamsDTO) {
     return this.conversationService.archiveConversation(params.conversationId, userId)
   }
 
   @Post(':conversationId/unarchive')
-  @ZodSerializerDto(MessageResDTO)
+  @ZodResponse({ type: MessageResponseDTO })
   async unarchiveConversation(@ActiveUser('userId') userId: number, @Param() params: ConversationParamsDTO) {
     return this.conversationService.unarchiveConversation(params.conversationId, userId)
   }
 
   @Post(':conversationId/mute')
-  @ZodSerializerDto(MessageResDTO)
+  @ZodResponse({ type: MessageResponseDTO })
   async muteConversation(
     @ActiveUser('userId') userId: number,
     @Param() params: ConversationParamsDTO,
@@ -99,13 +101,13 @@ export class ConversationController {
   }
 
   @Post(':conversationId/unmute')
-  @ZodSerializerDto(MessageResDTO)
+  @ZodResponse({ type: MessageResponseDTO })
   async unmuteConversation(@ActiveUser('userId') userId: number, @Param() params: ConversationParamsDTO) {
     return this.conversationService.unmuteConversation(params.conversationId, userId)
   }
 
   @Delete(':conversationId/leave')
-  @ZodSerializerDto(MessageResDTO)
+  @ZodResponse({ type: MessageResponseDTO })
   async leaveConversation(@ActiveUser('userId') userId: number, @Param() params: ConversationParamsDTO) {
     return this.conversationService.leaveConversation(params.conversationId, userId)
   }
@@ -113,14 +115,14 @@ export class ConversationController {
   // ===== MEMBER MANAGEMENT =====
 
   @Get(':conversationId/members')
-  @ZodSerializerDto(MessageResDTO)
+  @ZodResponse({ type: MessageResponseDTO })
   async getConversationMembers(@ActiveUser('userId') userId: number, @Param() params: ConversationParamsDTO) {
     const members = await this.conversationService.getConversationMembers(params.conversationId, userId)
-    return { data: members }
+    return { message: 'Danh sách thành viên', data: members }
   }
 
   @Post(':conversationId/members')
-  @ZodSerializerDto(ConversationResDTO)
+  @ZodResponse({ type: ConversationServiceResDTO as any })
   async addMembers(
     @ActiveUser('userId') userId: number,
     @Param() params: ConversationParamsDTO,
@@ -130,13 +132,13 @@ export class ConversationController {
   }
 
   @Delete(':conversationId/members/:memberId')
-  @ZodSerializerDto(MessageResDTO)
+  @ZodResponse({ type: MessageResponseDTO })
   async removeMember(@ActiveUser('userId') userId: number, @Param() params: MemberParamsDTO) {
     return this.conversationService.removeMember(params.conversationId, userId, params.memberId)
   }
 
   @Put(':conversationId/members/:memberId/role')
-  @ZodSerializerDto(MessageResDTO)
+  @ZodResponse({ type: MessageResponseDTO })
   async updateMemberRole(
     @ActiveUser('userId') userId: number,
     @Param() params: MemberParamsDTO,
@@ -148,7 +150,7 @@ export class ConversationController {
   // ===== MESSAGE MANAGEMENT =====
 
   @Get(':conversationId/messages')
-  @ZodSerializerDto(MessagesListResDTO)
+  @ZodResponse({ type: MessagesListResDTO as any })
   async getMessages(
     @ActiveUser('userId') userId: number,
     @Param() params: ConversationParamsDTO,
@@ -158,14 +160,14 @@ export class ConversationController {
   }
 
   @Get(':conversationId/messages/stats')
-  @ZodSerializerDto(MessageResDTO)
+  @ZodResponse({ type: MessageResponseDTO })
   async getMessageStats(@ActiveUser('userId') userId: number, @Param() params: ConversationParamsDTO) {
     const stats = await this.messageService.getMessageStats(params.conversationId, userId)
-    return { data: stats }
+    return { message: 'Thống kê tin nhắn', data: stats }
   }
 
   @Get('messages/search')
-  @ZodSerializerDto(MessageSearchResultResDTO)
+  @ZodResponse({ type: MessageSearchResultResDTO as any })
   async searchMessages(@ActiveUser('userId') userId: number, @Query() query: SearchMessagesQueryDTO) {
     return this.messageService.searchMessages(userId, query.q, {
       page: query.page,
@@ -178,19 +180,19 @@ export class ConversationController {
   }
 
   @Post('messages')
-  @ZodSerializerDto(ConversationMessageResDTO)
+  @ZodResponse({ type: ConversationMessageResDTO as any })
   async sendMessage(@ActiveUser('userId') userId: number, @Body() body: SendMessageBodyDTO) {
     return this.messageService.sendMessage(userId, body)
   }
 
   @Get('messages/:messageId')
-  @ZodSerializerDto(ConversationMessageResDTO)
+  @ZodResponse({ type: ConversationMessageResDTO as any })
   async getMessage(@ActiveUser('userId') userId: number, @Param() params: MessageParamsDTO) {
     return this.messageService.getMessageById(params.messageId, userId)
   }
 
   @Put('messages/:messageId')
-  @ZodSerializerDto(ConversationMessageResDTO)
+  @ZodResponse({ type: ConversationMessageResDTO as any })
   async editMessage(
     @ActiveUser('userId') userId: number,
     @Param() params: MessageParamsDTO,
@@ -200,7 +202,7 @@ export class ConversationController {
   }
 
   @Delete('messages/:messageId')
-  @ZodSerializerDto(ConversationMessageResDTO)
+  @ZodResponse({ type: ConversationMessageResDTO as any })
   async deleteMessage(
     @ActiveUser('userId') userId: number,
     @Param() params: MessageParamsDTO,
@@ -213,14 +215,14 @@ export class ConversationController {
   // ===== MESSAGE INTERACTIONS =====
 
   @Post('messages/read')
-  @ZodSerializerDto(MessageResDTO)
+  @ZodResponse({ type: MessageResponseDTO })
   async markAsRead(@ActiveUser('userId') userId: number, @Body() body: MarkAsReadBodyDTO) {
     const result = await this.messageService.markAsRead(body.conversationId, userId, body.messageId)
     return { message: `Đã đánh dấu ${result.markedCount} tin nhắn là đã đọc` }
   }
 
   @Post('messages/:messageId/react')
-  @ZodSerializerDto(MessageResDTO)
+  @ZodResponse({ type: MessageResponseDTO })
   async reactToMessage(
     @ActiveUser('userId') userId: number,
     @Param() params: MessageParamsDTO,
@@ -234,7 +236,7 @@ export class ConversationController {
   }
 
   @Delete('messages/:messageId/react')
-  @ZodSerializerDto(MessageResDTO)
+  @ZodResponse({ type: MessageResponseDTO })
   async removeReaction(
     @ActiveUser('userId') userId: number,
     @Param() params: MessageParamsDTO,
@@ -244,16 +246,16 @@ export class ConversationController {
   }
 
   @Get('messages/:messageId/reactions/stats')
-  @ZodSerializerDto(MessageResDTO)
+  @ZodResponse({ type: MessageResponseDTO })
   async getReactionStats(@ActiveUser('userId') userId: number, @Param() params: MessageParamsDTO) {
     const stats = await this.messageService.getReactionStats(params.messageId, userId)
-    return { data: stats }
+    return { message: 'Thống kê reaction', data: stats }
   }
 
   @Get('messages/:messageId/read-receipts/stats')
-  @ZodSerializerDto(MessageResDTO)
+  @ZodResponse({ type: MessageResponseDTO })
   async getReadReceiptStats(@ActiveUser('userId') userId: number, @Param() params: MessageParamsDTO) {
     const stats = await this.messageService.getReadReceiptStats(params.messageId, userId)
-    return { data: stats }
+    return { message: 'Thống kê đã đọc', data: stats }
   }
 }

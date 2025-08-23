@@ -69,7 +69,7 @@ export class AuthService {
       throw InvalidOTPException
     }
     // Kiểm tra expiresAt của mã OTP
-    if (verificationCode.expiresAt <= new Date()) {
+    if (new Date(verificationCode.expiresAt) <= new Date()) {
       throw OTPExpiredException
     }
 
@@ -131,7 +131,7 @@ export class AuthService {
       code: otpCode,
       type: body.type,
       // addMiliseconds nó cung cấp cho chúng ta một cái Date object phù hợp với đầu vào của thằng expiresAt truyền vào mốc thời gian hiện tại cộng với bao nhiêu thì chúng ta sử dụng thư viện `ms` thì nó sẽ tự động convert ra miliseconds.
-      expiresAt: addMilliseconds(new Date(), ms(envConfig.OTP_EXPIRES_IN)),
+      expiresAt: addMilliseconds(new Date(), ms(envConfig.OTP_EXPIRES_IN)).toISOString(),
     })
     // 3. Gửi mã OTP đến email của người dùng
     const { error } = await this.emailService.sendOTP({ email: body.email, code: otpCode })

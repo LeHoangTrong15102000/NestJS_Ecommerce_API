@@ -1,9 +1,11 @@
 import { Injectable } from '@nestjs/common'
+import { SerializeAll } from 'src/shared/decorators/serialize.decorator'
 import { RoleName } from 'src/shared/constants/role.constant'
 import { RoleType } from 'src/shared/models/shared-role.model'
 import { PrismaService } from 'src/shared/services/prisma.service'
 
 @Injectable()
+@SerializeAll()
 export class SharedRoleRepository {
   private clientRoleId: number | null = null
   private adminRoleId: number | null = null

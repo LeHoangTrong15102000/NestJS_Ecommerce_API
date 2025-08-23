@@ -7,6 +7,7 @@ import {
   CreateBrandTranslationBodyType,
   UpdateBrandTranslationBodyType,
 } from 'src/routes/brand/brand-translation/brand-translation.model'
+import { SerializeAll } from 'src/shared/decorators/serialize.decorator'
 
 @Injectable()
 export class BrandTranslationService {

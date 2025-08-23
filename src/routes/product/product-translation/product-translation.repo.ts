@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common'
+import { SerializeAll } from 'src/shared/decorators/serialize.decorator'
 import {
   GetProductTranslationDetailResType,
   CreateProductTranslationBodyType,
@@ -8,6 +9,7 @@ import { ProductTranslationType } from 'src/shared/models/shared-product-transla
 import { PrismaService } from 'src/shared/services/prisma.service'
 
 @Injectable()
+@SerializeAll()
 export class ProductTranslationRepo {
   constructor(private prismaService: PrismaService) {}
 
@@ -17,7 +19,7 @@ export class ProductTranslationRepo {
         id,
         deletedAt: null,
       },
-    })
+    }) as any
   }
 
   create({
@@ -32,10 +34,10 @@ export class ProductTranslationRepo {
         ...data,
         createdById,
       },
-    })
+    }) as any
   }
 
-  async update({
+  update({
     id,
     updatedById,
     data,
@@ -53,7 +55,7 @@ export class ProductTranslationRepo {
         ...data,
         updatedById,
       },
-    })
+    }) as any
   }
 
   delete(
@@ -67,12 +69,12 @@ export class ProductTranslationRepo {
     isHard?: boolean,
   ): Promise<ProductTranslationType> {
     return isHard
-      ? this.prismaService.productTranslation.delete({
+      ? (this.prismaService.productTranslation.delete({
           where: {
             id,
           },
-        })
-      : this.prismaService.productTranslation.update({
+        }) as any)
+      : (this.prismaService.productTranslation.update({
           where: {
             id,
             deletedAt: null,
@@ -81,6 +83,6 @@ export class ProductTranslationRepo {
             deletedAt: new Date(),
             deletedById,
           },
-        })
+        }) as any)
   }
 }

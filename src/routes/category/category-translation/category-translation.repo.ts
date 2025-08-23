@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common'
+import { SerializeAll } from 'src/shared/decorators/serialize.decorator'
 import {
   GetCategoryTranslationDetailResType,
   CreateCategoryTranslationBodyType,
@@ -8,6 +9,7 @@ import {
 import { PrismaService } from 'src/shared/services/prisma.service'
 
 @Injectable()
+@SerializeAll()
 export class CategoryTranslationRepo {
   constructor(private prismaService: PrismaService) {}
 
@@ -17,7 +19,7 @@ export class CategoryTranslationRepo {
         id,
         deletedAt: null,
       },
-    })
+    }) as any
   }
 
   create({
@@ -32,10 +34,10 @@ export class CategoryTranslationRepo {
         ...data,
         createdById,
       },
-    })
+    }) as any
   }
 
-  async update({
+  update({
     id,
     updatedById,
     data,
@@ -53,7 +55,7 @@ export class CategoryTranslationRepo {
         ...data,
         updatedById,
       },
-    })
+    }) as any
   }
 
   delete(
@@ -66,21 +68,23 @@ export class CategoryTranslationRepo {
     },
     isHard?: boolean,
   ): Promise<CategoryTranslationType> {
-    return isHard
-      ? this.prismaService.categoryTranslation.delete({
-          where: {
-            id,
-          },
-        })
-      : this.prismaService.categoryTranslation.update({
-          where: {
-            id,
-            deletedAt: null,
-          },
-          data: {
-            deletedAt: new Date(),
-            deletedById,
-          },
-        })
+    return (
+      isHard
+        ? this.prismaService.categoryTranslation.delete({
+            where: {
+              id,
+            },
+          })
+        : this.prismaService.categoryTranslation.update({
+            where: {
+              id,
+              deletedAt: null,
+            },
+            data: {
+              deletedAt: new Date(),
+              deletedById,
+            },
+          })
+    ) as any
   }
 }

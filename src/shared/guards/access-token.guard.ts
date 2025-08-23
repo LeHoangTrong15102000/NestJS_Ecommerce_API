@@ -1,4 +1,5 @@
 import { Injectable, CanActivate, ExecutionContext, UnauthorizedException, ForbiddenException } from '@nestjs/common'
+import { RoleWithPermissionsType } from 'src/routes/role/role.model'
 import { REQUEST_ROLE_PERMISSIONS, REQUEST_USER_KEY } from 'src/shared/constants/auth.constant'
 import { HTTPMethod } from 'src/shared/constants/role.constant'
 import { PrismaService } from 'src/shared/services/prisma.service'
@@ -47,7 +48,7 @@ export class AccessTokenGuard implements CanActivate {
     const roleId: number = decodedAccessToken.roleId
     const path: string = request.route.path
     const method = request.method as keyof typeof HTTPMethod
-    const role = await this.prismaService.role
+    const role = (await this.prismaService.role
       .findUniqueOrThrow({
         where: {
           id: roleId,
@@ -68,7 +69,7 @@ export class AccessTokenGuard implements CanActivate {
       .catch(() => {
         // hay vì prisma tự động quăng ra lỗi thông thường thì chúng ta sẽ chủ động quăng ra lỗi
         throw new ForbiddenException()
-      })
+      })) as unknown as RoleWithPermissionsType
 
     // console.log('role permission', role.permissions.length)
     // const canAccess = role.permissions.some((permission) => permission.method === method && permission.path === path)

@@ -1,5 +1,5 @@
 import { Body, Controller, Delete, Get, Param, Post, Put, Query } from '@nestjs/common'
-import { ZodSerializerDto } from 'nestjs-zod'
+import { ZodResponse } from 'nestjs-zod'
 import {
   CreateRoleBodyDTO,
   CreateRoleResDTO,
@@ -18,7 +18,7 @@ export class RoleController {
   constructor(private readonly roleService: RoleService) {}
 
   @Get()
-  @ZodSerializerDto(GetRolesResDTO)
+  @ZodResponse({ type: GetRolesResDTO })
   list(@Query() query: GetRolesQueryDTO) {
     return this.roleService.list({
       page: query.page,
@@ -27,13 +27,13 @@ export class RoleController {
   }
 
   @Get(':roleId')
-  @ZodSerializerDto(GetRoleDetailResDTO)
+  @ZodResponse({ type: GetRoleDetailResDTO })
   findById(@Param() params: GetRoleParamsDTO) {
     return this.roleService.findById(params.roleId)
   }
 
   @Post()
-  @ZodSerializerDto(CreateRoleResDTO)
+  @ZodResponse({ type: CreateRoleResDTO })
   create(@Body() body: CreateRoleBodyDTO, @ActiveUser('userId') userId: number) {
     return this.roleService.create({
       data: body,
@@ -42,7 +42,7 @@ export class RoleController {
   }
 
   @Put(':roleId')
-  @ZodSerializerDto(GetRoleDetailResDTO)
+  @ZodResponse({ type: GetRoleDetailResDTO })
   update(@Body() body: UpdateRoleBodyDTO, @Param() params: GetRoleParamsDTO, @ActiveUser('userId') userId: number) {
     return this.roleService.update({
       data: body,
@@ -52,7 +52,7 @@ export class RoleController {
   }
 
   @Delete(':roleId')
-  @ZodSerializerDto(MessageResDTO)
+  @ZodResponse({ type: MessageResDTO })
   delete(@Param() params: GetRoleParamsDTO, @ActiveUser('userId') userId: number) {
     return this.roleService.delete({
       id: params.roleId,

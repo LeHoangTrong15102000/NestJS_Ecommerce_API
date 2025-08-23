@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common'
+import { SerializeAll } from 'src/shared/decorators/serialize.decorator'
 import { PrismaService } from 'src/shared/services/prisma.service'
 import { PermissionType } from 'src/shared/models/shared-permission.model'
 import { RoleType } from 'src/shared/models/shared-role.model'
@@ -9,6 +10,7 @@ export type UserIncludeRolePermissionsType = UserType & { role: RoleType & { per
 export type WhereUniqueUserType = { id: number } | { email: string }
 
 @Injectable()
+@SerializeAll()
 export class SharedUserRepository {
   constructor(private readonly prismaService: PrismaService) {}
 
@@ -18,7 +20,7 @@ export class SharedUserRepository {
         ...uniqueObject,
         deletedAt: null,
       },
-    })
+    }) as any
   }
 
   findUniqueIncludeRolePermissions(uniqueObject: WhereUniqueUserType): Promise<UserIncludeRolePermissionsType | null> {
@@ -38,7 +40,7 @@ export class SharedUserRepository {
           },
         },
       },
-    })
+    }) as any
   }
 
   // Chỗ này không cần dùng email thì chúng ta chỉ cần quy định id là được
@@ -49,7 +51,7 @@ export class SharedUserRepository {
         deletedAt: null,
       },
       data,
-    })
+    }) as any
   }
 
   // Thêm methods cần thiết cho chat system
@@ -63,7 +65,7 @@ export class SharedUserRepository {
         id: { in: ids },
         deletedAt: null,
       },
-    })
+    }) as any
   }
 
   findMany(options?: { skip?: number; take?: number; where?: any; orderBy?: any }): Promise<UserType[]> {
@@ -75,6 +77,6 @@ export class SharedUserRepository {
       skip: options?.skip,
       take: options?.take,
       orderBy: options?.orderBy,
-    })
+    }) as any
   }
 }
