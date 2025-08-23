@@ -47,7 +47,7 @@ export const AddMembersBodySchema = z.object({
 })
 
 export const RemoveMemberBodySchema = z.object({
-  conversationId: z.string().cuid(),
+  conversationId: z.cuid(),
   memberId: z.number().int().positive(),
 })
 
