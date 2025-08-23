@@ -728,5 +728,5 @@ enum AttachmentType {
 
 enum MediaType {
   IMAGE
-  AUDIO
+  VIDEO
 }

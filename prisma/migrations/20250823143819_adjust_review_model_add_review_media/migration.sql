@@ -6,7 +6,7 @@
 
 */
 -- CreateEnum
-CREATE TYPE "MediaType" AS ENUM ('IMAGE', 'AUDIO');
+CREATE TYPE "MediaType" AS ENUM ('IMAGE', 'VIDEO');
 
 -- AlterTable
 ALTER TABLE "Review" ADD COLUMN     "orderId" INTEGER NOT NULL,
