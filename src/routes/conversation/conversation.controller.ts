@@ -174,8 +174,8 @@ export class ConversationController {
       limit: query.limit,
       type: query.type,
       fromUserId: query.fromUserId,
-      dateFrom: query.dateFrom,
-      dateTo: query.dateTo,
+      dateFrom: query.dateFrom ? new Date(query.dateFrom) : undefined,
+      dateTo: query.dateTo ? new Date(query.dateTo) : undefined,
     })
   }
 

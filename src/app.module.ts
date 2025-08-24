@@ -5,7 +5,7 @@ import { SharedModule } from 'src/shared/shared.module'
 import { AuthModule } from 'src/routes/auth/auth.module'
 import { APP_FILTER, APP_GUARD, APP_INTERCEPTOR, APP_PIPE } from '@nestjs/core'
 import CustomZodValidationPipe from 'src/shared/pipes/custom-zod-validation.pipe'
-import { ZodSerializerInterceptor } from 'nestjs-zod'
+import { ZodOutputInterceptor } from 'src/shared/interceptors/zod-output.interceptor'
 import { HttpExceptionFilter } from 'src/shared/filters/http-exception.filter'
 import { CatchEverythingFilter } from 'src/shared/filters/catch-everything.filter'
 import { LanguageModule } from 'src/routes/language/language.module'
@@ -29,8 +29,10 @@ import { SharedChatModule } from 'src/shared/modules/shared-chat.module'
 import { BullModule } from '@nestjs/bullmq'
 import envConfig from 'src/shared/config'
 import { PaymentConsumer } from 'src/queues/payment.consumer'
-import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler'
 import { ThrottlerBehindProxyGuard } from 'src/shared/guards/throttler-behind-proxy.guard'
+import { ReviewModule } from 'src/routes/review/review.module'
+import { ThrottlerModule } from '@nestjs/throttler'
+import { ZodSerializerInterceptor } from 'nestjs-zod'
 
 // console.log(path.resolve('src/i18n/'))
 
@@ -83,6 +85,7 @@ import { ThrottlerBehindProxyGuard } from 'src/shared/guards/throttler-behind-pr
     OrderModule,
     PaymentModule,
     ConversationModule,
+    ReviewModule,
   ],
   controllers: [AppController],
   providers: [

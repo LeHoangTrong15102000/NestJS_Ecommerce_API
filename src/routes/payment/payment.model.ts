@@ -22,7 +22,7 @@ export const PaymentTransactionSchema = z.object({
 export const WebhookPaymentBodySchema = z.object({
   id: z.number(), // ID giao dịch trên SePay
   gateway: z.string(), // Brand name của ngân hàng
-  transactionDate: z.string(), // Thời gian xảy ra giao dịch phía ngân hàng
+  transactionDate: z.iso.datetime(), // Thời gian xảy ra giao dịch phía ngân hàng
   accountNumber: z.string().nullable(), // Số tài khoản ngân hàng
   code: z.string().nullable(), // Mã code thanh toán (sepay tự nhận diện dựa vào cấu hình tại Công ty -> Cấu hình chung)
   content: z.string().nullable(), // Nội dung chuyển khoản

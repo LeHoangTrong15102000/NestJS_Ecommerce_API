@@ -100,7 +100,7 @@ describe('AuthService', () => {
         email: 'test@example.com',
         code: '123456',
         type: TypeOfVerificationCode.REGISTER,
-        expiresAt: new Date(Date.now() + 60000), // 1 phút từ bây giờ
+        expiresAt: new Date(Date.now() + 60000).toISOString(), // 1 phút từ bây giờ
       })
 
       mockAuthRepo.findUniqueVerificationCode.mockResolvedValue(mockVerificationCode)
@@ -143,7 +143,7 @@ describe('AuthService', () => {
         email: 'test@example.com',
         code: '123456',
         type: TypeOfVerificationCode.REGISTER,
-        expiresAt: new Date(Date.now() - 60000), // 1 phút trước (đã hết hạn)
+        expiresAt: new Date(Date.now() - 60000).toISOString(), // 1 phút trước (đã hết hạn)
       })
 
       mockAuthRepo.findUniqueVerificationCode.mockResolvedValue(expiredVerificationCode)
@@ -175,7 +175,7 @@ describe('AuthService', () => {
         email: validRegisterData.email,
         code: validRegisterData.code,
         type: TypeOfVerificationCode.REGISTER,
-        expiresAt: new Date(Date.now() + 60000),
+        expiresAt: new Date(Date.now() + 60000).toISOString(),
       })
 
       const mockUser = testDataFactory.user({
@@ -225,7 +225,7 @@ describe('AuthService', () => {
         email: validRegisterData.email,
         code: validRegisterData.code,
         type: TypeOfVerificationCode.REGISTER,
-        expiresAt: new Date(Date.now() + 60000),
+        expiresAt: new Date(Date.now() + 60000).toISOString(),
       })
 
       mockAuthRepo.findUniqueVerificationCode.mockResolvedValue(mockVerificationCode)

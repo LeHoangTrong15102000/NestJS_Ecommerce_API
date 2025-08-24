@@ -63,8 +63,8 @@ export const testDataFactory = {
     updatedById: null,
     deletedById: null,
     deletedAt: null,
-    createdAt: new Date(),
-    updatedAt: new Date(),
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
     ...overrides,
   }),
 
@@ -77,8 +77,8 @@ export const testDataFactory = {
     updatedById: null,
     deletedById: null,
     deletedAt: null,
-    createdAt: new Date(),
-    updatedAt: new Date(),
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
     permissions: [],
     ...overrides,
   }),
@@ -94,8 +94,8 @@ export const testDataFactory = {
     updatedById: null,
     deletedById: null,
     deletedAt: null,
-    createdAt: new Date(),
-    updatedAt: new Date(),
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
     ...overrides,
   }),
 
@@ -104,8 +104,8 @@ export const testDataFactory = {
     email: 'test@example.com',
     code: '123456',
     type: 'REGISTER' as const,
-    expiresAt: new Date(Date.now() + 300000), // 5 minutes from now
-    createdAt: new Date(),
+    expiresAt: new Date(Date.now() + 300000).toISOString(), // 5 minutes from now
+    createdAt: new Date().toISOString(),
     ...overrides,
   }),
 

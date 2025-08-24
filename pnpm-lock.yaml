@@ -111,7 +111,7 @@ importers:
         specifier: ^11.1.0
         version: 11.1.0
       zod:
-        specifier: ^4.1.0
+        specifier: ^4.0.17
         version: 4.1.0
     devDependencies:
       '@eslint/eslintrc':

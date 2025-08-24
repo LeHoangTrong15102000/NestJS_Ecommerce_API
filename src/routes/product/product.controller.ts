@@ -1,6 +1,6 @@
 import { Body, Controller, Delete, Get, Param, Post, Put, Query } from '@nestjs/common'
 import { SkipThrottle } from '@nestjs/throttler'
-import { ZodResponse } from 'nestjs-zod'
+import { ZodResponseOnly } from 'src/shared/decorators/zod-response-only.decorator'
 import {
   CreateProductBodyDTO,
   GetProductDetailResDTO,
@@ -20,7 +20,7 @@ export class ProductController {
   constructor(private readonly productService: ProductService) {}
 
   @Get()
-  @ZodResponse({ type: GetProductsResDTO })
+  @ZodResponseOnly({ type: GetProductsResDTO })
   list(@Query() query: GetProductsQueryDTO) {
     return this.productService.list({
       query,
@@ -29,7 +29,7 @@ export class ProductController {
 
   @SkipThrottle({ short: false, long: false })
   @Get(':productId')
-  @ZodResponse({ type: GetProductDetailResDTO })
+  @ZodResponseOnly({ type: GetProductDetailResDTO })
   findById(@Param() params: GetProductParamsDTO) {
     return this.productService.getDetail({
       productId: params.productId,

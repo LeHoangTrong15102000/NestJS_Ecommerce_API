@@ -99,11 +99,13 @@ export const GetConversationsQuerySchema = z.object({
 })
 
 export const GetMessagesQuerySchema = z.object({
+  q: z.string().min(1).max(100).describe('Từ khóa tìm kiếm'),
   page: z.coerce.number().int().positive().default(1),
-  limit: z.coerce.number().int().positive().max(100).default(50),
-  before: z.string().cuid().optional(), // Cursor-based pagination
-  after: z.string().cuid().optional(),
+  limit: z.coerce.number().int().positive().max(50).default(20),
   type: z.enum(['TEXT', 'IMAGE', 'VIDEO', 'AUDIO', 'FILE', 'STICKER', 'SYSTEM', 'LOCATION', 'CONTACT']).optional(),
+  fromUserId: z.coerce.number().int().positive().optional(),
+  dateFrom: z.iso.datetime().optional(),
+  dateTo: z.iso.datetime().optional(),
 })
 
 export const SearchMessagesQuerySchema = z.object({
@@ -112,8 +114,8 @@ export const SearchMessagesQuerySchema = z.object({
   limit: z.coerce.number().int().positive().max(50).default(20),
   type: z.enum(['TEXT', 'IMAGE', 'VIDEO', 'AUDIO', 'FILE', 'STICKER', 'SYSTEM', 'LOCATION', 'CONTACT']).optional(),
   fromUserId: z.coerce.number().int().positive().optional(),
-  dateFrom: z.coerce.date().optional(),
-  dateTo: z.coerce.date().optional(),
+  dateFrom: z.iso.datetime().optional(),
+  dateTo: z.iso.datetime().optional(),
 })
 
 // ===== RESPONSE DTOs =====
@@ -187,7 +189,6 @@ export const ConversationMessageSchema = z.object({
     .lazy(() =>
       ConversationMessageSchema.omit({
         replyTo: true,
-        replies: true,
         reactions: true,
         readReceipts: true,
       }),
@@ -232,7 +233,7 @@ export const ConversationServiceSchema = z.object({
   avatar: z.string().nullable(),
   ownerId: z.number().nullable(),
   lastMessage: z.string().nullable(),
-  lastMessageAt: z.union([z.date(), z.string()]).nullable(),
+  lastMessageAt: z.iso.datetime().nullable(),
   isArchived: z.boolean(),
   createdAt: z.iso.datetime(),
   updatedAt: z.iso.datetime(),
