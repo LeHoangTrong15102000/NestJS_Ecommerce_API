@@ -1068,10 +1068,159 @@
           }
         }
       ]
+    },
+
+    {
+      "name": "Conversations",
+      "item": [
+        {
+          "name": "List Conversations",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
+            "url": {
+              "raw": "http://localhost:3000/conversations?page=1&limit=10&type=DIRECT&search=&isArchived=false",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3000",
+              "path": ["conversations"],
+              "query": [
+                { "key": "page", "value": "1" },
+                { "key": "limit", "value": "10" },
+                { "key": "type", "value": "DIRECT" },
+                { "key": "search", "value": "" },
+                { "key": "isArchived", "value": "false" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Conversation Stats",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
+            "url": {
+              "raw": "http://localhost:3000/conversations/stats",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3000",
+              "path": ["conversations", "stats"]
+            }
+          }
+        },
+        {
+          "name": "Get Conversation Detail",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
+            "url": {
+              "raw": "http://localhost:3000/conversations/{{conversationId}}",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3000",
+              "path": ["conversations", "{{conversationId}}"]
+            }
+          }
+        },
+        {
+          "name": "Create Direct Conversation",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{accessToken}}" }
+            ],
+            "url": {
+              "raw": "http://localhost:3000/conversations/direct",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3000",
+              "path": ["conversations", "direct"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"recipientId\": 2\n}"
+            }
+          }
+        },
+        {
+          "name": "Create Group Conversation",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{accessToken}}" }
+            ],
+            "url": {
+              "raw": "http://localhost:3000/conversations/group",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3000",
+              "path": ["conversations", "group"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Nhóm làm việc\",\n  \"description\": \"Nhóm thảo luận công việc\",\n  \"memberIds\": [2, 3, 4],\n  \"avatar\": \"https://example.com/group-avatar.jpg\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Update Conversation",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{accessToken}}" }
+            ],
+            "url": {
+              "raw": "http://localhost:3000/conversations/{{conversationId}}",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3000",
+              "path": ["conversations", "{{conversationId}}"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Tên nhóm mới\",\n  \"description\": \"Mô tả mới\",\n  \"avatar\": \"https://example.com/new-avatar.jpg\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Archive Conversation",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
+            "url": {
+              "raw": "http://localhost:3000/conversations/{{conversationId}}/archive",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3000",
+              "path": ["conversations", "{{conversationId}}", "archive"]
+            }
+          }
+        },
+        {
+          "name": "Leave Conversation",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
+            "url": {
+              "raw": "http://localhost:3000/conversations/{{conversationId}}/leave",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3000",
+              "path": ["conversations", "{{conversationId}}", "leave"]
+            }
+          }
+        }
+      ]
     }
   ],
   "variable": [
     { "key": "accessToken", "value": "" },
-    { "key": "refreshToken", "value": "" }
+    { "key": "refreshToken", "value": "" },
+    { "key": "conversationId", "value": "" },
+    { "key": "messageId", "value": "" },
+    { "key": "memberId", "value": "" }
   ]
 }

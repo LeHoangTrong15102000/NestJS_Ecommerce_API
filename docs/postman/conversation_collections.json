@@ -1,0 +1,227 @@
+{
+  "collections": [
+    {
+      "name": "Conversation Member Management",
+      "item": [
+        {
+          "name": "Get Members",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
+            "url": {
+              "raw": "http://localhost:3000/conversations/{{conversationId}}/members",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3000",
+              "path": ["conversations", "{{conversationId}}", "members"]
+            }
+          }
+        },
+        {
+          "name": "Add Members",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{accessToken}}" }
+            ],
+            "url": {
+              "raw": "http://localhost:3000/conversations/{{conversationId}}/members",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3000",
+              "path": ["conversations", "{{conversationId}}", "members"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"memberIds\": [5, 6, 7]\n}"
+            }
+          }
+        },
+        {
+          "name": "Remove Member",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
+            "url": {
+              "raw": "http://localhost:3000/conversations/{{conversationId}}/members/{{memberId}}",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3000",
+              "path": ["conversations", "{{conversationId}}", "members", "{{memberId}}"]
+            }
+          }
+        },
+        {
+          "name": "Update Member Role",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{accessToken}}" }
+            ],
+            "url": {
+              "raw": "http://localhost:3000/conversations/{{conversationId}}/members/{{memberId}}/role",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3000",
+              "path": ["conversations", "{{conversationId}}", "members", "{{memberId}}", "role"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"role\": \"ADMIN\"\n}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Messages",
+      "item": [
+        {
+          "name": "Get Messages",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
+            "url": {
+              "raw": "http://localhost:3000/conversations/{{conversationId}}/messages?page=1&limit=20&before=&after=&type=TEXT",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3000",
+              "path": ["conversations", "{{conversationId}}", "messages"],
+              "query": [
+                { "key": "page", "value": "1" },
+                { "key": "limit", "value": "20" },
+                { "key": "before", "value": "" },
+                { "key": "after", "value": "" },
+                { "key": "type", "value": "TEXT" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Send Message",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{accessToken}}" }
+            ],
+            "url": {
+              "raw": "http://localhost:3000/conversations/messages",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3000",
+              "path": ["conversations", "messages"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"conversationId\": \"{{conversationId}}\",\n  \"content\": \"Xin chào mọi người!\",\n  \"type\": \"TEXT\",\n  \"replyToId\": null,\n  \"attachments\": []\n}"
+            }
+          }
+        },
+        {
+          "name": "Send Message with Attachments",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{accessToken}}" }
+            ],
+            "url": {
+              "raw": "http://localhost:3000/conversations/messages",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3000",
+              "path": ["conversations", "messages"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"conversationId\": \"{{conversationId}}\",\n  \"content\": \"Gửi file cho mọi người\",\n  \"type\": \"IMAGE\",\n  \"attachments\": [\n    {\n      \"type\": \"IMAGE\",\n      \"fileName\": \"image.jpg\",\n      \"fileUrl\": \"https://example.com/image.jpg\",\n      \"fileSize\": 1024000,\n      \"mimeType\": \"image/jpeg\",\n      \"width\": 1920,\n      \"height\": 1080\n    }\n  ]\n}"
+            }
+          }
+        },
+        {
+          "name": "Edit Message",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{accessToken}}" }
+            ],
+            "url": {
+              "raw": "http://localhost:3000/conversations/messages/{{messageId}}",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3000",
+              "path": ["conversations", "messages", "{{messageId}}"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"content\": \"Nội dung tin nhắn đã được chỉnh sửa\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Delete Message",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
+            "url": {
+              "raw": "http://localhost:3000/conversations/{{conversationId}}/messages/{{messageId}}?forEveryone=false",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3000",
+              "path": ["conversations", "messages", "{{messageId}}"],
+              "query": [
+                { "key": "forEveryone", "value": "false" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Mark as Read",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{accessToken}}" }
+            ],
+            "url": {
+              "raw": "http://localhost:3000/conversations/messages/read",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3000",
+              "path": ["conversations", "messages", "read"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"conversationId\": \"{{conversationId}}\",\n  \"messageId\": \"{{messageId}}\"\n}"
+            }
+          }
+        },
+        {
+          "name": "React to Message",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{accessToken}}" }
+            ],
+            "url": {
+              "raw": "http://localhost:3000/conversations/messages/{{messageId}}/react",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3000,
+              "path": ["conversations", "messages", "{{messageId}}", "react"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"emoji\": \"👍\"\n}"
+            }
+          }
+        }
+      ]
+    }
+  ]
+}
