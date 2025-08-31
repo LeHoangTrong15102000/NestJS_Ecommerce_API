@@ -47,9 +47,8 @@ export class AuthRepository {
     return this.prismaService.verificationCode.upsert({
       where: {
         // Khi mà unique nó thay đổi rồi thì cái điều kiện where cũng sẽ thay đổi theo
-        email_code_type: {
+        email_type: {
           email: payload.email,
-          code: payload.code,
           type: payload.type,
         },
       },
@@ -67,9 +66,8 @@ export class AuthRepository {
     uniqueValue:
       | { id: number }
       | {
-          email_code_type: {
+          email_type: {
             email: string
-            code: string
             type: TypeOfVerificationCodeType
           }
         },
@@ -190,9 +188,7 @@ export class AuthRepository {
 
   // Delete verificationCode
   deleteVerificationCode(
-    uniqueValue:
-      | { id: number }
-      | { email_code_type: { email: string; code: string; type: TypeOfVerificationCodeType } },
+    uniqueValue: { id: number } | { email_type: { email: string; type: TypeOfVerificationCodeType } },
   ) {
     return this.prismaService.verificationCode.delete({
       where: uniqueValue,
