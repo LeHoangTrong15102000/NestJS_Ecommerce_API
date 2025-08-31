@@ -36,13 +36,19 @@ import { ZodSerializerInterceptor } from 'nestjs-zod'
 import { ScheduleModule } from '@nestjs/schedule'
 import { RemoveRefreshTokenCronjob } from 'src/cronjobs/remove-refresh-token.cronjob'
 import { CacheModule } from '@nestjs/cache-manager'
+import { createKeyv } from '@keyv/redis'
 
 // console.log(path.resolve('src/i18n/'))
 
 @Module({
   imports: [
-    CacheModule.register({
+    CacheModule.registerAsync({
       isGlobal: true,
+      useFactory: () => {
+        return {
+          stores: [createKeyv(envConfig.REDIS_URL)],
+        }
+      },
     }),
     ScheduleModule.forRoot({}),
     BullModule.forRoot({
