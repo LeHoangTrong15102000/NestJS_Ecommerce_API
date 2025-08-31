@@ -35,11 +35,15 @@ import { ThrottlerModule } from '@nestjs/throttler'
 import { ZodSerializerInterceptor } from 'nestjs-zod'
 import { ScheduleModule } from '@nestjs/schedule'
 import { RemoveRefreshTokenCronjob } from 'src/cronjobs/remove-refresh-token.cronjob'
+import { CacheModule } from '@nestjs/cache-manager'
 
 // console.log(path.resolve('src/i18n/'))
 
 @Module({
   imports: [
+    CacheModule.register({
+      isGlobal: true,
+    }),
     ScheduleModule.forRoot({}),
     BullModule.forRoot({
       connection: {
