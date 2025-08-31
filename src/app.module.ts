@@ -33,11 +33,14 @@ import { ThrottlerBehindProxyGuard } from 'src/shared/guards/throttler-behind-pr
 import { ReviewModule } from 'src/routes/review/review.module'
 import { ThrottlerModule } from '@nestjs/throttler'
 import { ZodSerializerInterceptor } from 'nestjs-zod'
+import { ScheduleModule } from '@nestjs/schedule'
+import { RemoveRefreshTokenCronjob } from 'src/cronjobs/remove-refresh-token.cronjob'
 
 // console.log(path.resolve('src/i18n/'))
 
 @Module({
   imports: [
+    ScheduleModule.forRoot({}),
     BullModule.forRoot({
       connection: {
         url: envConfig.REDIS_URL,
@@ -117,6 +120,7 @@ import { ZodSerializerInterceptor } from 'nestjs-zod'
     //   useClass: CatchEverythingFilter,
     // },
     PaymentConsumer, // test xem khi mà Order xong thì nó đưa vào cái Queue rồi nó có chạy cái hàm ở trong PaymentConsumer hay không
+    RemoveRefreshTokenCronjob,
   ],
 })
 export class AppModule {}
