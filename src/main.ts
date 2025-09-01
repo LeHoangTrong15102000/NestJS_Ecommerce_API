@@ -3,12 +3,14 @@ import { AppModule } from './app.module'
 import { NestExpressApplication } from '@nestjs/platform-express'
 import { UPLOAD_DIR } from 'src/shared/constants/other.constant'
 import { WebsocketAdapter } from 'src/websockets/websocket.adapter'
+import helmet from 'helmet'
 // import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger'
 // import { patchNestJsSwagger } from 'nestjs-zod'
 
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule)
   app.enableCors() // Enable CORS for all routes
+  app.use(helmet())
   // patchNestJsSwagger()
   // Cái này nó giới hạn dựa trên cái địa chỉ IP của client
   app.set('trust proxy', 'loopback') // Trust requests from the loopback address
