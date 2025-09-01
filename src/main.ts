@@ -6,18 +6,18 @@ import { WebsocketAdapter } from 'src/websockets/websocket.adapter'
 import helmet from 'helmet'
 import { ConsoleLogger } from '@nestjs/common'
 import { LoggingInterceptor } from 'src/shared/interceptor/logging.interceptor'
+import { Logger } from 'nestjs-pino'
 // import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger'
 // import { patchNestJsSwagger } from 'nestjs-zod'
 
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule, {
-    logger: new ConsoleLogger({
-      // json: true,
-    }),
+    bufferLogs: true,
   })
+  app.useLogger(app.get(Logger))
   app.enableCors() // Enable CORS for all routes
   app.use(helmet())
-  app.useGlobalInterceptors(new LoggingInterceptor())
+  // app.useGlobalInterceptors(new LoggingInterceptor())
   // patchNestJsSwagger()
   // Cái này nó giới hạn dựa trên cái địa chỉ IP của client
   app.set('trust proxy', 'loopback') // Trust requests from the loopback address
