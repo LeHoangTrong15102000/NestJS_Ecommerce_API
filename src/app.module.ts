@@ -62,11 +62,20 @@ import pino from 'pino'
             }
           },
         },
-        stream: pino.destination({
-          dest: path.resolve('logs/app.log'),
-          sync: false, // Asynchronous logging
-          mkdir: true, // Create the directory if it doesn't exist
-        }),
+        // stream: pino.destination({
+        //   dest: path.resolve('logs/app.log'),
+        //   sync: false, // Asynchronous logging
+        //   mkdir: true, // Create the directory if it doesn't exist
+        // }), // In ra terminal thay vì ghi file. Nếu muốn đẹp hơn, dùng pino-pretty
+        // transport: {
+        //   target: 'pino-pretty',
+        //   options: {
+        //     colorize: true,
+        //     translateTime: 'SYS:standard',
+        //     singleLine: false,
+        //   },
+        // },
+        // stream: pino.destination(1),
       },
     }),
     CacheModule.registerAsync({

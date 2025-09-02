@@ -14,7 +14,8 @@ async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule, {
     bufferLogs: true,
   })
-  app.useLogger(app.get(Logger))
+  // app.useLogger(app.get(Logger))
+  app.useLogger(new ConsoleLogger())
   app.enableCors() // Enable CORS for all routes
   app.use(helmet())
   // app.useGlobalInterceptors(new LoggingInterceptor())
