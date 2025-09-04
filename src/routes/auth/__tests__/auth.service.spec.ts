@@ -7,7 +7,6 @@ import { EmailService } from '../../../shared/services/email.service'
 import { TwoFactorService } from '../../../shared/services/2fa.service'
 import { SharedUserRepository } from '../../../shared/repositories/shared-user.repo'
 import { SharedRoleRepository } from '../../../shared/repositories/shared-role.repo'
-import { testDataFactory } from '../../../../test/helpers/test-helpers'
 import {
   EmailAlreadyExistsException,
   EmailNotFoundException,
@@ -22,8 +21,62 @@ const mockIsUniqueConstraintPrismaError = isUniqueConstraintPrismaError as jest.
   typeof isUniqueConstraintPrismaError
 >
 
+// Simple test data factory để tránh memory leak
+const createTestData = {
+  verificationCode: (overrides = {}) => ({
+    id: 1,
+    email: 'test@example.com',
+    code: '123456',
+    type: TypeOfVerificationCode.REGISTER,
+    expiresAt: new Date(Date.now() + 60000).toISOString(),
+    createdAt: new Date().toISOString(),
+    ...overrides,
+  }),
+
+  user: (overrides = {}) => ({
+    id: 1,
+    email: 'test@example.com',
+    name: 'Test User',
+    phoneNumber: '0123456789',
+    password: 'hashedPassword123',
+    roleId: 2,
+    status: 'ACTIVE' as const,
+    avatar: null,
+    totpSecret: null,
+    createdById: null,
+    updatedById: null,
+    deletedById: null,
+    deletedAt: null,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+    ...overrides,
+  }),
+
+  role: (overrides = {}) => ({
+    id: 1,
+    name: 'CLIENT',
+    description: 'Client role',
+    isActive: true,
+    createdById: null,
+    updatedById: null,
+    deletedById: null,
+    deletedAt: null,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+    permissions: [],
+    ...overrides,
+  }),
+
+  tokens: (overrides = {}) => ({
+    accessToken: 'mock-access-token',
+    refreshToken: 'mock-refresh-token',
+    ...overrides,
+  }),
+}
+
 describe('AuthService', () => {
   let service: AuthService
+  let module: TestingModule
   let mockAuthRepo: jest.Mocked<AuthRepository>
   let mockHashingService: jest.Mocked<HashingService>
   let mockTokenService: jest.Mocked<TokenService>
@@ -33,7 +86,7 @@ describe('AuthService', () => {
   let mockSharedRoleRepo: jest.Mocked<SharedRoleRepository>
 
   beforeEach(async () => {
-    // Create mocks with proper typing
+    // Create mocks with proper typing - tối ưu hóa để tránh memory leak
     mockAuthRepo = {
       findUniqueVerificationCode: jest.fn(),
       createUser: jest.fn(),
@@ -73,7 +126,7 @@ describe('AuthService', () => {
       getClientRoleId: jest.fn(),
     } as any
 
-    const module: TestingModule = await Test.createTestingModule({
+    module = await Test.createTestingModule({
       providers: [
         AuthService,
         { provide: AuthRepository, useValue: mockAuthRepo },
@@ -91,12 +144,20 @@ describe('AuthService', () => {
 
   afterEach(() => {
     jest.clearAllMocks()
+    jest.resetAllMocks()
+  })
+
+  afterAll(async () => {
+    jest.restoreAllMocks()
+    if (module) {
+      await module.close()
+    }
   })
 
   describe('validateVerificationCode', () => {
     it('should validate verification code successfully', async () => {
       // Arrange - Chuẩn bị dữ liệu test
-      const mockVerificationCode = testDataFactory.verificationCode({
+      const mockVerificationCode = createTestData.verificationCode({
         email: 'test@example.com',
         code: '123456',
         type: TypeOfVerificationCode.REGISTER,
@@ -115,9 +176,8 @@ describe('AuthService', () => {
       // Assert - Kiểm tra kết quả
       expect(result).toEqual(mockVerificationCode)
       expect(mockAuthRepo.findUniqueVerificationCode).toHaveBeenCalledWith({
-        email_code_type: {
+        email_type: {
           email: 'test@example.com',
-          code: '123456',
           type: TypeOfVerificationCode.REGISTER,
         },
       })
@@ -139,7 +199,7 @@ describe('AuthService', () => {
 
     it('should throw error when verification code is expired', async () => {
       // Arrange - Chuẩn bị mã xác thực đã hết hạn
-      const expiredVerificationCode = testDataFactory.verificationCode({
+      const expiredVerificationCode = createTestData.verificationCode({
         email: 'test@example.com',
         code: '123456',
         type: TypeOfVerificationCode.REGISTER,
@@ -171,20 +231,20 @@ describe('AuthService', () => {
 
     it('should register user successfully', async () => {
       // Arrange - Chuẩn bị dữ liệu test
-      const mockVerificationCode = testDataFactory.verificationCode({
+      const mockVerificationCode = createTestData.verificationCode({
         email: validRegisterData.email,
         code: validRegisterData.code,
         type: TypeOfVerificationCode.REGISTER,
         expiresAt: new Date(Date.now() + 60000).toISOString(),
       })
 
-      const mockUser = testDataFactory.user({
+      const mockUser = createTestData.user({
         email: validRegisterData.email,
         name: validRegisterData.name,
         phoneNumber: validRegisterData.phoneNumber,
       })
 
-      const mockDeletedVerificationCode = testDataFactory.verificationCode({
+      const mockDeletedVerificationCode = createTestData.verificationCode({
         id: 1,
         email: validRegisterData.email,
         code: validRegisterData.code,
@@ -211,9 +271,8 @@ describe('AuthService', () => {
         roleId: 1,
       })
       expect(mockAuthRepo.deleteVerificationCode).toHaveBeenCalledWith({
-        email_code_type: {
+        email_type: {
           email: validRegisterData.email,
-          code: validRegisterData.code,
           type: TypeOfVerificationCode.REGISTER,
         },
       })
@@ -221,7 +280,7 @@ describe('AuthService', () => {
 
     it('should throw EmailAlreadyExistsException on unique constraint violation', async () => {
       // Arrange - Chuẩn bị dữ liệu test với lỗi unique constraint
-      const mockVerificationCode = testDataFactory.verificationCode({
+      const mockVerificationCode = createTestData.verificationCode({
         email: validRegisterData.email,
         code: validRegisterData.code,
         type: TypeOfVerificationCode.REGISTER,
@@ -253,7 +312,7 @@ describe('AuthService', () => {
 
       mockSharedUserRepo.findUnique.mockResolvedValue(null) // User chưa tồn tại
       mockAuthRepo.createVerificationCode.mockResolvedValue(
-        testDataFactory.verificationCode({
+        createTestData.verificationCode({
           email: otpData.email,
           type: otpData.type,
         }),
@@ -282,7 +341,7 @@ describe('AuthService', () => {
         type: TypeOfVerificationCode.REGISTER,
       }
 
-      const existingUser = testDataFactory.user({
+      const existingUser = createTestData.user({
         email: otpData.email,
         name: 'Existing User',
       })
@@ -318,15 +377,15 @@ describe('AuthService', () => {
     it('should login successfully without 2FA', async () => {
       // Arrange - Chuẩn bị dữ liệu đăng nhập không có 2FA
       const mockUser = {
-        ...testDataFactory.user(),
+        ...createTestData.user(),
         totpSecret: null, // Không bật 2FA
-        role: testDataFactory.role({
+        role: createTestData.role({
           id: 1,
           name: 'CLIENT',
         }),
       }
 
-      const mockTokens = testDataFactory.tokens({
+      const mockTokens = createTestData.tokens({
         accessToken: 'access-token',
         refreshToken: 'refresh-token',
       })
@@ -379,9 +438,9 @@ describe('AuthService', () => {
       }
 
       const mockUser = {
-        ...testDataFactory.user(),
+        ...createTestData.user(),
         totpSecret: null, // Chưa bật 2FA
-        role: testDataFactory.role({ id: 1, name: 'CLIENT' }),
+        role: createTestData.role({ id: 1, name: 'CLIENT' }),
       }
 
       mockAuthRepo.findUniqueUserIncludeRole.mockResolvedValue(mockUser as any)

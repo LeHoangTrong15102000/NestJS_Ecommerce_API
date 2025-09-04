@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common'
 import { MulterModule } from '@nestjs/platform-express'
 import { existsSync, mkdirSync } from 'fs'
-import multer from 'multer'
+import * as multer from 'multer'
 import { MediaController } from 'src/routes/media/media.controller'
 import { MediaRepo } from 'src/routes/media/media.repo'
 import { MediaService } from 'src/routes/media/media.service'

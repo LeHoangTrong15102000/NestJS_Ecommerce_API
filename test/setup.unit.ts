@@ -4,3 +4,14 @@ jest.mock('src/shared/helpers', () => ({
   isUniqueConstraintPrismaError: jest.fn(),
   isNotFoundPrismaError: jest.fn(),
 }))
+
+// Tăng memory limit cho test environment
+process.env.NODE_OPTIONS = '--max-old-space-size=4096'
+
+// Cleanup global objects sau mỗi test
+afterEach(() => {
+  // Force garbage collection nếu có
+  if (global.gc) {
+    global.gc()
+  }
+})

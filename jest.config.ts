@@ -55,16 +55,19 @@ const config: Config = {
   forceExit: true,
   detectOpenHandles: true,
 
-  // Parallel execution
-  maxWorkers: '50%',
+  // Parallel execution - giảm workers để tránh memory overflow
+  maxWorkers: 2,
 
   // Verbose output for debugging
-  verbose: true,
+  verbose: false,
 
   // Clear mocks between tests
   clearMocks: true,
   restoreMocks: true,
   resetMocks: true,
+
+  // Memory management
+  logHeapUsage: true,
 }
 
 export default config
