@@ -16,6 +16,8 @@
     "add-catalog-sample": "ts-node initialScript/add-catalog-sample.ts",
     "add-cart-order-data": "ts-node initialScript/add-cart-order-data.ts",
     "add-conversations-data": "ts-node initialScript/add-conversations-data.ts",
+    "add-address-sample": "ts-node initialScript/add-address-sample.ts",
+    "add-voucher-sample": "ts-node initialScript/add-voucher-sample.ts",
     "email:dev": "email dev",
     "email:build": "email build",
     "email:export": "email export",
@@ -36,6 +38,7 @@
     "test:ci": "jest --coverage --ci --reporters=default --reporters=jest-junit"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.61.0",
     "@aws-sdk/client-s3": "^3.782.0",
     "@aws-sdk/lib-storage": "^3.782.0",
     "@aws-sdk/s3-request-presigner": "^3.787.0",

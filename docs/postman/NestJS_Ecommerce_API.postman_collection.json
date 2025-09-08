@@ -1214,6 +1214,555 @@
           }
         }
       ]
+    },
+
+    {
+      "name": "Addresses",
+      "item": [
+        {
+          "name": "List Addresses",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
+            "url": {
+              "raw": "http://localhost:3000/addresses?page=1&limit=10&isActive=true",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3000",
+              "path": ["addresses"],
+              "query": [
+                { "key": "page", "value": "1" },
+                { "key": "limit", "value": "10" },
+                { "key": "isActive", "value": "true" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Create Address",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{accessToken}}" }
+            ],
+            "url": {
+              "raw": "http://localhost:3000/addresses",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3000",
+              "path": ["addresses"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Nguyễn Văn A\",\n  \"phone\": \"0901234567\",\n  \"provinceId\": \"79\",\n  \"provinceName\": \"Thành phố Hồ Chí Minh\",\n  \"districtId\": \"760\",\n  \"districtName\": \"Quận 1\",\n  \"wardId\": \"26734\",\n  \"wardName\": \"Phường Bến Nghé\",\n  \"detail\": \"123 Đường Nguyễn Huệ\",\n  \"isDefault\": true\n}"
+            }
+          }
+        },
+        {
+          "name": "Get Address Stats",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
+            "url": {
+              "raw": "http://localhost:3000/addresses/stats",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3000",
+              "path": ["addresses", "stats"]
+            }
+          }
+        },
+        {
+          "name": "Get Default Address",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
+            "url": {
+              "raw": "http://localhost:3000/addresses/default",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3000",
+              "path": ["addresses", "default"]
+            }
+          }
+        },
+        {
+          "name": "Get Address Detail",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
+            "url": {
+              "raw": "http://localhost:3000/addresses/{{addressId}}",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3000",
+              "path": ["addresses", "{{addressId}}"]
+            }
+          }
+        },
+        {
+          "name": "Update Address",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{accessToken}}" }
+            ],
+            "url": {
+              "raw": "http://localhost:3000/addresses/{{addressId}}",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3000",
+              "path": ["addresses", "{{addressId}}"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Nguyễn Văn A (Updated)\",\n  \"phone\": \"0901234567\",\n  \"detail\": \"456 Đường Nguyễn Huệ (Updated)\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Set Default Address",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
+            "url": {
+              "raw": "http://localhost:3000/addresses/{{addressId}}/default",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3000",
+              "path": ["addresses", "{{addressId}}", "default"]
+            }
+          }
+        },
+        {
+          "name": "Delete Address",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
+            "url": {
+              "raw": "http://localhost:3000/addresses/{{addressId}}",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3000",
+              "path": ["addresses", "{{addressId}}"]
+            }
+          }
+        }
+      ]
+    },
+
+    {
+      "name": "Vouchers",
+      "item": [
+        {
+          "name": "Get Available Vouchers (Public)",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "http://localhost:3000/vouchers/available?page=1&limit=10&type=PERCENTAGE",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3000",
+              "path": ["vouchers", "available"],
+              "query": [
+                { "key": "page", "value": "1" },
+                { "key": "limit", "value": "10" },
+                { "key": "type", "value": "PERCENTAGE" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Voucher by Code",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "http://localhost:3000/vouchers/code/WELCOME10",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3000",
+              "path": ["vouchers", "code", "WELCOME10"]
+            }
+          }
+        },
+        {
+          "name": "Get Voucher Detail",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
+            "url": {
+              "raw": "http://localhost:3000/vouchers/{{voucherId}}",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3000",
+              "path": ["vouchers", "{{voucherId}}"]
+            }
+          }
+        },
+        {
+          "name": "Collect Voucher",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
+            "url": {
+              "raw": "http://localhost:3000/vouchers/{{voucherId}}/collect",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3000",
+              "path": ["vouchers", "{{voucherId}}", "collect"]
+            }
+          }
+        },
+        {
+          "name": "Get My Vouchers",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
+            "url": {
+              "raw": "http://localhost:3000/vouchers/my?page=1&limit=10&status=available",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3000",
+              "path": ["vouchers", "my"],
+              "query": [
+                { "key": "page", "value": "1" },
+                { "key": "limit", "value": "10" },
+                { "key": "status", "value": "available" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Apply Voucher",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{accessToken}}" }
+            ],
+            "url": {
+              "raw": "http://localhost:3000/vouchers/apply",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3000",
+              "path": ["vouchers", "apply"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"code\": \"WELCOME10\",\n  \"orderAmount\": 500000,\n  \"productIds\": [1, 2, 3]\n}"
+            }
+          }
+        },
+        {
+          "name": "Get My Voucher Stats",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
+            "url": {
+              "raw": "http://localhost:3000/vouchers/my/stats",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3000",
+              "path": ["vouchers", "my", "stats"]
+            }
+          }
+        }
+      ]
+    },
+
+    {
+      "name": "Voucher Management (Admin/Seller)",
+      "item": [
+        {
+          "name": "Create Voucher",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{accessToken}}" }
+            ],
+            "url": {
+              "raw": "http://localhost:3000/vouchers/manage",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3000",
+              "path": ["vouchers", "manage"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"code\": \"NEWSALE20\",\n  \"name\": \"Sale mới 20%\",\n  \"description\": \"Voucher giảm 20% cho đơn hàng từ 300k\",\n  \"type\": \"PERCENTAGE\",\n  \"value\": 20,\n  \"minOrderValue\": 300000,\n  \"maxDiscount\": 100000,\n  \"usageLimit\": 100,\n  \"userUsageLimit\": 1,\n  \"startDate\": \"2024-01-01T00:00:00.000Z\",\n  \"endDate\": \"2024-12-31T23:59:59.000Z\",\n  \"isActive\": true\n}"
+            }
+          }
+        },
+        {
+          "name": "List Vouchers (Management)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
+            "url": {
+              "raw": "http://localhost:3000/vouchers/manage?page=1&limit=10&isActive=true",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3000",
+              "path": ["vouchers", "manage"],
+              "query": [
+                { "key": "page", "value": "1" },
+                { "key": "limit", "value": "10" },
+                { "key": "isActive", "value": "true" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Voucher Stats (Management)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
+            "url": {
+              "raw": "http://localhost:3000/vouchers/manage/stats",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3000",
+              "path": ["vouchers", "manage", "stats"]
+            }
+          }
+        },
+        {
+          "name": "Update Voucher",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{accessToken}}" }
+            ],
+            "url": {
+              "raw": "http://localhost:3000/vouchers/manage/{{voucherId}}",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3000",
+              "path": ["vouchers", "manage", "{{voucherId}}"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Sale mới 25% (Updated)\",\n  \"value\": 25,\n  \"maxDiscount\": 150000\n}"
+            }
+          }
+        },
+        {
+          "name": "Delete Voucher",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
+            "url": {
+              "raw": "http://localhost:3000/vouchers/manage/{{voucherId}}",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3000",
+              "path": ["vouchers", "manage", "{{voucherId}}"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "AI Assistant",
+      "item": [
+        {
+          "name": "Test AI Assistant (No Auth)",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "http://localhost:3000/ai-assistant/test?message=Xin chào! Tôi muốn tìm hiểu về sản phẩm iPhone 15 Pro Max",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3000",
+              "path": ["ai-assistant", "test"],
+              "query": [
+                {
+                  "key": "message",
+                  "value": "Xin chào! Tôi muốn tìm hiểu về sản phẩm iPhone 15 Pro Max"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Test Streaming (No Auth)",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "http://localhost:3000/ai-assistant/test-stream?message=Tôi cần tư vấn laptop cho học sinh",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3000",
+              "path": ["ai-assistant", "test-stream"],
+              "query": [
+                {
+                  "key": "message",
+                  "value": "Tôi cần tư vấn laptop cho học sinh"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Create AI Conversation",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{accessToken}}" }
+            ],
+            "url": {
+              "raw": "http://localhost:3000/ai-assistant/conversations",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3000",
+              "path": ["ai-assistant", "conversations"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"context\": {\n    \"userPreferences\": {\n      \"categories\": [\"electronics\", \"smartphones\"]\n    }\n  }\n}"
+            }
+          }
+        },
+        {
+          "name": "Get User Conversations",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
+            "url": {
+              "raw": "http://localhost:3000/ai-assistant/conversations?page=1&limit=10",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3000",
+              "path": ["ai-assistant", "conversations"],
+              "query": [
+                { "key": "page", "value": "1" },
+                { "key": "limit", "value": "10" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Conversation Details",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
+            "url": {
+              "raw": "http://localhost:3000/ai-assistant/conversations/{{aiConversationId}}",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3000",
+              "path": ["ai-assistant", "conversations", "{{aiConversationId}}"]
+            }
+          }
+        },
+        {
+          "name": "Send Message to AI",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{accessToken}}" }
+            ],
+            "url": {
+              "raw": "http://localhost:3000/ai-assistant/conversations/{{aiConversationId}}/messages",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3000",
+              "path": ["ai-assistant", "conversations", "{{aiConversationId}}", "messages"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"message\": \"Tôi muốn mua điện thoại iPhone 15 Pro Max. Bạn có thể tư vấn về giá cả và tính năng không?\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Stream in Conversation",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
+            "url": {
+              "raw": "http://localhost:3000/ai-assistant/conversations/{{aiConversationId}}/stream?message=So sánh iPhone 15 Pro Max với Samsung Galaxy S24 Ultra",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3000",
+              "path": ["ai-assistant", "conversations", "{{aiConversationId}}", "stream"],
+              "query": [
+                {
+                  "key": "message",
+                  "value": "So sánh iPhone 15 Pro Max với Samsung Galaxy S24 Ultra"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Archive Conversation",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
+            "url": {
+              "raw": "http://localhost:3000/ai-assistant/conversations/{{aiConversationId}}/archive",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3000",
+              "path": ["ai-assistant", "conversations", "{{aiConversationId}}", "archive"]
+            }
+          }
+        },
+        {
+          "name": "Delete Conversation",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
+            "url": {
+              "raw": "http://localhost:3000/ai-assistant/conversations/{{aiConversationId}}",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3000",
+              "path": ["ai-assistant", "conversations", "{{aiConversationId}}"]
+            }
+          }
+        },
+        {
+          "name": "Search Messages",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
+            "url": {
+              "raw": "http://localhost:3000/ai-assistant/search?q=iPhone&page=1&limit=10",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3000",
+              "path": ["ai-assistant", "search"],
+              "query": [
+                { "key": "q", "value": "iPhone" },
+                { "key": "page", "value": "1" },
+                { "key": "limit", "value": "10" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get AI Stats",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
+            "url": {
+              "raw": "http://localhost:3000/ai-assistant/stats",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3000",
+              "path": ["ai-assistant", "stats"]
+            }
+          }
+        }
+      ]
     }
   ],
   "variable": [
@@ -1221,6 +1770,9 @@
     { "key": "refreshToken", "value": "" },
     { "key": "conversationId", "value": "" },
     { "key": "messageId", "value": "" },
-    { "key": "memberId", "value": "" }
+    { "key": "memberId", "value": "" },
+    { "key": "addressId", "value": "" },
+    { "key": "voucherId", "value": "" },
+    { "key": "aiConversationId", "value": "" }
   ]
 }

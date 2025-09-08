@@ -8,3 +8,12 @@ export const InvalidPasswordException = new UnprocessableEntityException([
     path: 'password',
   },
 ])
+
+// Helper function to create error objects
+export function createErrorObject(error: { message: string; statusCode: number; errorCode: string }) {
+  return {
+    message: error.message,
+    statusCode: error.statusCode,
+    errorCode: error.errorCode,
+  }
+}

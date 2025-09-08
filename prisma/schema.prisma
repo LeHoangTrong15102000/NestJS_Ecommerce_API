@@ -119,6 +119,11 @@ model User {
   updatedVouchers Voucher[]     @relation("VoucherUpdatedBy")
   deletedVouchers Voucher[]     @relation("VoucherDeletedBy")
 
+  // AI Assistant Relations
+  aiConversations    AIConversation[] @relation("UserAIConversations")
+  createdAIKnowledge AIKnowledge[]    @relation("AIKnowledgeCreatedBy")
+  updatedAIKnowledge AIKnowledge[]    @relation("AIKnowledgeUpdatedBy")
+
   @@index([deletedAt])
 }
 
@@ -247,6 +252,7 @@ model Product {
   createdById         Int
   createdBy           User                 @relation("ProductCreatedBy", fields: [createdById], references: [id], onDelete: Cascade, onUpdate: NoAction)
   ProductSKUSnapshot  ProductSKUSnapshot[]
+  aiKnowledge         AIKnowledge[]        @relation("AIKnowledgeProduct")
 
   @@index([deletedAt])
 }
@@ -291,6 +297,7 @@ model Category {
   updatedBy            User?                 @relation("CategoryUpdatedBy", fields: [updatedById], references: [id], onUpdate: NoAction)
   categoryTranslations CategoryTranslation[]
   products             Product[]             @relation("CategoryToProduct")
+  aiKnowledge          AIKnowledge[]         @relation("AIKnowledgeCategory")
 
   @@index([deletedAt])
 }
@@ -863,4 +870,90 @@ enum AttachmentType {
 enum MediaType {
   IMAGE
   VIDEO
+}
+
+// ===== AI ASSISTANT SYSTEM MODELS =====
+
+// AI Conversation: Cuộc trò chuyện với AI Assistant riêng biệt
+model AIConversation {
+  id         String   @id @default(cuid())
+  userId     Int // User sở hữu conversation
+  title      String?  @db.VarChar(500) // Tiêu đề conversation (auto-generated)
+  context    Json? // Context data cho AI (products viewed, orders, preferences)
+  isActive   Boolean  @default(true)
+  isArchived Boolean  @default(false)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  // Relations
+  user     User        @relation("UserAIConversations", fields: [userId], references: [id], onDelete: Cascade)
+  messages AIMessage[] @relation("AIConversationMessages")
+
+  @@index([userId, isActive])
+  @@index([createdAt])
+}
+
+// AI Messages: Tin nhắn trong AI conversation
+model AIMessage {
+  id             String        @id @default(cuid())
+  conversationId String
+  role           AIMessageRole // USER hoặc ASSISTANT
+  content        String // Nội dung tin nhắn
+  tokenCount     Int? // Số tokens consumed (for tracking costs)
+  responseTime   Int? // Response time in milliseconds
+  model          String?       @db.VarChar(100) // AI model used (claude-3-haiku, etc.)
+  error          String? // Error message nếu có lỗi
+  contextUsed    Json? // Context data được sử dụng cho response này
+  createdAt      DateTime      @default(now())
+
+  // Relations
+  conversation AIConversation @relation("AIConversationMessages", fields: [conversationId], references: [id], onDelete: Cascade)
+
+  @@index([conversationId, createdAt])
+  @@index([role])
+}
+
+// AI Knowledge Base: Lưu trữ kiến thức cho AI
+model AIKnowledge {
+  id          String          @id @default(cuid())
+  type        AIKnowledgeType // PRODUCT, FAQ, POLICY, etc.
+  title       String          @db.VarChar(500)
+  content     String // Nội dung kiến thức
+  keywords    String[] // Keywords để search
+  isActive    Boolean         @default(true)
+  priority    Int             @default(0) // Priority for retrieval
+  productId   Int? // Link đến product nếu có
+  categoryId  Int? // Link đến category nếu có
+  createdById Int?
+  updatedById Int?
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+
+  // Relations
+  product   Product?  @relation("AIKnowledgeProduct", fields: [productId], references: [id], onDelete: SetNull)
+  category  Category? @relation("AIKnowledgeCategory", fields: [categoryId], references: [id], onDelete: SetNull)
+  createdBy User?     @relation("AIKnowledgeCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
+  updatedBy User?     @relation("AIKnowledgeUpdatedBy", fields: [updatedById], references: [id], onDelete: SetNull)
+
+  @@index([type, isActive])
+  @@index([keywords])
+  @@index([productId])
+  @@index([categoryId])
+}
+
+// ===== AI ASSISTANT ENUMS =====
+
+enum AIMessageRole {
+  USER // Tin nhắn từ user
+  ASSISTANT // Tin nhắn từ AI
+  SYSTEM // Tin nhắn hệ thống (context, errors)
+}
+
+enum AIKnowledgeType {
+  PRODUCT // Thông tin sản phẩm
+  FAQ // Câu hỏi thường gặp
+  POLICY // Chính sách (đổi trả, vận chuyển)
+  GUIDE // Hướng dẫn sử dụng
+  PROMOTION // Khuyến mãi
+  CATEGORY // Thông tin danh mục
 }

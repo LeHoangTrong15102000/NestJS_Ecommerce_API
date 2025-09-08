@@ -1,0 +1,462 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Test AI Assistant Streaming - NestJS E-commerce</title>
+    <style>
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        max-width: 900px;
+        margin: 50px auto;
+        padding: 20px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+      }
+
+      .container {
+        background: white;
+        border-radius: 16px;
+        padding: 40px;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+      }
+
+      h1 {
+        color: #333;
+        text-align: center;
+        margin-bottom: 40px;
+        font-size: 28px;
+        font-weight: 600;
+      }
+
+      .subtitle {
+        text-align: center;
+        color: #666;
+        margin-bottom: 30px;
+        font-size: 16px;
+      }
+
+      .input-section {
+        display: flex;
+        gap: 15px;
+        margin-bottom: 30px;
+        align-items: stretch;
+      }
+
+      input[type='text'] {
+        flex: 1;
+        padding: 16px 20px;
+        border: 2px solid #e1e5e9;
+        border-radius: 12px;
+        font-size: 16px;
+        outline: none;
+        transition: all 0.3s ease;
+        background: #f8f9fa;
+      }
+
+      input[type='text']:focus {
+        border-color: #667eea;
+        background: white;
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+      }
+
+      button {
+        padding: 16px 32px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border: none;
+        border-radius: 12px;
+        font-size: 16px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        white-space: nowrap;
+      }
+
+      button:hover:not(:disabled) {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+      }
+
+      button:disabled {
+        background: #cbd5e0;
+        cursor: not-allowed;
+        transform: none;
+        box-shadow: none;
+      }
+
+      .response-section {
+        background: #f8f9fa;
+        border-radius: 12px;
+        padding: 30px;
+        min-height: 200px;
+        border: 1px solid #e1e5e9;
+      }
+
+      .status {
+        color: #666;
+        font-style: italic;
+        margin-bottom: 15px;
+        font-size: 14px;
+        padding: 8px 12px;
+        background: #e9ecef;
+        border-radius: 8px;
+        display: inline-block;
+      }
+
+      .status.info {
+        background: #cce7ff;
+        color: #0066cc;
+      }
+
+      .status.streaming {
+        background: #d4edda;
+        color: #155724;
+      }
+
+      .status.success {
+        background: #d4edda;
+        color: #155724;
+      }
+
+      .status.error {
+        background: #f8d7da;
+        color: #721c24;
+      }
+
+      .streaming-content {
+        font-size: 16px;
+        line-height: 1.8;
+        white-space: pre-wrap;
+        min-height: 80px;
+        color: #333;
+        background: white;
+        padding: 20px;
+        border-radius: 8px;
+        border: 1px solid #e1e5e9;
+      }
+
+      .cursor {
+        display: inline-block;
+        background: #667eea;
+        color: white;
+        padding: 0 3px;
+        margin-left: 2px;
+        border-radius: 2px;
+        animation: blink 1s infinite;
+        font-weight: 600;
+      }
+
+      @keyframes blink {
+        0%,
+        50% {
+          opacity: 1;
+        }
+        51%,
+        100% {
+          opacity: 0;
+        }
+      }
+
+      .metrics {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 20px;
+        margin-top: 20px;
+        font-size: 14px;
+      }
+
+      .metric-item {
+        background: white;
+        padding: 15px;
+        border-radius: 8px;
+        border: 1px solid #e1e5e9;
+        text-align: center;
+      }
+
+      .metric-value {
+        font-size: 20px;
+        font-weight: 600;
+        color: #667eea;
+      }
+
+      .metric-label {
+        color: #666;
+        margin-top: 5px;
+      }
+
+      .examples {
+        margin-top: 30px;
+        padding: 20px;
+        background: #f1f3f4;
+        border-radius: 12px;
+      }
+
+      .examples h3 {
+        margin: 0 0 15px 0;
+        color: #333;
+        font-size: 16px;
+      }
+
+      .example-buttons {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+      }
+
+      .example-btn {
+        padding: 8px 16px;
+        background: white;
+        border: 1px solid #d1d5db;
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: 14px;
+        transition: all 0.2s ease;
+      }
+
+      .example-btn:hover {
+        background: #667eea;
+        color: white;
+        border-color: #667eea;
+      }
+
+      .api-info {
+        margin-top: 30px;
+        padding: 20px;
+        background: #e8f4f8;
+        border-radius: 12px;
+        border-left: 4px solid #667eea;
+      }
+
+      .api-info h3 {
+        margin: 0 0 10px 0;
+        color: #333;
+      }
+
+      .api-info code {
+        background: #f8f9fa;
+        padding: 2px 6px;
+        border-radius: 4px;
+        font-size: 14px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>🤖 AI Assistant Streaming Test</h1>
+      <p class="subtitle">Test streaming response cho NestJS E-commerce AI Assistant</p>
+
+      <div class="input-section">
+        <input
+          type="text"
+          id="messageInput"
+          placeholder="Nhập câu hỏi của bạn về sản phẩm, đơn hàng, thanh toán..."
+          value="Xin chào! Tôi muốn tìm hiểu về sản phẩm điện thoại iPhone 15 Pro Max."
+        />
+        <button id="sendBtn" onclick="startStreaming()">Gửi</button>
+        <button id="stopBtn" onclick="stopStreaming()" disabled>Dừng</button>
+      </div>
+
+      <div class="examples">
+        <h3>💡 Ví dụ câu hỏi:</h3>
+        <div class="example-buttons">
+          <span class="example-btn" onclick="setExample(this)">Tôi cần tư vấn laptop cho học sinh</span>
+          <span class="example-btn" onclick="setExample(this)">Làm sao để kiểm tra đơn hàng?</span>
+          <span class="example-btn" onclick="setExample(this)">Chính sách đổi trả như thế nào?</span>
+          <span class="example-btn" onclick="setExample(this)">Có khuyến mãi gì hôm nay không?</span>
+          <span class="example-btn" onclick="setExample(this)">Phí giao hàng bao nhiêu?</span>
+          <span class="example-btn" onclick="setExample(this)">So sánh iPhone 15 và Samsung Galaxy S24</span>
+        </div>
+      </div>
+
+      <div class="response-section">
+        <div class="status" id="status">Sẵn sàng để test AI Assistant streaming...</div>
+        <div class="streaming-content" id="content"></div>
+        <div class="metrics" id="metrics"></div>
+      </div>
+
+      <div class="api-info">
+        <h3>📡 API Endpoint Info</h3>
+        <p><strong>URL:</strong> <code>GET /ai-assistant/test-stream</code></p>
+        <p><strong>Method:</strong> Server-Sent Events (SSE)</p>
+        <p><strong>Model:</strong> Claude 3 Haiku (Anthropic)</p>
+        <p><strong>Authentication:</strong> Không cần (test endpoint)</p>
+      </div>
+    </div>
+
+    <script>
+      let eventSource = null
+      let startTime = null
+      let firstChunkTime = null
+      let chunkCount = 0
+      let totalTokens = 0
+
+      function setExample(element) {
+        document.getElementById('messageInput').value = element.textContent
+      }
+
+      function startStreaming() {
+        const message = document.getElementById('messageInput').value.trim()
+        if (!message) {
+          alert('Vui lòng nhập câu hỏi!')
+          return
+        }
+
+        // Reset UI
+        document.getElementById('content').textContent = ''
+        document.getElementById('metrics').innerHTML = ''
+        document.getElementById('sendBtn').disabled = true
+        document.getElementById('stopBtn').disabled = false
+
+        // Setup timing
+        startTime = Date.now()
+        firstChunkTime = null
+        chunkCount = 0
+        totalTokens = 0
+
+        // Setup streaming
+        const encodedMessage = encodeURIComponent(message)
+        const url = `http://localhost:3000/ai-assistant/test-stream?message=${encodedMessage}`
+
+        updateStatus('🔄 Đang kết nối với AI Assistant...', 'info')
+
+        eventSource = new EventSource(url)
+
+        eventSource.onmessage = function (event) {
+          try {
+            const data = JSON.parse(event.data)
+            handleStreamingData(data)
+          } catch (error) {
+            console.error('Error parsing JSON:', error)
+            updateStatus('❌ Lỗi parse dữ liệu', 'error')
+          }
+        }
+
+        eventSource.onerror = function (event) {
+          console.error('EventSource error:', event)
+          updateStatus('❌ Lỗi kết nối với server', 'error')
+          stopStreaming()
+        }
+      }
+
+      function handleStreamingData(data) {
+        const contentDiv = document.getElementById('content')
+
+        switch (data.type) {
+          case 'start':
+            updateStatus('🤖 AI đang suy nghĩ và tạo phản hồi...', 'info')
+            break
+
+          case 'chunk':
+            if (firstChunkTime === null) {
+              firstChunkTime = Date.now()
+              updateStatus('📝 Đang nhận phản hồi từ AI...', 'streaming')
+            }
+
+            // Append chunk với cursor effect
+            contentDiv.innerHTML = data.fullContent + '<span class="cursor">|</span>'
+            chunkCount++
+
+            // Estimate tokens (rough calculation)
+            totalTokens = Math.ceil(data.fullContent.length / 4)
+
+            updateMetrics()
+            break
+
+          case 'complete':
+            contentDiv.innerHTML = data.fullResponse // Remove cursor
+            updateStatus('✅ AI Assistant đã hoàn tất phản hồi!', 'success')
+            updateMetrics(true)
+            stopStreaming()
+            break
+
+          case 'error':
+            updateStatus(`❌ Lỗi: ${data.message}`, 'error')
+            if (data.fallback) {
+              contentDiv.textContent = data.fallback
+            }
+            stopStreaming()
+            break
+        }
+      }
+
+      function updateStatus(message, type = 'info') {
+        const statusDiv = document.getElementById('status')
+        statusDiv.textContent = message
+        statusDiv.className = `status ${type}`
+      }
+
+      function updateMetrics(completed = false) {
+        const metricsDiv = document.getElementById('metrics')
+        const now = Date.now()
+
+        let metrics = []
+
+        if (firstChunkTime) {
+          const timeToFirstChunk = firstChunkTime - startTime
+          metrics.push({
+            label: 'Phản hồi đầu',
+            value: `${timeToFirstChunk}ms`,
+          })
+        }
+
+        if (completed && startTime) {
+          const totalTime = now - startTime
+          metrics.push({
+            label: 'Tổng thời gian',
+            value: `${totalTime}ms`,
+          })
+
+          // Calculate average response speed
+          const avgSpeed = Math.round((totalTokens / totalTime) * 1000)
+          metrics.push({
+            label: 'Tốc độ trung bình',
+            value: `${avgSpeed} tokens/s`,
+          })
+        }
+
+        metrics.push({
+          label: 'Chunks nhận',
+          value: chunkCount,
+        })
+
+        metrics.push({
+          label: 'Tokens ước tính',
+          value: totalTokens,
+        })
+
+        metricsDiv.innerHTML = metrics
+          .map(
+            (metric) =>
+              `<div class="metric-item">
+                <div class="metric-value">${metric.value}</div>
+                <div class="metric-label">${metric.label}</div>
+              </div>`,
+          )
+          .join('')
+      }
+
+      function stopStreaming() {
+        if (eventSource) {
+          eventSource.close()
+          eventSource = null
+        }
+
+        document.getElementById('sendBtn').disabled = false
+        document.getElementById('stopBtn').disabled = true
+      }
+
+      // Enter key support
+      document.getElementById('messageInput').addEventListener('keypress', function (e) {
+        if (e.key === 'Enter' && !document.getElementById('sendBtn').disabled) {
+          startStreaming()
+        }
+      })
+
+      // Page unload cleanup
+      window.addEventListener('beforeunload', function () {
+        stopStreaming()
+      })
+    </script>
+  </body>
+</html>

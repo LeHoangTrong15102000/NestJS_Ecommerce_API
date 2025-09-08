@@ -14,7 +14,6 @@ import {
   Logger,
 } from '@nestjs/common'
 import { Response } from 'express'
-import { AuthenticationGuard } from 'src/shared/guards/authentication.guard'
 import { ActiveUser } from 'src/shared/decorators/active-user.decorator'
 import { AIAssistantService } from './ai-assistant.service'
 import {
@@ -38,7 +37,6 @@ export class AIAssistantController {
    * POST /ai-assistant/conversations
    */
   @Post('conversations')
-  @UseGuards(AuthenticationGuard)
   async createConversation(@ActiveUser('userId') userId: number, @Body() dto: CreateAIConversationDto) {
     try {
       const conversation = await this.aiAssistantService.createConversation(userId, dto)
@@ -63,7 +61,6 @@ export class AIAssistantController {
    * GET /ai-assistant/conversations
    */
   @Get('conversations')
-  @UseGuards(AuthenticationGuard)
   async getConversations(@ActiveUser('userId') userId: number, @Query() query: GetConversationsQueryDto) {
     try {
       const result = query.archived
@@ -90,7 +87,6 @@ export class AIAssistantController {
    * GET /ai-assistant/conversations/:id
    */
   @Get('conversations/:id')
-  @UseGuards(AuthenticationGuard)
   async getConversation(@ActiveUser('userId') userId: number, @Param() params: ConversationIdParamDto) {
     try {
       const conversation = await this.aiAssistantService.getConversationDetails(params.id, userId)
@@ -122,7 +118,6 @@ export class AIAssistantController {
    * POST /ai-assistant/conversations/:id/messages
    */
   @Post('conversations/:id/messages')
-  @UseGuards(AuthenticationGuard)
   async sendMessage(
     @ActiveUser('userId') userId: number,
     @Param() params: ConversationIdParamDto,
@@ -151,7 +146,6 @@ export class AIAssistantController {
    * PATCH /ai-assistant/conversations/:id/archive
    */
   @Patch('conversations/:id/archive')
-  @UseGuards(AuthenticationGuard)
   async archiveConversation(@ActiveUser('userId') userId: number, @Param() params: ConversationIdParamDto) {
     try {
       const result = await this.aiAssistantService.archiveConversation(params.id, userId)
@@ -176,7 +170,6 @@ export class AIAssistantController {
    * DELETE /ai-assistant/conversations/:id
    */
   @Delete('conversations/:id')
-  @UseGuards(AuthenticationGuard)
   async deleteConversation(@ActiveUser('userId') userId: number, @Param() params: ConversationIdParamDto) {
     try {
       const result = await this.aiAssistantService.deleteConversation(params.id, userId)
@@ -201,7 +194,6 @@ export class AIAssistantController {
    * GET /ai-assistant/search
    */
   @Get('search')
-  @UseGuards(AuthenticationGuard)
   async searchMessages(@ActiveUser('userId') userId: number, @Query() query: SearchMessagesQueryDto) {
     try {
       const result = await this.aiAssistantService.searchMessages(userId, query.q, query.page, query.limit)
@@ -225,7 +217,6 @@ export class AIAssistantController {
    * GET /ai-assistant/stats
    */
   @Get('stats')
-  @UseGuards(AuthenticationGuard)
   async getUserStats(@ActiveUser('userId') userId: number) {
     try {
       const stats = await this.aiAssistantService.getUserStats(userId)
@@ -356,7 +347,6 @@ export class AIAssistantController {
    * GET /ai-assistant/conversations/:id/stream?message=hello
    */
   @Get('conversations/:id/stream')
-  @UseGuards(AuthenticationGuard)
   async streamInConversation(
     @ActiveUser('userId') userId: number,
     @Param() params: ConversationIdParamDto,
