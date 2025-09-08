@@ -31,6 +31,9 @@ import envConfig from 'src/shared/config'
 import { PaymentConsumer } from 'src/queues/payment.consumer'
 import { ThrottlerBehindProxyGuard } from 'src/shared/guards/throttler-behind-proxy.guard'
 import { ReviewModule } from 'src/routes/review/review.module'
+import { AddressModule } from 'src/routes/address/address.module'
+import { VoucherModule } from 'src/routes/voucher/voucher.module'
+import { AIAssistantModule } from 'src/routes/ai-assistant/ai-assistant.module'
 import { ThrottlerModule } from '@nestjs/throttler'
 import { ZodSerializerInterceptor } from 'nestjs-zod'
 import { ScheduleModule } from '@nestjs/schedule'
@@ -135,6 +138,9 @@ import pino from 'pino'
     PaymentModule,
     ConversationModule,
     ReviewModule,
+    AddressModule,
+    VoucherModule,
+    AIAssistantModule,
   ],
   controllers: [AppController],
   providers: [
