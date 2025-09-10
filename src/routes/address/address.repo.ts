@@ -82,7 +82,7 @@ export class AddressRepository {
   }
 
   // Tìm địa chỉ theo ID và userId
-  async findById(id: number, userId: number) {
+  findById(id: number, userId: number) {
     return this.prismaService.address.findFirst({
       where: { id, userId, isActive: true },
     })
@@ -119,7 +119,7 @@ export class AddressRepository {
   }
 
   // Xóa địa chỉ (soft delete bằng cách set isActive = false)
-  async delete(id: number, userId: number) {
+  delete(id: number, userId: number) {
     return this.prismaService.address.update({
       where: { id, userId },
       data: { isActive: false },
@@ -127,7 +127,7 @@ export class AddressRepository {
   }
 
   // Hard delete địa chỉ
-  async hardDelete(id: number, userId: number) {
+  hardDelete(id: number, userId: number) {
     return this.prismaService.address.delete({
       where: { id, userId },
     })
@@ -152,14 +152,14 @@ export class AddressRepository {
   }
 
   // Lấy địa chỉ mặc định
-  async findDefault(userId: number) {
+  findDefault(userId: number) {
     return this.prismaService.address.findFirst({
       where: { userId, isDefault: true, isActive: true },
     })
   }
 
   // Đếm số lượng địa chỉ của user
-  async countByUser(userId: number) {
+  countByUser(userId: number) {
     return this.prismaService.address.count({
       where: { userId, isActive: true },
     })
