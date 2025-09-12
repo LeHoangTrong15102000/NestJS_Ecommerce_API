@@ -284,3 +284,4 @@ export const DEFAULT_AI_CONFIG: AIConfiguration = {
   rateLimitPerUser: 100,
   rateLimitWindow: 3600, // 1 hour
 }
+

@@ -10,3 +10,4 @@ import { SharedModule } from 'src/shared/shared.module'
   exports: [AIAssistantService, AIAssistantRepo],
 })
 export class AIAssistantModule {}
+
