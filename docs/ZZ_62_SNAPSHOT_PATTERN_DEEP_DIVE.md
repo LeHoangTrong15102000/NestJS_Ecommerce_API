@@ -13,7 +13,7 @@
 
 ---
 
-## 1) Snapshot Pattern là gì?
+## 1. Snapshot Pattern là gì?
 
 Snapshot Pattern lưu lại một bản sao “tối thiểu nhưng đủ dùng” về thực thể liên quan đến giao dịch tại thời điểm diễn ra giao dịch. Với e‑commerce:
 
@@ -22,7 +22,7 @@ Snapshot Pattern lưu lại một bản sao “tối thiểu nhưng đủ dùng�
 
 ---
 
-## 2) Vì sao snapshot là bắt buộc trong đơn hàng?
+## 2. Vì sao snapshot là bắt buộc trong đơn hàng?
 
 Nếu chỉ lưu `orderItem.skuId` rồi JOIN sang bảng `SKU`/`Product` để lấy giá/tên/hình khi render đơn cũ:
 
@@ -34,7 +34,7 @@ Snapshot giải quyết triệt để: giữ nguyên “sự thật tại thời
 
 ---
 
-## 3) Tại sao snapshot ở cấp SKU thay vì Product?
+## 3. Tại sao snapshot ở cấp SKU thay vì Product?
 
 - **Khách mua SKU cụ thể** (ví dụ: iPhone 15, màu Đen, 128GB). Giá/ảnh/stock khác nhau theo biến thể.
 - Snapshot Product sẽ dư thừa: chứa cả danh sách biến thể, hình ảnh không liên quan, khó xác định người mua biến thể nào.
@@ -42,7 +42,7 @@ Snapshot giải quyết triệt để: giữ nguyên “sự thật tại thời
 
 ---
 
-## 4) Mapping vào schema hiện tại
+## 4. Mapping vào schema hiện tại
 
 Trong schema Prisma của dự án, bảng snapshot là `ProductSKUSnapshot` (rút gọn các trường chính):
 
@@ -75,7 +75,7 @@ Ghi chú thiết kế quan trọng:
 
 ---
 
-## 5) Ví dụ end‑to‑end (đầy đủ và dễ hình dung)
+## 5. Ví dụ end‑to‑end (đầy đủ và dễ hình dung)
 
 ### Bối cảnh
 
@@ -127,7 +127,7 @@ Hệ quả:
 
 ---
 
-## 6) Khi nào tạo snapshot? (Timing chuẩn)
+## 6. Khi nào tạo snapshot? (Timing chuẩn)
 
 Khuyến nghị quy trình an toàn 2‑pha:
 
@@ -147,7 +147,7 @@ Sai lầm thường gặp (tránh):
 
 ---
 
-## 7) Snapshot nên chứa gì và không chứa gì?
+## 7. Snapshot nên chứa gì và không chứa gì?
 
 Nên snapshot (luôn):
 
@@ -166,7 +166,7 @@ Có thể cân nhắc snapshot (tùy nghiệp vụ):
 
 ---
 
-## 8) Quan hệ và tính bất biến (immutability)
+## 8. Quan hệ và tính bất biến (immutability)
 
 - `skuId`, `productId` để tham chiếu ngược (tiện đối soát), nhưng là optional.
 - Không cập nhật snapshot sau khi tạo (bất biến). Nếu cần sửa “hiển thị”, tạo bản ghi snapshot mới kèm audit, KHÔNG thay đổi bản cũ.
@@ -174,7 +174,7 @@ Có thể cân nhắc snapshot (tùy nghiệp vụ):
 
 ---
 
-## 9) Truy vấn thường dùng và hiệu năng
+## 9. Truy vấn thường dùng và hiệu năng
 
 Truy vấn order items:
 
@@ -197,7 +197,7 @@ Index gợi ý:
 
 ---
 
-## 10) FAQ nhanh
+## 10. FAQ nhanh
 
 **Q1: Tại sao không lưu mỗi `skuId` rồi JOIN lúc hiển thị?**
 
@@ -217,7 +217,7 @@ Index gợi ý:
 
 ---
 
-## 11) Checklist triển khai an toàn
+## 11. Checklist triển khai an toàn
 
 - [ ] Tạo snapshot ngay khi tạo order item từ cart
 - [ ] Trường snapshot là bất biến (chỉ đọc)
@@ -228,7 +228,7 @@ Index gợi ý:
 
 ---
 
-## 12) So sánh nhanh với các phương án khác
+## 12. So sánh nhanh với các phương án khác
 
 - Event Sourcing: mạnh nhưng phức tạp, phải “replay” events để tính giá → không cần thiết cho hóa đơn đơn hàng.
 - Temporal Tables: phụ thuộc DB, truy vấn phức tạp hơn; snapshot đơn giản, portable và đủ dùng.
@@ -236,7 +236,7 @@ Index gợi ý:
 
 ---
 
-## 13) Mini sequence (minh hoạ quy trình)
+## 13. Mini sequence (minh hoạ quy trình)
 
 ```mermaid
 sequenceDiagram
