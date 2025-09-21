@@ -253,6 +253,7 @@ export class VoucherService {
       canApply: result.canApply,
       discountAmount: result.discountAmount || 0,
       reason: result.reason,
+      voucher: result.voucher,
     }
   }
 

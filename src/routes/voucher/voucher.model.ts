@@ -72,6 +72,7 @@ export const VoucherApplicationResultSchema = z.object({
   canApply: z.boolean(),
   discountAmount: z.number(),
   reason: z.string().optional(),
+  voucher: VoucherResponseSchema.optional(),
 })
 
 export type VoucherApplicationResult = z.infer<typeof VoucherApplicationResultSchema>
