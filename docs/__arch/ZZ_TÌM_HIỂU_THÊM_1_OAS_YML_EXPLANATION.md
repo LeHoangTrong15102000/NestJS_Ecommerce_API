@@ -231,24 +231,24 @@ User:
 ```typescript
 // Từ oas.yml sinh ra:
 export interface CreateUserRequest {
-  email: string;
-  firstName: string;
-  lastName: string;
-  password: string;
+  email: string
+  firstName: string
+  lastName: string
+  password: string
 }
 
 export interface LoginRequest {
-  email: string;
-  password: string;
+  email: string
+  password: string
 }
 
 export interface User {
-  id?: number;
-  email?: string;
-  firstName?: string;
-  lastName?: string;
-  createdAt?: string;
-  updatedAt?: string;
+  id?: number
+  email?: string
+  firstName?: string
+  lastName?: string
+  createdAt?: string
+  updatedAt?: string
 }
 ```
 
@@ -257,25 +257,19 @@ export interface User {
 ```typescript
 // AuthApi class với method login
 export class AuthApi extends BaseAPI {
-  public login(
-    requestParameters: AuthApiLoginRequest,
-    options?: RawAxiosRequestConfig,
-  ) {
+  public login(requestParameters: AuthApiLoginRequest, options?: RawAxiosRequestConfig) {
     return AuthApiFp(this.configuration)
       .login(requestParameters.loginRequest, options)
-      .then((request) => request(this.axios, this.basePath));
+      .then((request) => request(this.axios, this.basePath))
   }
 }
 
 // UserApi class với method createUser
 export class UserApi extends BaseAPI {
-  public createUser(
-    requestParameters: UserApiCreateUserRequest,
-    options?: RawAxiosRequestConfig,
-  ) {
+  public createUser(requestParameters: UserApiCreateUserRequest, options?: RawAxiosRequestConfig) {
     return UserApiFp(this.configuration)
       .createUser(requestParameters.createUserRequest, options)
-      .then((request) => request(this.axios, this.basePath));
+      .then((request) => request(this.axios, this.basePath))
   }
 }
 ```
@@ -296,13 +290,13 @@ export class SsoClientService {
     try {
       const res = await this.userApi.createUser({
         createUserRequest: data,
-      });
-      return res.data;
+      })
+      return res.data
     } catch (error: any) {
       if (error.response.status === 400) {
-        throw new BadRequestException(error.response.data);
+        throw new BadRequestException(error.response.data)
       }
-      throw error;
+      throw error
     }
   }
 
@@ -310,13 +304,13 @@ export class SsoClientService {
     try {
       const res = await this.authApi.login({
         loginRequest: data,
-      });
-      return res.data;
+      })
+      return res.data
     } catch (error: any) {
       if (error.response.status === 401) {
-        throw new UnauthorizedException(error.response.data);
+        throw new UnauthorizedException(error.response.data)
       }
-      throw error;
+      throw error
     }
   }
 }
@@ -334,11 +328,7 @@ export class SsoClientService {
       },
     }),
   ],
-  providers: [
-    SsoClientService,
-    injectApiProvider(UserApi),
-    injectApiProvider(AuthApi),
-  ],
+  providers: [SsoClientService, injectApiProvider(UserApi), injectApiProvider(AuthApi)],
   exports: [SsoClientService],
 })
 export class SsoClientModule {}
@@ -354,7 +344,7 @@ export class AuthController {
 
   @Post('login')
   async login(@Body() body: LoginRequest) {
-    return this.ssoClientService.login(body);
+    return this.ssoClientService.login(body)
   }
 }
 
@@ -365,7 +355,7 @@ export class UserController {
 
   @Post()
   async register(@Body() body: CreateUserRequest) {
-    return this.ssoClientService.createUser(body);
+    return this.ssoClientService.createUser(body)
   }
 }
 ```
