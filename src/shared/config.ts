@@ -48,6 +48,11 @@ const configSchema = z.object({
   // REDIS_USERNAME: z.string(),
   // REDIS_PASSWORD: z.string(),
   REDIS_URL: z.string(),
+
+  MUX_TOKEN_ID: z.string(),
+  MUX_TOKEN_SECRET: z.string(),
+  MUX_WEBHOOK_ENDPOINT: z.string(),
+  MUX_SIGNING_SECRET: z.string(),
 })
 
 const configServer = configSchema.safeParse(process.env)
