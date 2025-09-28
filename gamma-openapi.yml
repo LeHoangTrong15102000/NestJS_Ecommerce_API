@@ -1,0 +1,352 @@
+openapi: 3.0.3
+info:
+  title: Gamma API
+  version: 1.0.0
+  description: |
+    The Gamma API allows you to programmatically create and manage presentations.
+
+    **Base URL**: https://public-api.gamma.app/v0.2
+
+    **Authentication**: Include your API key in the `X-API-KEY` header
+
+    **Rate Limits**: 300 requests per minute across all endpoints
+
+servers:
+  - url: https://public-api.gamma.app/v0.2
+    description: Production server
+
+security:
+  - ApiKeyAuth: []
+
+paths:
+  /generations:
+    post:
+      tags:
+        - Generations
+      operationId: createGeneration
+      summary: Generate a gamma (presentation)
+      description: Create a new presentation using AI
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateGenerationRequest'
+      responses:
+        '200':
+          description: Generation created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenerationResponse'
+        '400':
+          description: Invalid parameters
+        '401':
+          description: Invalid API key
+        '403':
+          description: Forbidden - No credits left
+        '404':
+          description: Generation ID not found
+        '422':
+          description: Failed to generate text
+        '429':
+          description: Too many requests
+        '500':
+          description: Error generating gamma
+        '502':
+          description: Bad gateway
+
+  /generations/{generationId}:
+    get:
+      tags:
+        - Generations
+      operationId: getGeneration
+      summary: Receive generated file URLs
+      description: Get the status and URLs of a generated presentation
+      parameters:
+        - name: generationId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Generation ID
+      responses:
+        '200':
+          description: Generation details retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenerationStatusResponse'
+        '404':
+          description: Not Found
+
+components:
+  securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: X-API-KEY
+
+  schemas:
+    # Request Schemas
+    CreateGenerationRequest:
+      type: object
+      required:
+        - inputText
+      properties:
+        inputText:
+          type: string
+          description: Text to generate presentation from. Can be pages of text with character limits 1-750,000
+          example: "Deep Sea Technology: Exploring the Ocean's Depths"
+          minLength: 1
+          maxLength: 750000
+        textMode:
+          type: string
+          enum: [generate, condense, preserve]
+          default: generate
+          description: How to modify inputText to be modified by Gamma
+        format:
+          type: string
+          enum: [presentation, document, social]
+          default: presentation
+          description: The type of artifact to create
+        themeName:
+          type: string
+          description: Theme for the presentation (can create custom themes in Gamma)
+          example: 'Modern Professional'
+        numCards:
+          type: integer
+          minimum: 1
+          maximum: 120
+          default: 10
+          description: Number of cards/slides to create when cardSplit is set to auto
+        cardSplit:
+          type: string
+          enum: [auto, inputBreaks]
+          default: auto
+          description: How content is divided up. Options - auto, inputBreaks
+        additionalInstructions:
+          type: string
+          maxLength: 1500
+          description: Extra specifications about desired content and layouts. Character limits 1-1500
+          example: 'Make the titles catchy'
+        exportAs:
+          type: string
+          enum: [pdf, pptx]
+          description: Additional file types for saving your gamma. Options pdf, pptx
+        textOptions:
+          type: object
+          description: Attributes of the text to generate
+          properties:
+            language:
+              type: string
+              default: 'en'
+              example: 'en'
+              description: Language code for generated text
+            tone:
+              type: string
+              enum: [professional, casual, friendly, formal, creative]
+              default: professional
+              description: Tone of the generated content
+            length:
+              type: string
+              enum: [brief, medium, detailed]
+              default: medium
+              description: Length/verbosity of generated text
+        imageOptions:
+          type: object
+          description: Attributes of images to generate. If any attribute is specified, we ignore the imageOptions.source parameter
+          properties:
+            source:
+              type: string
+              enum: [aiGenerated, pictographic]
+              default: aiGenerated
+              description: Source type for images
+            model:
+              type: string
+              enum:
+                [
+                  flux-1-quick,
+                  flux-kontext-fast,
+                  imagen-3-flash,
+                  luma-photon-flash-1,
+                  flux-1-pro,
+                  imagen-3-pro,
+                  ideogram-v3-turbo,
+                  luma-photon-1,
+                  leonardo-phoenix,
+                  flux-kontext-pro,
+                  ideogram-v3,
+                  imagen-4-pro,
+                  recraft-v3,
+                  gpt-image-1-medium,
+                  flux-1-ultra,
+                  imagen-4-ultra,
+                  dall-e-3,
+                  gpt-image-1-high,
+                ]
+              default: flux-1-quick
+              description: AI model to use for image generation
+            style:
+              type: string
+              example: 'photorealistic'
+              description: Style prompt for image generation
+        cardOptions:
+          type: object
+          description: Attributes of cards to generate. Related to the format parameter
+          properties:
+            dimensions:
+              type: string
+              enum: ['16:9', '4:3', 'fluid']
+              default: '16:9'
+              description: Aspect ratio for cards (16:9, 4:3, fluid)
+        sharingOptions:
+          type: object
+          description: How the gamma is shared with others
+          properties:
+            visibility:
+              type: string
+              enum: [public, private, unlisted]
+              default: private
+              description: Visibility setting for the generated gamma
+
+    GenerationResponse:
+      type: object
+      properties:
+        generationId:
+          type: string
+          example: 'xxxxxxxx'
+          description: Unique generation ID to track the request
+
+    GenerationStatusResponse:
+      type: object
+      properties:
+        generationId:
+          type: string
+          example: 'xxxxxxxx'
+          description: The generation ID
+        status:
+          type: string
+          enum: [completed, processing, failed]
+          example: 'completed'
+          description: Status of the generation request
+        comment:
+          type: string
+          example: 'https://gamma.app/docs/yyyyyyyy'
+          description: URL to the generated gamma
+        deducted:
+          type: integer
+          example: 100
+          description: Credits deducted for this generation
+        remaining:
+          type: integer
+          example: 3008
+          description: Remaining credits after this generation
+        urls:
+          type: object
+          description: URLs for different formats of the generated content
+          properties:
+            gamma:
+              type: string
+              format: uri
+              example: 'https://gamma.app/docs/yyyyyyyy'
+              description: URL to view the gamma online
+            pdf:
+              type: string
+              format: uri
+              description: URL to download as PDF (if exportAs includes pdf)
+            pptx:
+              type: string
+              format: uri
+              description: URL to download as PowerPoint (if exportAs includes pptx)
+
+    # Image Model Options
+    ImageModelOption:
+      type: object
+      properties:
+        modelName:
+          type: string
+          description: Name of the image generation model
+        string:
+          type: string
+          description: Model identifier string
+        creditsPerImage:
+          type: integer
+          description: Number of credits required per image generated
+
+    # Error Response Schemas
+    ErrorResponse:
+      type: object
+      properties:
+        message:
+          type: string
+          description: Error message description
+        statusCode:
+          type: integer
+          description: HTTP status code
+        error:
+          type: string
+          description: Error type
+      examples:
+        - message: 'Invalid API key'
+          statusCode: 401
+          error: 'Unauthorized'
+        - message: 'The request is missing required parameters'
+          statusCode: 400
+          error: 'Bad Request'
+        - message: 'No credits left. Upgrade your plan or refill credits'
+          statusCode: 403
+          error: 'Forbidden'
+
+    # Warning Response Schema
+    WarningResponse:
+      type: object
+      properties:
+        warnings:
+          type: array
+          items:
+            type: string
+          example:
+            [
+              'cardOptions.dimensions 1x1 is not valid for format presentation. Valid dimensions are: [16x9, 4x3, fluid ]. Using default: fluid.',
+            ]
+        conflictingFormats:
+          type: object
+          description: Details about format conflicts
+          properties:
+            dimensions:
+              type: string
+              example: '1x1'
+            validDimensions:
+              type: array
+              items:
+                type: string
+              example: ['16x9', '4x3', 'fluid']
+            usingDefault:
+              type: string
+              example: 'fluid'
+        conflictingImageOptions:
+          type: object
+          description: Details about image option conflicts
+          properties:
+            model:
+              type: string
+            style:
+              type: string
+            reason:
+              type: string
+              example: 'imageOptions.model and imageOptions.style are ignored when imageOptions.source is not aiGenerated.'
+
+    # Success Response for Generation Creation
+    GenerationCreatedResponse:
+      type: object
+      properties:
+        generationId:
+          type: string
+          example: 'xxxxxxxx'
+          description: Unique identifier for tracking the generation
+        status:
+          type: string
+          enum: [processing]
+          example: 'processing'
+          description: Initial status when generation is created
