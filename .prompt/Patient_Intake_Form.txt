@@ -1,0 +1,355 @@
+# Patient Intake Form - Cherry Garcia
+
+## General Information
+**Full Name:** Cherry Garcia  
+**DOB:** Not provided (Age: 41 years old as of August 2, 2025)  
+**Sex/Gender:** Male  
+**Phone:** Not provided  
+**Email:** Not provided  
+**Emergency contact:** Not provided  
+**Occupation:** Not provided (High-stress lifestyle noted)
+
+---
+
+## Functional & Lifestyle Assessment
+Rate each from 1 (poor) to 10 (excellent):
+- Energy levels: 2
+- Mental clarity/Focus: 3
+- Mood/Emotional Wellbeing: 3
+- Libido/Sexual Health: 2
+- Digestion: 4
+- Immune Function: 2
+- Fitness Level: 4
+- Skin Appearance: 5
+- Hair Health: 5
+
+---
+
+## Presenting Concern
+**Primary health concerns:**
+1. Severe chronic fatigue and complete loss of energy/vitality
+2. Critically low libido and sexual dysfunction
+3. Significant cardiovascular risk with active inflammatory plaque in coronary arteries
+4. Rapid hormonal collapse - testosterone levels plummeted from 678 to 149 ng/dL in 5 months
+5. Chronic immune system exhaustion with recurrent infections
+6. Elevated stress hormones causing systemic dysfunction
+7. Severe dyslipidemia - extremely high cholesterol ratios (13:1)
+8. Chronic viral reactivation (Epstein-Barr Virus)
+9. Systemic inflammation throughout the body
+10. Food sensitivities causing immune reactions (especially eggs)
+11. Sleep disruption and poor sleep quality
+12. Muscle weakness and inability to maintain fitness
+13. Metabolic dysfunction with pre-diabetic tendencies
+14. Elevated prolactin suppressing testosterone production
+15. Adrenal strain and HPA axis dysregulation
+
+**When did you first notice?**
+Symptoms began gradually but have shown rapid deterioration over the past 5 months (February to July 2025), with accelerating decline in hormonal, metabolic, and immune function.
+
+**Treatments tried:**
+Not specified in report
+
+---
+
+## Goals of Treatment
+1. Restore energy levels and overall vitality
+2. Reverse hormonal collapse and optimize testosterone levels
+3. Aggressively manage cardiovascular risk factors
+4. Reduce systemic inflammation throughout the body
+5. Strengthen and rebalance immune system function
+6. Address chronic viral load (EBV)
+7. Improve body composition and reduce visceral fat
+8. Enhance sleep quality and stress management
+9. Achieve enhanced longevity and disease prevention
+10. Optimize metabolic health
+11. Restore libido and sexual health
+12. Build robust immune resilience
+
+---
+
+## Past Medical History
+*Check all that apply:*
+- Severe secondary hypogonadism (testosterone dropped from 678 to 149 ng/dL)
+- Hyperprolactinemia (38.5 ng/ml - significantly elevated)
+- HPA axis dysregulation with elevated cortisol
+- Active non-calcified coronary artery plaque (Left Anterior Descending artery)
+- Severe dyslipidemia with extremely high cholesterol/HDL ratio (13:1)
+- Low HDL cholesterol (19 mg/dL - critically low)
+- High LDL cholesterol (197 mg/dL)
+- Elevated triglycerides (183 mg/dL)
+- Elevated Apolipoprotein B (173 mg/dL)
+- Low Apolipoprotein A-1 (82 mg/dL)
+- Elevated Lp-PLA2 (258 U/L - indicating inflammatory plaque)
+- Chronic Epstein-Barr Virus reactivation (very high VCA IgG >8.000 AI, EBNA IgG 3.3 AI)
+- Immune system exhaustion and suppression
+- T-cell depletion (low CD3+, CD4+, CD8+ counts)
+- Leukopenia (low white blood cell count 3.8 K/ul)
+- Systemic inflammation with elevated ferritin (439.0 ng/ml)
+- Elevated vitamin B12 (2775 pg/ml - may indicate inflammatory state)
+- Adrenal fatigue with DHEA-S at bottom of normal range (90.2 ug/dL)
+- Elevated potassium (5.6 mmol/L)
+- Elevated BUN (22 mg/dl - possible dehydration or kidney stress)
+- Low total protein (6.3 g/dl)
+- Low globulin (2.0 g/dl)
+- Low SHBG (9 nmol/L)
+- Extremely low free testosterone (4.8 ng/dl)
+- Extremely low FSH (0.5 mIU/ml)
+- Low DHT (10.2 ng/dL)
+- Elevated progesterone (0.27 ng/mL)
+- Multiple mineral deficiencies (low urine calcium, magnesium, phosphorus, lithium)
+- MTHFR C677T heterozygous genetic variant
+- Food sensitivities with high IgG reactions
+- Intestinal permeability suspected (leaky gut)
+- Metabolic syndrome features
+- Visceral adiposity
+
+---
+
+## Surgeries/Hospitalizations (with dates)
+Not provided in report
+
+---
+
+## Significant Injuries
+Not provided in report
+
+---
+
+## Allergies (medications/foods/environmental)
+**Food Sensitivities (IgG Testing):**
+- **Egg white:** 25.01 μg/ml (Highly Elevated - severe reaction)
+- **Egg yolk:** 23.13 μg/ml (Highly Elevated - severe reaction)
+- **Honey:** 15.19 μg/ml (Intermediate reaction)
+- **Common mussel:** 14.44 μg/ml (Intermediate reaction)
+- **Quail egg:** 13.40 μg/ml (Intermediate reaction)
+
+**Other Allergies:** Not specified
+
+---
+
+## Current Medications & Supplements
+**Prescription Medications:**
+- None reported
+
+**Supplements:**
+- Not specified in report
+
+---
+
+## Family History
+Not provided in report (noted as "key area for future discussion")
+
+---
+
+## Social History
+- **Relationship status:** Not provided
+- **Children:** Not provided
+- **Living situation:** Not provided
+- **Tobacco use:** Not provided
+- **Alcohol:** Not provided
+- **Cannabis/Recreational drugs:** Not provided
+- **Caffeine intake:** Not provided
+- **Lifestyle:** High-stress lifestyle confirmed
+
+---
+
+## Sleep
+- **Average hours per night:** Not specified (but poor quality indicated)
+- **Sleep quality:** Very poor
+- **Trouble falling asleep?** Yes
+- **Trouble staying asleep?** Yes
+- **Do you snore?** Not specified
+- **Wake up feeling rested?** No
+- **Daytime sleepiness?** Severe
+- **Use of sleep aids?** Not currently specified
+
+---
+
+## Physical Activity
+- **Frequency:** Declining due to fatigue
+- **Type of exercise:** Not specified
+- **Duration per session:** Limited by energy levels
+- **Intensity:** Reduced significantly
+- **Exercise limitations:** Severe fatigue, muscle weakness, poor recovery
+- **Recovery:** Very slow, inability to maintain fitness levels
+
+---
+
+## Support System
+- **Do you have a strong support system?** Not specified
+- **Relationship with family:** Not provided
+- **Close friends:** Not provided
+- **Mental health support:** Not specified
+- **Work environment:** High-stress
+- **Feel isolated?** Not specified
+
+---
+
+## Diet & Nutrition
+- **Diet type:** Not specified (consuming eggs regularly based on sensitivity results)
+- **Food sensitivities/intolerances:** Confirmed: Eggs (severe), Honey, Mussels, Quail eggs (moderate)
+- **Eating patterns:** Not specified
+- **Typical daily intake:**
+  - **Breakfast:** Not specified
+  - **Lunch:** Not specified
+  - **Dinner:** Not specified
+  - **Snacks:** Not specified (but eggs are regular part of diet)
+  - **Beverages:** Not specified
+- **Water intake per day:** Appears inadequate (elevated BUN suggests possible dehydration)
+- **Food cravings:** Not specified
+- **Appetite:** Not specified
+- **Digestive symptoms after eating:** Likely inflammation from egg consumption
+- **Meal timing:** Not specified
+
+---
+
+## Stress & Mental Health
+- **Stress level (1-10):** 9-10
+- **Main stressors:** High-stress lifestyle, health concerns, physiological stress
+- **Anxiety symptoms:** Not specified but likely given stress hormone levels
+- **Depression symptoms:** Likely present given low energy and hormonal collapse
+- **Panic attacks:** Not specified
+- **Coping mechanisms:** Not specified
+- **Past therapy:** Not specified
+- **Past psychiatric medications:** None reported
+- **Current mental state:** Concerned about health trajectory, experiencing physiological stress overload
+
+---
+
+## Cognitive Function
+- **Memory issues:** Likely present (not explicitly stated)
+- **Concentration problems:** Probable given overall health status
+- **Brain fog:** Likely significant
+- **Decision-making:** Potentially impaired
+- **Processing speed:** Likely reduced
+- **Impact on work:** High-stress occupation affected by health decline
+
+---
+
+## Environment & Toxins
+- **Home environment:** Not specified
+- **Environmental problems:** Not specified
+- **Air quality:** Not specified
+- **Water source:** Not specified
+- **Air/Water filters:** Not specified
+- **Workplace exposure:** High-stress work environment
+- **Chemical exposure:** Not specified
+- **Mold exposure:** Not specified
+- **Heavy metal exposure:** Not tested
+- **Plastic use:** Not specified
+- **Personal care products:** Not specified
+- **Dental:** Not specified
+- **Implants/medical devices:** None mentioned
+
+---
+
+## Additional Symptoms & Concerns
+- **Cardiovascular:** Active inflammatory plaque in LAD artery (widow-maker), heart disease risk, poor lipid profile, elevated inflammatory markers in blood vessels
+- **Endocrine:** Severe testosterone deficiency, elevated prolactin, high cortisol, low DHEA-S, low FSH, hormonal axis collapse, secondary hypogonadism
+- **Immune:** T-cell depletion, low white blood cells, chronic viral reactivation (EBV), immune exhaustion, recurrent infections
+- **Metabolic:** Elevated ferritin indicating inflammation, abnormal B12 metabolism, electrolyte imbalances, kidney stress markers, low protein levels
+- **Energy:** Severe chronic fatigue, complete loss of vitality, inability to maintain physical activity
+- **Sexual health:** Critically low libido, sexual dysfunction, very low testosterone and free testosterone
+- **Body composition:** Excess visceral fat, poor muscle mass maintenance, metabolic dysfunction
+- **Inflammation:** Systemic inflammation throughout body, elevated Lp-PLA2, high ferritin, inflammatory plaque
+- **Digestive:** Food sensitivities causing immune reactions, suspected leaky gut, intestinal permeability
+- **General:** Rapid health deterioration over 5 months, accelerating decline in multiple body systems
+
+---
+
+## Recent Lab Work
+**Endocrine Panel (July 25, 2025):**
+- Total Testosterone: 149 ng/dL (critically low, down from 678 in February)
+- Free Testosterone: 4.8 ng/dL (critically low)
+- FSH: 0.5 mIU/ml (extremely low)
+- Prolactin: 38.5 ng/ml (significantly elevated)
+- Cortisol: 21.1 ug/dL (elevated)
+- DHT: 10.2 ng/dL (low)
+- Progesterone: 0.27 ng/mL (elevated for male)
+- SHBG: 9 nmol/L (very low)
+- DHEA-Sulfate: 90.2 ug/dL (bottom of normal range)
+
+**Cardiovascular Panel:**
+- Total Cholesterol: 251 mg/dL (elevated)
+- HDL Cholesterol: 19 mg/dL (critically low)
+- LDL Cholesterol: 197 mg/dL (very high)
+- Triglycerides: 183 mg/dL (elevated)
+- Cholesterol/HDL Ratio: 13 (extremely high risk)
+- Lp-PLA2: 258 U/L (elevated - inflammatory plaque)
+- Apolipoprotein A-1: 82 mg/dL (low)
+- Apolipoprotein B: 173 mg/dL (high)
+
+**Inflammation & General:**
+- Ferritin: 439.0 ng/ml (elevated)
+- White Blood Cell: 3.8 K/ul (low)
+- Potassium: 5.6 mmol/L (elevated)
+- BUN: 22 mg/dl (elevated)
+- Vitamin B12: 2775 pg/ml (very high)
+- Total Protein: 6.3 g/dl (low)
+- Globulin: 2.0 g/dl (low)
+- Albumin/Globulin Ratio: 2.1 (elevated)
+
+**Immune Panel:**
+- Absolute CD3+ Cells: 682 Cells/uL (low)
+- Absolute CD4+ Cells: 507 Cells/uL (low)
+- Absolute CD8+ Cells: 180 Cells/uL (low)
+
+**Infectious Disease:**
+- Epstein-Barr VCA IgG: >8.000 AI (very high - chronic viral load)
+- Epstein-Barr EBNA IgG: 3.3 AI (elevated)
+
+**Urine Minerals:**
+- Calcium: 14.40 mg/g (low)
+- Magnesium: 8.70 mg/g (low)
+- Phosphorus: 48.60 mg/g (low)
+- Lithium: 9.5 ug/g (low)
+
+**Other:**
+- Hemoglobin A1C: 5.4% (optimal)
+- IGF-1: 154 ng/mL (optimal)
+
+**Genetics:**
+- MTHFR c.665C>T: Heterozygous variant detected
+
+**Imaging:**
+- Coronary CTA (June 28, 2024): Total Calcium Score: 0 (excellent), but **minimal non-calcified plaque in LAD artery** (high-risk finding), CAD-RADS 1
+
+---
+
+## Additional Notes
+**What else is important for us to know?**
+- Patient is at a critical inflection point with rapid health deterioration
+- Five-month comparison shows accelerating decline in hormonal, metabolic, and immune function
+- Despite zero calcium score, has active inflammatory plaque in "widow-maker" artery
+- Chronic viral load (EBV) contributing to immune exhaustion
+- Regular egg consumption is major hidden source of inflammation
+- Physiological stress is driving hormonal collapse
+- Body is in state of cascading system failures
+- Immediate and decisive intervention required to reverse health trajectory
+- High motivation for comprehensive treatment approach
+- Seeking enhanced longevity and disease prevention
+- Goals include optimized body composition and robust immune resilience
+
+**Are you comfortable with injectables?** Yes (based on prescribed protocol including injectable therapies)
+
+**What are your expectations from this consultation?**
+- Reverse rapid health decline
+- Restore hormonal balance and vitality
+- Aggressively manage cardiovascular risk
+- Address root causes, not just symptoms
+- Comprehensive, evidence-based treatment protocol
+- Integration of advanced therapies (peptides, hormones, IV treatments)
+- Lifestyle optimization for long-term health
+- Regular monitoring and adjustments
+- Goal: Transform from "D+" to "A-" wellness grade
+
+---
+
+**Current Wellness Grade:** D+ (reflecting significant decline in endocrine and cardiovascular function, severe inflammation, hormonal collapse, high-risk lipid profile, and immune exhaustion)
+
+**Potential Wellness Grade with Protocol:** A- (achievable through comprehensive intervention addressing hormonal balance, cardiovascular risk, inflammation resolution, and lifestyle changes)
+
+---
+
+**Patient Signature:** Cherry Garcia  
+**Date:** August 2, 2025

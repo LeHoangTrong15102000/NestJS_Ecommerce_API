@@ -1,3 +1,8 @@
 {
-  "python.languageServer": "None"
+  "javascript.validate.enable": true,
+  "typescript.tsserver.experimental.enableProjectDiagnostics": false,
+  "files.associations": {
+    "gemini-analysis.js": "javascript",
+    "gemini-patient-analysis.js": "javascript"
+  }
 }

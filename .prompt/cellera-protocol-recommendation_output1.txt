@@ -1,0 +1,377 @@
+Personalized Wellness Protocol for Cherry Garcia
+
+Welcome to Your Personalized Wellness Journey
+
+Welcome Cherry Garcia to your personalized wellness journey with Lifestyle Medicine. Harnessing the power of advanced artificial intelligence and deep real world clinical insight, we've created a precision-guided approach that is as unique as you are to deliver tailored recommendations that help accelerate your health into a new era of life. With AI and your doctor working seamlessly together, you can trust that your plan reflects the latest breakthroughs in longevity and wellness medicine, all designed specifically for you. Today, August 2, 2025, marks the start of a new era in your health—where innovation and medicine unite to serve your optimal well-being.
+
+Your Intake Review
+
+A comprehensive analysis of your diagnostic data and reported concerns provides a clear picture of your current health status.
+● According to the information provided, you are a 41-year-old male with a high-stress lifestyle who is seeking to improve your severe chronic fatigue, critically low libido, and systemic inflammation and work towards achieving restored energy and vitality, optimized hormonal health, and robust immune resilience.
+● Your lifestyle currently includes a high-stress environment and a diet containing known inflammatory triggers, which are significantly contributing to your poor sleep quality, declining fitness, and overall health deterioration.
+● You report a cascade of developing conditions including severe secondary hypogonadism, hyperprolactinemia, and severe dyslipidemia, along with a chronic Epstein-Barr virus load. Your family history is not provided but would be a key area for future discussion.
+● A positive aspect of your health is the absence of calcified plaque in your coronary arteries, but this is sharply contrasted by the negative finding of active, non-calcified plaque in your LAD artery, indicating a more immediate and inflammatory form of cardiovascular risk.
+● Your current overall health is at a critical inflection point, characterized by a rapid five-month decline in hormonal, immune, and metabolic function that requires immediate and decisive intervention to reverse your health trajectory.
+
+Your Comprehensive Health Overview and Wellness Grade
+
+A comprehensive analysis of your lab results, goals, concerns, medical history, and lifestyle factors has been performed to generate your current "Wellness Grade". This grade is a holistic measure of your health, reflecting not just the absence of disease but the presence of vitality and resilience.
+
+| Current Wellness Grade | Explanation/Factors Considered | Potential Grade if Protocol is Followed |
+| :--- | :--- | :--- |
+| **D+** | Your wellness grade reflects a significant and rapid decline in key health systems, particularly endocrine and cardiovascular function. While your body shows no signs of long-term calcified disease, it is under immense strain from severe inflammation, hormonal collapse, and a high-risk lipid profile. These factors, combined with evidence of immune exhaustion, are critical areas that must be addressed to improve your vitality and long-term health. | **A-** |
+| | **Potential Explanation:** By fully committing to the comprehensive protocol—restoring hormonal balance, aggressively managing cardiovascular risk factors, resolving systemic inflammation, and adopting the prescribed lifestyle changes—you have the potential to achieve a dramatic improvement in your health, reflecting optimized vitality and significantly reduced disease risk. | |
+| | **Disclaimer:** These scores are an estimate based on the provided data and are informational/motivational only. It is an estimation of your potential to improve your health if you adhere strictly to the suggested protocol and lifestyle adjustments. | |
+
+The assignment of your current grade is not merely a reflection of individual biomarkers being out of range; rather, it is heavily weighted by the velocity and trajectory of your health's decline. The analysis of your diagnostic data from February 2025 compared to July 2025 reveals an accelerated deterioration in hormonal, metabolic, and immune function over a span of just five months. This rapid negative trend represents a more significant and immediate risk than a chronic but stable condition. A patient whose key health markers are in a state of free fall requires a more urgent and comprehensive intervention. Therefore, the "D+" grade encapsulates this dynamic risk, making the potential for improvement to an "A-" a powerful and achievable goal that underscores the impact of a decisive, targeted wellness strategy.
+
+Analysis of Your Diagnostic Markers
+
+Thank you for entrusting us with your care and for completing your initial evaluation. This document serves as a summary of your recent diagnostic test results, which we have carefully analyzed in combination with the detailed information you shared on your intake form. By integrating the objective data from your lab work with your personal health history and goals, we can gain a comprehensive understanding of your unique physiology. The key findings highlighted here will form the scientific foundation for the personalized treatment protocol we are developing specifically for you, aimed at restoring your vitality and establishing a trajectory toward long-term health. Below you will find your diagnostic review with explanations to help you understand your biochemistry. In this report, diagnostic markers highlighted in red are considered out of the standard laboratory range. Markers in pink represent the upper end of the normal reference range, while those in blue indicate the lower end of the normal range. While these pink and blue markers are not technically abnormal, values at the extreme ends of a "normal" range may not be optimal for your specific health, goals, and lifestyle, and can still be associated with your symptoms.
+
+Longitudinal Biomarker Review (February 5, 2025 vs. July 25, 2025)
+
+An analysis of your laboratory results from February 5, 2025 compared to your most recent results from July 25, 2025 reveals a rapid and concerning deterioration in your hormonal and metabolic health over a time frame of just over five months. This longitudinal data is critical, as it shows a clear trajectory of declining endocrine function and worsening cardiovascular risk markers working against your health goals. This sharp decline underscores the urgency of the situation and highlights the need for a decisive intervention to reverse these trends and restore your physiological balance. The comparative data reveals a cascading endocrine failure. In February, your Follicle-Stimulating Hormone (FSH) was already below the reference range, indicating that the pituitary gland's signal to the testes was faltering. While your testosterone level was still within the normal range at that time, the suppressed FSH was a critical early warning sign of impending secondary hypogonadism. This state of compensated dysfunction has now fully decompensated, as evidenced by the July results showing a near-total collapse of testosterone production, coupled with a significant elevation in prolactin—a hormone known to further suppress the hypothalamic-pituitary-gonadal (HPG) axis. This progression was not a sudden event but the predictable outcome of an underlying, progressive dysfunction driven by chronic stress and inflammation, which was visible five months prior.
+
+| Biomarker | Result (02/05/25) | Result (07/25/25) | Normal Range | Explanation | Trend |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| **ENDOCRINE PANEL** | | | | | |
+| TESTOSTERONE, TOTAL | 678 ng/dl | 149 ng/dl | 249 - 836 ng/dl | Primary male sex hormone for energy, libido, and muscle. | Needs Improvement |
+| TESTOSTERONE, FREE | 16.9 ng/dl | 4.8 ng/dl | 5.7 - 17.9 ng/dl | The unbound, biologically active form of testosterone. | Needs Improvement |
+| FSH | 1.3 mIU/ml | 0.5 mIU/ml | 1.5 - 12.4 mIU/ml | Pituitary hormone that signals testosterone production. | Needs Improvement |
+| PROLACTIN | Not Tested | 38.5 ng/ml | 4.04 - 15.2 ng/ml | A pituitary hormone that can suppress testosterone when high. | Needs Improvement |
+| SEX HORMONE BIND GLOBULIN | 28 nmol/L | 9 nmol/L | 16.5 - 55.9 nmol/L | A protein that binds to testosterone, affecting its availability. | Needs Improvement |
+| CORTISOL | 29.0 ug/dL (pm) | 21.1 ug/dL (am) | am: 6.2 - 19.4 ug/dL | The primary stress hormone, which can suppress other hormones. | Needs Improvement |
+| **CARDIOVASCULAR PANEL** | | | | | |
+| CHOLESTEROL, TOTAL | 280 mg/dl | 251 mg/dl | < 200 mg/dl | A measure of all cholesterol in your blood. | Needs Improvement |
+| HDL CHOLESTEROL | 44 mg/dl | 19 mg/dl | > 40 mg/dl | "Good" cholesterol that helps remove plaque from arteries. | Needs Improvement |
+| LDL CHOLESTEROL, calc. | 202 mg/dl | 197 mg/dl | < 100 mg/dl | "Bad" cholesterol that contributes to plaque buildup. | Needs Improvement |
+| TRIGLYCERIDES | 181 mg/dl | 183 mg/dl | < 150 mg/dl | A type of fat in the blood that increases heart disease risk. | Needs Improvement |
+| CHOL/HDL RATIO | 6.4 | 13 | < 5.0 | A key ratio for assessing cardiovascular risk. | Needs Improvement |
+| PLAC (Lp-PLA2) | 297 U/L | 258 U/L | < 225 U/L | An enzyme indicating active, inflammatory arterial plaque. | Needs Improvement |
+| APOLIPOPROTEIN A-1 | 118 mg/dl | 82 mg/dl | > 101 mg/dl | The main protein in HDL ("good") cholesterol. | Needs Improvement |
+| APOLIPOPROTEIN B | 174 mg/dl | 173 mg/dl | < 100 mg/dl | The main protein in LDL ("bad") cholesterol; a key risk marker. | Needs Improvement |
+| **INFLAMMATION & GENERAL** | | | | | |
+| FERRITIN | 340.7 ng/ml | 439.0 ng/ml | 30 - 400 ng/ml | Measures stored iron and is a marker for inflammation. | Needs Improvement |
+| WHITE BLOOD CELL | 3.5 K/ul | 3.8 K/ul | 3.4 - 10.8 K/ul | A measure of your body's immune cells. | Needs Improvement |
+| POTASSIUM | 5.3 mmol/L | 5.6 mmol/L | 3.5 - 5.1 mmol/L | An electrolyte critical for nerve and muscle function. | Needs Improvement |
+| BUN | 26 mg/dl | 22 mg/dl | 6 - 20 mg/dl | A waste product that reflects kidney function and hydration. | Needs Improvement |
+| **IMMUNE PANEL** | | | | | |
+| Absolute CD3+ Cells | Not Tested | 682 Cells/uL | 722 - 2806 Cells/uL | Total T-cells, the soldiers of your adaptive immune system. | Needs Improvement |
+| Absolute CD4+ Cells | Not Tested | 507 Cells/uL | 404 - 1612 Cells/uL | "Helper" T-cells that coordinate the immune response. | Needs Improvement |
+| Absolute CD8+ Cells | Not Tested | 180 Cells/uL | 145 - 945 Cells/uL | "Suppressor" T-cells that control and end immune responses. | Needs Improvement |
+
+Current Laboratory Review (July 25, 2025)
+
+The following section presents the most recent laboratory results available for this patient. In the tables below, results marked in red 🔴 indicate values that are out of the normal range, while yellow 🟡 highlights values at the high end of normal range. Green ✅ represent results firmly within the normal range, and blue 🔵 indicate values at the low end of the normal range.
+
+Analysis of Diagnostic Biomarkers
+
+| Biomarker | Your Result | Normal Range | Status | Explanation & Clinical Correlation |
+| :--- | :--- | :--- | :--- | :--- |
+| **ENDOCRINE EVALUATION** | | | | |
+| TESTOSTERONE, TOTAL | 149 ng/dl | 249 - 836 ng/dl | 🔴 Out of Range (Low) | This measures the primary male sex hormone responsible for energy, libido, and muscle mass. Your critically low level is a key driver of fatigue and is indicative of significant hormonal axis dysfunction. |
+| TESTOSTERONE, FREE | 4.8 ng/dl | 5.7 - 17.9 ng/dl | 🔴 Out of Range (Low) | This measures the unbound, biologically active form of testosterone available for your cells to use. Your very low level further confirms a state of severe testosterone deficiency, impacting energy and vitality. |
+| SEX HORMONE BIND GLOBULIN | 9 nmol/L | 16.5 - 55.9 nmol/L | 🔴 Out of Range (Low) | This is a protein that binds to testosterone, regulating its availability to your tissues. Your low level indicates your body is trying to compensate for low testosterone by making more of it available, but total production is too low to overcome the deficit. |
+| FSH | 0.5 mIU/ml | 1.5 - 12.4 mIU/ml | 🔴 Out of Range (Low) | This is a key signaling hormone from the pituitary gland that tells the testes to produce testosterone. Your extremely low level confirms that the origin of your low testosterone is in the brain (secondary hypogonadism), likely due to stress and high prolactin. |
+| PROLACTIN | 38.5 ng/ml | 4.04 - 15.2 ng/ml | 🔴 Out of Range (High) | This is a pituitary hormone that, when elevated in men, strongly suppresses testosterone production. Your high level is a primary driver of your hormonal collapse and requires immediate attention. |
+| CORTISOL | 21.1 ug/dl | 6.2 - 19.4 ug/dl | 🔴 Out of Range (High) | This is your body's main stress hormone, measured here in the morning. Your elevated level indicates your body is in a state of chronic physiological stress, which directly suppresses testosterone production and contributes to inflammation. |
+| DIHYDROTESTOSTERONE LC/MS | 10.2 ng/dL | 11.2 - 95.5 ng/dL | 🔴 Out of Range (Low) | This is the most potent androgen, converted from testosterone, and is crucial for libido and male characteristics. Your low level is a direct result of your low testosterone and contributes to your symptoms. |
+| PROGESTERONE | 0.27 ng/mL | 0.05 - 0.149 ng/mL | 🔴 Out of Range (High) | In men, high progesterone can be a sign of adrenal stress or hormonal imbalance. Your elevated level is consistent with the overall picture of HPA axis dysregulation. |
+| **CORONARY RISK** | | | | |
+| HDL CHOLESTEROL | 19 mg/dl | > 40 mg/dl | 🔴 Out of Range (Low) | This is your "good" cholesterol, which helps remove plaque from arteries. Your critically low level is a major independent risk factor for cardiovascular disease. |
+| APOLIPOPROTEIN A-1 | 82 mg/dl | > 101 mg/dl | 🔴 Out of Range (Low) | This is the main protein component of HDL cholesterol, essential for its protective functions. Your low level confirms the poor quality and quantity of your protective cholesterol particles. |
+| CHOLESTEROL, TOTAL | 251 mg/dl | < 200 mg/dl | 🔴 Out of Range (High) | This is a measure of all cholesterol in your blood, including both "good" and "bad" types. Your elevated level indicates an overall imbalance in lipid metabolism. |
+| LDL CHOLESTEROL, calc. | 197 mg/dl | < 100 mg/dl | 🔴 Out of Range (High) | This is your "bad" cholesterol, which can build up in arteries and form plaque. Your very high level is a significant contributor to your cardiovascular risk. |
+| APOLIPOPROTEIN B | 173 mg/dl | < 100 mg/dl | 🔴 Out of Range (High) | This measures the number of atherogenic ("bad") cholesterol particles. Your high level is a more accurate predictor of heart disease risk than LDL alone and indicates you have too many plaque-forming particles. |
+| CHOL/HDL RATIO | 13 | < 5.0 | 🔴 Out of Range (High) | This ratio is a powerful predictor of heart disease risk. Your extremely high ratio of 13 is a severe warning sign of cardiovascular danger. |
+| TRIGLYCERIDES | 183 mg/dl | < 150 mg/dl | 🔴 Out of Range (High) | This is a type of fat in your blood that, when elevated, is a key component of metabolic syndrome and increases heart disease risk. Your high level is linked to your overall metabolic dysfunction. |
+| PLAC (Lp-PLA2) | 258 U/L | < 225 U/L | 🔴 Out of Range (High) | This is an enzyme that indicates active, unstable, and inflammatory plaque within your artery walls. Your elevated level suggests that the plaque you have is "hot" and poses a more immediate risk. |
+| **INFLAMMATION & IRON** | | | | |
+| FERRITIN | 439.0 ng/ml | 30 - 400 ng/ml | 🔴 Out of Range (High) | This measures your body's stored iron but is also a key marker of systemic inflammation. Your high level points to a significant inflammatory burden, which is a root cause of both your hormonal and cardiovascular issues. |
+| VITAMIN B12 | 2775 pg/ml | 232 - 1245 pg/ml | 🔴 Out of Range (High) | This measures Vitamin B12, crucial for nerve function and red blood cell formation. Your very high level is not from diet and may indicate an issue with how your body is processing B12, sometimes seen in inflammatory states or liver stress. |
+| **GENERAL CHEMISTRY** | | | | |
+| POTASSIUM | 5.6 mmol/L | 3.5 - 5.1 mmol/L | 🔴 Out of Range (High) | This is a critical electrolyte for nerve and heart function. Your level is slightly elevated, which can be related to kidney stress or adrenal dysfunction and requires monitoring. |
+| BUN | 22 mg/dl | 6 - 20 mg/dl | 🔴 Out of Range (High) | This measures urea nitrogen, a waste product cleared by the kidneys. Your elevated level may suggest mild dehydration or reduced kidney filtration, potentially related to your overall metabolic stress. |
+| TOTAL PROTEIN | 6.3 g/dl | 6.4 - 8.3 g/dl | 🔴 Out of Range (Low) | This measures the total amount of albumin and globulin proteins in your blood. Your low level could be related to nutritional status or liver function and warrants further investigation. |
+| GLOBULIN | 2.0 g/dl | 2.1 - 3.6 g/dl | 🔴 Out of Range (Low) | This is a group of proteins, including antibodies, that are crucial for immune function. Your low level may align with the signs of immune exhaustion seen in your lymphocyte panel. |
+| Albumin/Globulin Ratio | 2.1 | 0.8 - 2.0 | 🔴 Out of Range (High) | This ratio can be elevated when globulin levels are low. Your result is consistent with the low globulin finding and points towards an imbalance in protein synthesis or immune function. |
+| **IMMUNE PANEL** | | | | |
+| WHITE BLOOD CELL | 3.8 K/ul | 3.4 - 10.8 K/ul | 🔵 Lower Normal | This is the total count of your immune cells. Your low-normal count (leukopenia) suggests your immune system may be suppressed or exhausted, possibly due to chronic stress and viral load. |
+| Absolute CD3+ Cells | 682 Cells/uL | 722 - 2806 Cells/uL | 🔴 Out of Range (Low) | This is your total count of T-cells, the primary soldiers of your adaptive immune system. Your low count is a significant sign of immune suppression. |
+| Absolute CD4+ Cells | 507 Cells/uL | 404 - 1612 Cells/uL | 🔵 Lower Normal | These are the "helper" T-cells that orchestrate the immune response. Your low-normal level further indicates a weakened ability to mount an effective defense against pathogens. |
+| Absolute CD8+ Cells | 180 Cells/uL | 145 - 945 Cells/uL | 🔵 Lower Normal | These are the "suppressor/killer" T-cells that eliminate infected cells and regulate the immune response. Your low-normal count completes the picture of broad T-cell depletion. |
+| **INFECTIOUS DISEASE** | | | | |
+| EPSTEIN-BARR VCA, IgG | >8.000 AI | =< 0.8 AI | 🔴 Reactive | This antibody indicates a past infection with Epstein-Barr Virus (EBV). Your very high level suggests a high viral load from a past infection, which may be contributing to chronic immune activation and fatigue. |
+| EPSTEIN-BARR (EBNA), IgG | 3.3 AI | =< 0.8 AI | 🔴 Reactive | This antibody also points to a past EBV infection. Your elevated level, along with the high VCA IgG, strongly suggests the virus is playing a role in your current state of immune dysregulation. |
+| **URINE MINERALS** | | | | |
+| Calcium, Urine | 14.40 mg/g | 15 - 300 mg/g | 🔴 Out of Range (Low) | This measures calcium excretion. Your low level may indicate poor dietary intake or absorption issues. |
+| Magnesium, Urine | 8.70 mg/g | 10 - 200 mg/g | 🔴 Out of Range (Low) | This measures magnesium excretion, a mineral vital for stress management and muscle function. Your low level suggests your body is holding onto magnesium, indicating a probable systemic deficiency. |
+| Phosphorus, Urine | 48.60 mg/g | 50 - 2000 mg/g | 🔴 Out of Range (Low) | This measures phosphorus excretion, a mineral important for energy production. Your low level may reflect nutritional status. |
+| Lithium, Urine | 9.5 ug/g | 10 - 200 ug/g | 🔴 Out of Range (Low) | This measures excretion of the trace mineral lithium, important for neurological health. Your low level suggests a possible dietary deficiency. |
+| **GENETICS** | | | | |
+| MTHFR c.665C>T | Heterozygous | Not Applicable | 🟡 Variant Detected | This genetic test looks for common variants in the MTHFR gene, which is involved in folate metabolism. You are heterozygous for the C677T variant, which can slightly reduce the efficiency of this pathway but is not considered a high-risk factor on its own. |
+| **COMPLETE BLOOD COUNT** | | | | |
+| HEMOGLOBIN A1C | 5.4 % | < 5.7 % | ✅ Optimal | This measures your average blood sugar over the past 2-3 months. Your result is in the normal, healthy range, indicating good blood sugar control. |
+| DHEA-SULFATE | 90.2 ug/dl | 88.9 - 427 ug/dl | 🔵 Lower Normal | This is a key adrenal hormone and precursor to testosterone. Your level is at the absolute bottom of the normal range, indicating significant adrenal strain and contributing to your low testosterone. |
+| IGF-1 | 154 ng/mL | 98.5 - 218 ng/mL | ✅ Optimal | This is a marker for Growth Hormone (GH) activity, important for repair and vitality. Your level is within the normal range, which is a positive finding amidst the other hormonal challenges. |
+
+Coronary CTA Imaging (June 28, 2024)
+
+Your Coronary CT Angiography provides a direct look at the health of your heart's arteries. The results are mixed and highlight the specific nature of your cardiovascular risk.
+● **Total Calcium Score: 0.** This is an excellent result. It means you have no calcified, hardened plaque in your coronary arteries. This type of plaque is associated with long-term, chronic atherosclerosis.
+● **Stenosis Assessment: CAD-RADS 1 (Minimal Stenosis).** This indicates that there are no significant blockages or narrowing in your heart arteries that would impede blood flow.
+● **Plaque Assessment: Minimal Non-Calcified Plaque.** This is the most critical finding of the entire report. While you do not have old, hardened plaque, the scan identified "very minimal noncalcified plaque" in your Left Anterior Descending (LAD) artery, often called the "widow-maker." Non-calcified plaque is soft, inflammatory, and considered more unstable and prone to rupture than calcified plaque. This finding, combined with your high Lp-PLA2 level, confirms that you have active, inflammatory vascular disease that represents a more immediate, rather than long-term, risk.
+
+Food Sensitivity IgG Panel
+
+This test measures IgG antibody responses to various foods, which can be an indicator of delayed food sensitivities that may contribute to inflammation, gut issues, and immune system burden.
+
+| Food Antigen | Your Result | Reference Range | Status | Explanation & Clinical Correlation |
+| :--- | :--- | :--- | :--- | :--- |
+| Egg white | 25.01 μg/ml | <20 μg/ml | 🔴 Highly Elevated | This indicates a very strong IgG antibody response to egg whites. Regular consumption is likely a significant source of systemic inflammation, contributing to your high inflammatory markers and immune dysregulation. |
+| Egg yolk | 23.13 μg/ml | <20 μg/ml | 🔴 Highly Elevated | This indicates a very strong IgG antibody response to egg yolks. This confirms a sensitivity to the entire egg, making avoidance a critical part of your anti-inflammatory strategy. |
+| Honey | 15.19 μg/ml | <20 μg/ml | 🟡 Intermediate | This indicates a moderate IgG response to honey. While not as severe as eggs, it may be beneficial to limit or avoid honey to reduce your overall inflammatory load. |
+| Common mussel | 14.44 μg/ml | <20 μg/ml | 🟡 Intermediate | This indicates a moderate IgG response to common mussels. It would be prudent to avoid this food as part of your gut-healing and anti-inflammatory protocol. |
+| Quail egg | 13.40 μg/ml | <20 μg/ml | 🟡 Intermediate | This moderate response to quail eggs, along with the high response to chicken eggs, suggests a broad sensitivity to avian eggs. All types of eggs should be eliminated from your diet. |
+
+Your Top 5 Key Takeaways
+
+1.  **Critical Cardiovascular Risk:** Despite a reassuring calcium score of zero, you have active, inflammatory, non-calcified plaque in a key heart artery. This, combined with a high-risk lipid profile (too many small, dense cholesterol particles), places you at a significant near-term risk for a cardiovascular event that must be aggressively managed.
+2.  **Severe Hormonal Collapse:** Your testosterone has fallen to critically low levels, driven by dysfunction in your brain's hormonal signaling centers. This is the primary cause of your low energy, vitality, and libido and is also a major contributor to your cardiovascular risk.
+3.  **Systemic Inflammation & Immune Strain:** Your body is in a state of high alert, with significant systemic inflammation and an immune system that is both exhausted (low T-cell counts) and over-activated (evidence of a chronic viral load from Epstein-Barr Virus). This chronic battle is draining your resources and fueling other health issues.
+4.  **Diet-Driven Inflammation:** You have a highly significant immune reaction to eggs. Consuming them is likely a major hidden source of inflammation, contributing to gut issues and worsening your overall immune and inflammatory status.
+5.  **Chronic Stress Overload:** Your stress hormone, cortisol, is elevated, indicating your body is under constant physiological stress. This is worsening your hormonal collapse, straining your immune system, and must be addressed through targeted lifestyle changes and therapies.
+
+Patient Acknowledgment and Consent
+
+By electronically signing below, you acknowledge and agree to the following statements:
+1.  **Protocol Understanding and Physician Oversight:** I understand that this therapeutic protocol has been generated based on an analysis of my provided intake forms, diagnostic labs, and personal health goals. I acknowledge that while AI may be used to assist in data analysis and initial drafting, this protocol is not final and does not constitute a medical order until it has been personally reviewed, approved, and issued by a licensed physician who is responsible for my care.
+2.  **FDA-Approved vs. Compounded Medications & Off-Label Use:** I understand the distinction between FDA-approved and compounded medications. I acknowledge that FDA-approved drugs have undergone rigorous testing for safety and effectiveness for specific conditions. I also understand that this protocol may include compounded medications, which are custom-prepared by a specialized pharmacy for my individual needs as prescribed by a physician. While the active ingredients in these compounded medications are sourced from FDA-registered facilities, the final compounded product itself is not FDA-approved. Furthermore, I understand the practice of "off-label" prescribing, where a physician, using their professional judgment, may prescribe an FDA-approved drug for a purpose other than its originally approved indication based on sound scientific evidence. I consent to the use of compounded medications and/or off-label prescriptions as deemed appropriate for my care by the prescribing physician.
+3.  **Program Duration and Communication:** I am aware that my personalized program is designed for a specific duration (e.g., one, two, or three months). I agree to proactively communicate with the company as my program's end date approaches to discuss continuation, transition, or conclusion of my therapy to ensure seamless care.
+4.  **Integrated Health Platform:** I acknowledge that my patient portal is a fully integrative health management tool. I understand it can synchronize with my personal wearable devices to provide real-time data for my clinical team, and that it serves as a secure, centralized location for all my lab results, health documents, and protocol information, providing me with the necessary resources to optimize my health journey.
+By signing below, I confirm that I have read, fully understand, and agree to all the terms, conditions, and acknowledgments outlined in this document. I consent to proceed with the treatment protocol as prescribed and supervised by my physician.
+Name: Cherry Garcia
+Date: August 2, 2025
+
+Your Personalized 2-Month Protocol
+
+Hormones, Peptides, and Prescription Medications
+
+Welcome to your personalized protocol overview. This document presents a tailored selection of peptides, hormones, and medications, chosen to align with your specific goals, intake forms, and diagnostic findings. Each therapy recommendation is generated through collaboration between advanced artificial intelligence and your healthcare provider, ensuring a highly individualized, evidence-based approach. Every suggestion is supported by scientific citations and has been meticulously reviewed against medical literature and media history for safety and efficacy. Please review your protocol with your physician to ensure it is appropriate for your ongoing care.
+
+| Current Medications & Peptides | Dose | Frequency | Reason for Taking |
+| :--- | :--- | :--- | :--- |
+| None Reported | N/A | N/A | N/A |
+
+**Hormone Optimization & Vitality Protocol**
+
+This protocol uses advanced peptides and compounds called secretagogues. Instead of giving you synthetic hormones, they work by signaling your own body's pituitary gland to produce and release more of its natural Growth Hormone (GH). As an adult, GH is your master repair and rejuvenation hormone, crucial for maintaining lean muscle, managing body fat, repairing tissues, and supporting overall vitality. [1]
+● **Tesamorelin:** This is a GHRH (Growth Hormone-Releasing Hormone) analog. Think of it as the "green light" signal that tells your pituitary gland to start producing and releasing GH. It provides a strong, foundational stimulus for increasing your overall GH levels.
+Your Personalized Protocol Option: Injectable GHRH
+● **Tesamorelin (3 mg/mL 2x10 mL Vials)**
+    ○ **What it's for:** A powerful, targeted therapy well-studied for reducing visceral (deep abdominal) fat and improving overall body composition. This is directly indicated by your high-risk lipid profile and metabolic markers.
+    ○ **Dose:** Inject 50 units subcutaneously (SQ) before bed, 5 times per week (e.g., Mon-Fri).
+    ○ **Duration:** The 2-vial supply lasts 8 weeks.
+    ○ **Cost:** $1300 for the 8-week supply.
+
+**Foundational Hormone Optimization Protocol**
+
+Think of your body's hormonal system like a large family tree. At the very top are the powerful "parent" hormones that the body uses to create many other essential hormones down the line. This protocol focuses on replenishing these foundational building blocks, which naturally decline with age and are critically low in your case. [2]
+● **DHEA (The "Mother" Hormone):** DHEA is the most abundant circulating hormone in the body and is the direct parent to your sex hormones, testosterone and estrogen. Healthy DHEA levels are associated with energy, vitality, a strong immune system, and resilience to stress.
+Your Personalized Program Option: DHEA Revitalization Program
+● **What It's For:** Restoring overall vitality, energy, stress resilience, and providing the building blocks for healthy testosterone and estrogen levels. This is essential given your low DHEA-S, low testosterone, and high cortisol.
+● **Dosing (Gender Specific):** For Men: One (1) 100 mg capsule, taken daily.
+● **Program Cost:** $150 for a 60-day supply.
+
+Nutraceuticals
+
+Welcome to your personalized nutraceutical protocol. This tailored regimen features a blend of science-backed nutraceuticals, custom-selected to align with your unique goals, intake forms, and detailed medical history. Whether as a master blend created exclusively for you or as individualized combinations from preformulated products, each suggestion is customized to support your personal wellness journey. All recommendations are rigorously supported by clinical data and scientific citations, and every component has been meticulously evaluated for safety and efficacy through thorough review of relevant medical literature and media history. Please consult with your healthcare provider to ensure that this protocol fits seamlessly with your ongoing care and specific health needs.
+
+**Cherry Garcia Nutraceutical Blend**
+
+This custom-formulated blend provides targeted support for your most pressing health needs: reducing systemic inflammation, supporting hormonal balance, and enhancing your body's stress resilience.
+
+| Nutrient | Dose | Reasoning | Correlation to Your Profile |
+| :--- | :--- | :--- | :--- |
+| **Ashwagandha Extract** | 600 mg | A powerful adaptogen that helps modulate the HPA axis and lower cortisol levels. [3] | Directly targets your high Cortisol to reduce physiological stress and support the recovery of your HPG (hormonal) axis. |
+| **Tongkat Ali** | 400 mg | An herb shown to help increase free testosterone by unbinding it from SHBG and may support natural production. [4] | Addresses your critically low Total and Free Testosterone and very low SHBG, aiming to improve hormonal vitality. |
+| **Shilajit** | 250 mg | A mineral-rich compound that supports energy production and has been shown to support testosterone levels. [5] | Works synergistically with Tongkat Ali to address low testosterone and combat fatigue. |
+| **N-Acetyl-L-Cysteine (NAC)** | 1200 mg | A precursor to glutathione, the body's master antioxidant, which supports liver detoxification and cellular protection. [6] | Addresses the high systemic inflammation (high Ferritin) and provides the antioxidant support needed to counter high oxidative stress from your metabolic condition. |
+| **L-Glutathione (Setria®)** | 500 mg | The body's master antioxidant, provided in a highly bioavailable form to directly combat cellular damage. [7] | Directly supports detoxification pathways and helps mitigate the inflammatory damage indicated by your high Lp-PLA2 and overall risk profile. |
+| **Turmeric (95% Curcuminoids)** | 1000 mg | A potent natural anti-inflammatory that works by inhibiting key inflammatory pathways like NF-kB. [8] | Targets the systemic inflammation (high Ferritin) and vascular inflammation (high Lp-PLA2) that are driving your health issues. |
+| **Resveratrol** | 500 mg | A polyphenol known for activating sirtuins (longevity genes) and providing cardiovascular protection. [9] | Supports cardiovascular health in the face of your severe dyslipidemia and inflammatory plaque. |
+| **Zinc (as Picolinate)** | 30 mg | An essential mineral for immune function and a critical cofactor for testosterone production. [10] | Supports your weakened immune system (low T-cells) and provides a foundational element for restoring low testosterone. |
+| **Magnesium (as Glycinate)** | 400 mg | A calming mineral that supports the nervous system, improves sleep, and is vital for over 300 enzymatic reactions. [11] | Your low urine magnesium suggests a deficiency. Supplementation will help lower stress (high Cortisol) and improve sleep quality. |
+| **Vitamin D3** | 5000 IU | A pro-hormone essential for immune function, mood, and hormonal health. [12] | Optimizing your Vitamin D level will further support your immune system and overall health. |
+
+**Pre-Formulated Supplements**
+
+**Dr. Sleep**
+● **What it is:** Dr. Sleep is a comprehensive formula designed to help you fall asleep faster and enjoy a more restful, restorative night. It combines calming minerals, stress-reducing herbs, and natural sleep-cycle regulators to prepare your mind and body for deep sleep without causing morning grogginess.
+● **How the Ingredients Work:**
+    ○ **Magnesium, Zinc & L-Theanine:** This trio works to calm your nervous system, reduce anxiety, and promote a state of "wakeful relaxation" that helps you transition easily into sleep. [11]
+    ○ **Ashwagandha & Valerian Extract:** These traditional herbs are known for their ability to lower the stress hormone cortisol and enhance the activity of GABA, your brain's primary "calming" neurotransmitter. [3]
+    ○ **Melatonin:** A natural hormone that directly signals to your body that it's time to sleep, helping to regulate your internal body clock. [13]
+● **Rationale:** Your elevated cortisol level is a major disruptor of healthy sleep patterns. Improving sleep quality is a foundational step in repairing your HPA (stress) axis and allowing your hormonal system to recover.
+● **Administration:** Take as directed, 30-60 minutes before bedtime.
+● **Program Cost:** $300 for a 2-month supply.
+
+**Dr. NAD**
+● **What it is:** Dr. NAD is a formula designed to recharge your cells by boosting your levels of NAD+, a crucial molecule that declines with age. Think of NAD+ as the spark plug for your cellular power plants (mitochondria), essential for creating energy, repairing DNA, and keeping you feeling vital.
+● **How the Ingredients Work:**
+    ○ **Nicotinamide Riboside Chloride (NR):** A highly effective form of Vitamin B3 that serves as a direct building block for NAD+. [14]
+    ○ **Resveratrol:** A plant-based antioxidant that activates "longevity genes" called sirtuins, which use the NAD+ you produce to carry out cellular repair. [9]
+    ○ **Apigenin:** A natural compound that helps protect your NAD+ supply by blocking an enzyme that breaks it down.
+    ○ **Vitamin C (Liposomal):** A potent antioxidant that protects your cells and NAD+ molecules from oxidative stress and damage.
+● **Rationale:** Your body is under immense metabolic and inflammatory stress, which rapidly depletes NAD+ stores. Replenishing NAD+ will support cellular energy production, combat fatigue, and provide the necessary resources for cellular repair.
+● **Administration:** Take 2 capsules daily in the morning with food.
+● **Program Cost:** $200 for a 2-month supply.
+
+Nutritional IV Therapy
+
+Welcome to your personalized IV therapy protocol. IV therapy is a treatment that delivers fluids, nutrients, and vitamins directly into your bloodstream, allowing for rapid and efficient absorption. Your custom IV regimen is designed around your goals, intake forms, and lab results to precisely support your unique health needs. This approach can be more effective than oral supplements, as it bypasses the digestive system for maximum nutrient availability. Each component in your protocol has been rigorously reviewed for safety and efficacy, and we recommend discussing your plan with your healthcare provider to ensure it fits your overall care.
+
+**Option 1: EBOO - The Ultimate Blood Purification**
+● **What It's For:** The most advanced protocol for systemic detoxification and revitalization. EBOO is designed to address chronic inflammation, complex chronic illness, and to provide a comprehensive "reset" for your entire body. [15]
+● **Rationale:** Your combination of high inflammatory markers (Ferritin, Lp-PLA2), evidence of chronic viral load (EBV), and severe dyslipidemia indicates a high level of systemic toxicity and immune burden. EBOO offers the most powerful intervention to cleanse the blood, reduce this burden, and create a healthier internal environment conducive to healing.
+● **The Process:** EBOO (Extracorporeal Blood Oxygenation and Ozonation) is like dialysis for your blood. It continuously draws blood from one arm, runs it through a special filtration system where it is cleaned, oxygenated, and ozonated, and then returns the purified blood to your other arm. Over about an hour, your entire blood volume is treated.
+● **Frequency:** One session during the 2-month protocol.
+● **Program Cost:** $1,700 per session.
+
+**Option 2: High-Dose Vitamin C IV Therapy**
+● **What It's For:** This therapy is primarily used as adjunctive support for the immune system in cases of chronic or severe illness. [16]
+● **Rationale:** Your lab work shows a suppressed immune system (low T-cell counts) that is simultaneously dealing with a high chronic viral load from Epstein-Barr Virus (EBV). High-dose Vitamin C provides potent antiviral and anti-inflammatory support, helping to reduce the burden on your immune system and lower systemic inflammation.
+● **The Process:** Expect an intravenous infusion lasting 90-180 minutes, administered in a medical setting with monitoring for vein irritation, blood sugar changes, and hydration status.
+● **Frequency:** One session per week for the first four weeks of the program.
+● **Program Cost:** $350 per session.
+
+Unique Therapeutic Modalities
+
+Welcome to your personalized treatment protocol, which features a range of advanced therapies. These diverse modalities can help initiate and support healing processes throughout your body, targeting underlying imbalances and optimizing overall function. Based on your intake forms and diagnostic lab tests, the following therapies are tailored to address issues such as immune dysregulation, chronic viral load, and gut inflammation. Each therapy is selected not just for its evidence-based benefits, but also for its ability to work synergistically within a comprehensive wellness approach. We encourage you to review this protocol with your healthcare provider to ensure the best fit for your unique health needs and goals.
+
+**Thymosin Alpha-1**
+● **Understanding Your Peptide Therapy:** Thymosin Alpha-1 is the "immune system balancer." It's naturally produced by your thymus gland and works to modulate your immune system. It can boost a weak immune response to fight infections or calm an overactive one to reduce chronic inflammation, creating a better environment for your body to heal itself. [17]
+● **Rationale:** Your diagnostic results show clear evidence of immune dysregulation, with depleted T-cell counts (CD3+, CD4+, CD8+) alongside a high antibody response to Epstein-Barr Virus (EBV). This indicates an exhausted immune system struggling with a chronic pathogen. Thymosin Alpha-1 is specifically indicated to help restore T-cell function and rebalance the immune response to effectively manage this chronic viral load.
+● **Your Personalized Protocol Option: Injectable Vial**
+    ○ **Thymosin Alpha-1 Vial (3 mg/mL, 5 mL)**
+    ○ **Dose:** Inject 50 units (1.5 mg) subcutaneously (SQ) twice per week.
+    ○ **How to take it:** Inject into abdominal fat in the morning on your scheduled days (e.g., Monday and Thursday).
+    ○ **Vial Duration:** This vial ($450) will last 5 weeks.
+
+**BPC-157 (Body Protective Compound)**
+● **Understanding Your Peptide Therapy:** Often called the "super-repairman," this peptide is derived from a protein found in stomach acid. It's renowned for its powerful ability to accelerate the healing of various tissues, including muscles, tendons, ligaments, and especially the gut lining. It acts locally to reduce inflammation and promote new blood vessel growth, which is critical for repair. [18]
+● **Rationale:** Your highly elevated IgG response to eggs strongly suggests the presence of increased intestinal permeability, or "leaky gut." This condition allows food particles to enter the bloodstream, driving systemic inflammation and immune activation. BPC-157 is one of the most effective agents for healing the gut lining, reducing this permeability, and thereby lowering a major source of your body's inflammatory burden.
+● **Your Personalized Protocol Option: Oral Capsules**
+    ○ **BPC-157 Oral 500 mcg Capsule**
+    ○ **What it's for:** Best for systemic inflammation and digestive/gut issues.
+    ○ **Dose:** Take one (500 mcg) capsule daily.
+    ○ **How to take it:** Take on an empty stomach in the morning, at least 30 minutes before food.
+    ○ **Duration:** 60-day supply ($500).
+
+Lifestyle Adjustments
+
+Achieving optimal health is a multifaceted process that extends beyond medical interventions to encompass meaningful lifestyle changes. This program focuses on achieving your goals of enhanced longevity, optimized body composition, and robust immune resilience as well as alleviating the drivers of your cardiovascular risk and hormonal decline. In this section, you will find evidence-based guidance on key facets of daily living, including proper hydration, balanced nutrition, stress management, restorative sleep, and structured exercise modalities. By integrating these individualized strategies into your daily routine, you can enhance recovery, increase resilience, and minimize future health risks. Working closely with your care team and embracing these adjustments empowers you to play an active role in your journey toward enduring health and wellness.
+
+**Lifestyle Snapshot**
+
+Your diagnostic profile suggests a state of significant physiological stress, likely driven by a combination of lifestyle factors, chronic inflammation, and underlying immune challenges. The elevated cortisol, depleted hormones, and high inflammatory markers are classic signs of a system that is overwhelmed and struggling to maintain balance. The following lifestyle adjustments are not merely suggestions but are foundational to the success of your entire therapeutic protocol; they create the environment in which the prescribed therapies can work most effectively.
+● **Water Intake:** Proper hydration is critical for detoxification, cellular communication, and kidney function, especially given your elevated BUN and potassium.
+    ○ **Daily Goal:** Aim to consume a minimum of 100 ounces of filtered water per day. Increase this amount on days with intense exercise or high sweat loss.
+● **Diet/Nutrition: The Anti-Inflammatory Elimination Diet**
+    ○ **Why this diet was selected:** Your lab work reveals two major drivers of disease that can be directly addressed by nutrition: systemic inflammation (high Ferritin, high Lp-PLA2) and food-driven immune reactivity (highly elevated IgG to eggs). The primary goal of this diet is to remove all potential sources of inflammation, allowing your gut to heal and your immune system to calm down. This dietary change is the single most powerful lifestyle intervention you can make to support your protocol.
+    ○ **How it works:** For the next two months, you will completely eliminate the most common inflammatory foods. This gives your body a chance to reset. After the initial period, foods may be carefully reintroduced one at a time to identify any other sensitivities.
+    ○ **How it interacts with your program:** By reducing the inflammatory load from your diet, you allow the therapeutic agents (like BPC-157, Thymosin Alpha-1, and the anti-inflammatory nutraceuticals) to work more effectively on underlying issues rather than constantly fighting new fires caused by your food choices.
+    ○ **Foods to ELIMINATE for 60 Days:**
+        ■ **Eggs:** All forms (chicken, quail, etc.). This is non-negotiable due to your high IgG reaction.
+        ■ **Gluten:** All wheat, barley, rye, and spelt products (bread, pasta, cereals).
+        ■ **Dairy:** All milk, cheese, yogurt, and butter from cow's milk.
+        ■ **Sugar & Refined Carbohydrates:** All added sugars, high-fructose corn syrup, white bread, white rice, pastries, and sodas.
+        ■ **Processed Foods:** Anything in a box with a long ingredient list, industrial seed oils (canola, soy, corn oil), and artificial additives.
+        ■ **Alcohol:** All forms. Alcohol is a direct toxin to the liver and gut and will impede your progress.
+    ○ **Foods to EMBRACE:**
+
+| Category | Approved Foods |
+| :--- | :--- |
+| **Proteins** | Grass-fed beef, wild-caught fish (salmon, sardines), pasture-raised chicken and turkey, lamb. |
+| **Healthy Fats** | Avocado, extra virgin olive oil, coconut oil, nuts (almonds, walnuts), seeds (chia, flax). |
+| **Carbohydrates** | All non-starchy vegetables (leafy greens, broccoli, cauliflower, bell peppers), sweet potatoes, quinoa, berries (in moderation). |
+| **Snacks** | A handful of nuts, avocado with sea salt, celery sticks with almond butter, high-quality protein powders (pea, beef, or rice-based). |
+
+● **Exercise:** Your exercise regimen is designed to naturally boost testosterone, improve insulin sensitivity, and strengthen your cardiovascular system. [19]
+    ○ **Resistance Training (3 times per week):** Focus on compound movements like squats, deadlifts, overhead presses, and rows. This type of training is a powerful stimulus for testosterone and growth hormone production.
+    ○ **High-Intensity Interval Training (HIIT) (2 times per week):** Perform short bursts of maximum effort (e.g., 30 seconds of sprinting or stationary bike) followed by 60-90 seconds of recovery. Repeat for 15-20 minutes. This is highly effective for improving cardiovascular health and mitochondrial function.
+● **Stress Reduction:** Your high cortisol is a clear sign that your sympathetic ("fight-or-flight") nervous system is in overdrive. Actively engaging your parasympathetic ("rest-and-digest") system is crucial.
+    ○ **Box Breathing:** Practice this for 5 minutes, twice daily. Inhale for a count of 4, hold for 4, exhale for a count of 4, hold for 4. This simple technique has a profound effect on calming the nervous system. [20]
+    ○ **Digital Detox:** Excessive use of electronics, especially before bed, bombards your brain with blue light and stimulating information, disrupting cortisol rhythms and sleep. Implement a strict "no screens" rule for at least 60 minutes before your desired bedtime.
+● **Sleep Hygiene:** Sleep is when your body repairs tissue and consolidates hormonal signaling. It is non-negotiable for recovery.
+    ○ **What is Sleep?** Sleep is a critical biological process composed of several stages (light, deep, REM), each with unique restorative functions. Deep sleep is when physical repair and growth hormone release peak, while REM sleep is vital for cognitive function and emotional regulation.
+    ○ **How to Maximize Quality:**
+        ■ **Consistent Schedule:** Go to bed and wake up at the same time every day, even on weekends.
+        ■ **Cool, Dark, Quiet Environment:** Your bedroom should be an oasis for sleep. Use blackout curtains, a sound machine, and set the thermostat to a cool temperature.
+        ■ **Supplement Synergy:** Take your Dr. Sleep supplement 30-60 minutes before bed to signal to your brain and body that it is time to wind down and prepare for restorative rest.
+
+Product & Modality Summaries
+
+Protocol Review
+
+Cherry Garcia, here is your personalized protocol product summary, highlighting all the treatments and therapies recommended for your initial two-month program. Each suggestion from your AI and healthcare provider team is chosen to address your unique goals and current health conditions, with the understanding that programs may continue for up to eight months depending on your progress and needs. All associated costs are presented in two-month cycles for clarity and transparency. It is your responsibility to contact your provider at least two weeks before your program's end, as some products require advance preparation. Please review your protocol in detail and work closely with your provider to ensure seamless continuation or adjustment of your care plan.
+
+**"A La Carte" Program Options**
+
+This list allows you to see the individual monthly cost associated with each component of your comprehensive plan.
+
+| Category | Product/Modality | Administration | Expected Benefit | 2-Month Cost |
+| :--- | :--- | :--- | :--- | :--- |
+| **Hormones & Peptides** | Tesamorelin (2 Vials) | 50 units SQ, 5x/week | Reduce visceral fat, improve lipids, boost GH/IGF-1 axis | $1300 |
+| | DHEA | 100 mg capsule, daily | Restore foundational hormone levels, counter stress | $150 |
+| | Thymosin Alpha-1 (1 Vial) | 50 units SQ, 2x/week | Modulate immune system, address chronic viral load | $450 |
+| | BPC-157 | 500 mcg capsule, daily | Heal gut lining, reduce intestinal permeability | $500 |
+| **Nutraceuticals** | Cherry Garcia Custom Blend | As directed, daily | Systemic anti-inflammatory and hormonal support | $400 |
+| | Dr. Sleep | As directed, nightly | Improve sleep quality, lower cortisol | $300 |
+| | Dr. NAD | 2 capsules, daily | Boost cellular energy, support mitochondrial health | $200 |
+| **IV Therapy** | EBOO Session | 1 session (60 min) | Systemic detoxification, reduce inflammation & pathogen load | $1700 |
+| | High-Dose Vitamin C IV | 1 session/week for 4 weeks | Immune support, antiviral, anti-inflammatory | $1400 |
+| **Lifestyle** | Anti-Inflammatory Diet | Daily adherence | Reduce inflammation, heal gut, identify sensitivities | Priceless |
+| | Structured Exercise Plan | 5 days/week | Boost testosterone, improve cardiovascular health | Priceless |
+
+**Tiered Wellness Programs**
+
+To simplify your journey, we have curated three program tiers. Each tier builds upon the last, offering a progressively more intensive and comprehensive approach to achieving your health goals.
+
+| Tier | Products & Therapies | Efficacy & Focus | 2-Month Cost (with 5% discount) |
+| :--- | :--- | :--- | :--- |
+| **Tier 1 (Foundation)** | **Prescribed:** Tesamorelin, DHEA<br>**Nutraceuticals:** Cherry Garcia Custom Blend, Dr. Sleep, Dr. NAD<br>**Lifestyle:** Full Diet & Exercise Plan | This tier focuses on the most critical foundational elements: aggressively managing cardiovascular risk with Tesamorelin, rebuilding the hormonal cascade with DHEA, and providing core nutritional and lifestyle support to lower stress and inflammation. | **$2,422.50** |
+| **Tier 2 (Comprehensive)** | Includes all of Tier 1, **PLUS:**<br>**Peptides:** Thymosin Alpha-1, BPC-157<br>**IV Therapy:** High-Dose Vitamin C IV (4 sessions) | This tier adds powerful peptide therapies to directly address immune exhaustion, chronic viral load (EBV), and gut healing. The weekly Vitamin C IVs provide robust anti-inflammatory and immune-boosting support to accelerate recovery. | **$5,082.50** |
+| **Tier 3 (Optimal)** | Includes all of Tier 1 & 2, **PLUS:**<br>**IV Therapy:** EBOO Session | This is the most comprehensive protocol, incorporating the ultimate detoxification and revitalization therapy. The EBOO session provides a profound "reset" of the internal environment, cleansing the blood of inflammatory mediators and pathogens to maximize the efficacy of all other interventions. | **$6,697.50** |
+
+End of Report Disclaimer
+
+Medical Disclaimer: This report has been generated by an artificial intelligence model using your laboratory results, intake forms, and general medical knowledge. The outlined protocol has been reviewed and approved by your licensed physician, who takes full responsibility for the clinical content and recommendations within.
+
+Clinical References
+
+This section outlines the clinical resources and reputable references that have been used to validate every protocol suggested within your personalized program. All recommendations are deeply rooted in evidence drawn from peer-reviewed journals, clinical guidelines, and established medical organizations. Our AI and healthcare provider team has thoroughly vetted these sources to ensure each protocol reflects the latest standards in safety and efficacy. By relying exclusively on credible scientific literature, we aim to provide you with the most trustworthy and up-to-date guidance available.
+1.  [https://www.clinicaltrials.gov/study/NCT01263717](https://www.clinicaltrials.gov/study/NCT01263717)
+2.  [https://www.verywellhealth.com/can-dhea-increase-mens-testosterone-levels-89137](https://www.verywellhealth.com/can-dhea-increase-mens-testosterone-levels-89137)
+3.  [https://pmc.ncbi.nlm.nih.gov/articles/PMC6438434/](https://pmc.ncbi.nlm.nih.gov/articles/PMC6438434/)
+4.  [https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3669033/](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3669033/)
+5.  [https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4948208/](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4948208/)
+6.  [https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5241507/](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5241507/)
+7.  [https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4684116/](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4684116/)
+8.  [https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4758570/](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4758570/)
+9.  [https://www.ncbi.nlm.nih.gov/pmc/articles/PMC6164842/](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC6164842/)
+10. [https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5852775/](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5852775/)
+11. [https://www.ncbi.nlm.nih.gov/pmc/articles/PMC6024559/](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC6024559/)
+12. [https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3191624/](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3191624/)
+13. [https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4273450/](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4273450/)
+14. [https://pmc.ncbi.nlm.nih.gov/articles/PMC10692436/](https://pmc.ncbi.nlm.nih.gov/articles/PMC10692436/)
+15. [https://www.integrativemedicineoc.com/services/eboo/](https://www.integrativemedicineoc.com/services/eboo/)
+16. [https://www.ncbi.nlm.nih.gov/pmc/articles/PMC7999663/](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC7999663/)
+17. [https://pmc.ncbi.nlm.nih.gov/articles/PMC7747025/](https://pmc.ncbi.nlm.nih.gov/articles/PMC7747025/)
+18. [https://pmc.ncbi.nlm.nih.gov/articles/PMC5333585/](https://pmc.ncbi.nlm.nih.gov/articles/PMC5333585/)
+19. [https://www.ncbi.nlm.nih.gov/pmc/articles/PMC7739241/](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC7739241/)
+20. [https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5455070/](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5455070/)
+
+**Lifestyle Medicine**
+**Invest in your most important asset… Yourself…**
