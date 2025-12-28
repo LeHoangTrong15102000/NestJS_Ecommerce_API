@@ -1,8 +1,8 @@
 import { INestApplicationContext } from '@nestjs/common'
 import { IoAdapter } from '@nestjs/platform-socket.io'
 import { createAdapter } from '@socket.io/redis-adapter'
-import { createClient } from 'redis'
-import { ServerOptions, Server, Socket } from 'socket.io'
+import Redis from 'ioredis'
+import { Server, ServerOptions, Socket } from 'socket.io'
 import envConfig from 'src/shared/config'
 import { generateRoomUserId } from 'src/shared/helpers'
 import { SharedWebsocketRepository } from 'src/shared/repositories/shared-websocket.repo'
@@ -19,10 +19,34 @@ export class WebsocketAdapter extends IoAdapter {
   }
 
   async connectToRedis(): Promise<void> {
-    const pubClient = createClient({ url: envConfig.REDIS_URL })
+    const pubClient = new Redis(envConfig.REDIS_URL, {
+      retryStrategy: (times) => {
+        const delay = Math.min(times * 50, 2000)
+        return delay
+      },
+      maxRetriesPerRequest: 3,
+      enableOfflineQueue: true,
+    })
+
     const subClient = pubClient.duplicate()
 
-    await Promise.all([pubClient.connect(), subClient.connect()])
+    // Wait for both clients to be ready
+    await Promise.all([
+      new Promise<void>((resolve) => {
+        if (pubClient.status === 'ready') {
+          resolve()
+        } else {
+          pubClient.once('ready', () => resolve())
+        }
+      }),
+      new Promise<void>((resolve) => {
+        if (subClient.status === 'ready') {
+          resolve()
+        } else {
+          subClient.once('ready', () => resolve())
+        }
+      }),
+    ])
 
     this.adapterConstructor = createAdapter(pubClient, subClient)
   }
