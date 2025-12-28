@@ -1,16 +1,16 @@
 import { Test, TestingModule } from '@nestjs/testing'
 import { ConversationController } from '../conversation.controller'
-import { ConversationService } from '../conversation.service'
-import { MessageService } from '../message.service'
 import {
-  CreateDirectConversationBodyDTO,
-  CreateGroupConversationBodyDTO,
-  UpdateConversationBodyDTO,
   AddMembersBodyDTO,
   ConversationParamsDTO,
-  MemberParamsDTO,
+  CreateDirectConversationBodyDTO,
+  CreateGroupConversationBodyDTO,
   GetConversationsQueryDTO,
+  MemberParamsDTO,
+  UpdateConversationBodyDTO,
 } from '../conversation.dto'
+import { ConversationService } from '../conversation.service'
+import { MessageService } from '../message.service'
 
 // Test data factory để tạo dữ liệu test
 const createTestData = {
@@ -159,6 +159,136 @@ const createTestData = {
     createTestData.conversationMember({ userId: 2, id: 'member-2', role: 'MEMBER' }),
     ...overrides,
   ],
+
+  // Message-related test data
+  message: (overrides = {}) => ({
+    id: 'msg-1',
+    conversationId: 'conv-1',
+    fromUserId: 1,
+    content: 'Hello world',
+    type: 'TEXT' as const,
+    isDeleted: false,
+    isEdited: false,
+    editedAt: null,
+    deletedForEveryone: false,
+    replyToId: null,
+    createdAt: new Date('2024-01-01'),
+    updatedAt: new Date('2024-01-01'),
+    deletedAt: null,
+    fromUser: createTestData.user(),
+    attachments: [],
+    reactions: [],
+    readReceipts: [],
+    replyTo: null,
+    conversation: null,
+    isReadByCurrentUser: false,
+    readByCount: 0,
+    ...overrides,
+  }),
+
+  messagesList: (overrides = {}) => ({
+    data: [
+      {
+        ...createTestData.message(),
+        isReadByCurrentUser: false,
+        readByCount: 0,
+      },
+    ],
+    pagination: {
+      limit: 50,
+      cursor: undefined,
+      direction: 'backward' as const,
+      hasMore: false,
+      nextCursor: null,
+      prevCursor: null,
+    },
+    ...overrides,
+  }),
+
+  sendMessageBody: (overrides = {}) => ({
+    conversationId: 'conv-1',
+    content: 'Hello world',
+    type: 'TEXT' as const,
+    ...overrides,
+  }),
+
+  getMessagesQuery: (overrides = {}) => ({
+    limit: 50,
+    cursor: undefined,
+    direction: 'backward' as const,
+    type: undefined,
+    ...overrides,
+  }),
+
+  searchMessagesQuery: (overrides = {}) => ({
+    q: 'search term',
+    limit: 20,
+    cursor: undefined,
+    type: undefined,
+    fromUserId: undefined,
+    dateFrom: undefined,
+    dateTo: undefined,
+    ...overrides,
+  }),
+
+  messageParams: (overrides = {}) => ({
+    messageId: 'msg-1',
+    ...overrides,
+  }),
+
+  markAsReadBody: (overrides = {}) => ({
+    conversationId: 'conv-1',
+    messageId: 'msg-1',
+    ...overrides,
+  }),
+
+  messageStats: (overrides = {}) => ({
+    total: 100,
+    byType: {
+      TEXT: 80,
+      IMAGE: 15,
+      VIDEO: 5,
+    },
+    mediaCount: 20,
+    ...overrides,
+  }),
+
+  searchResults: (overrides = {}) => ({
+    data: [],
+    pagination: {
+      limit: 20,
+      cursor: null,
+      hasMore: false,
+      nextCursor: null,
+    },
+    ...overrides,
+  }),
+
+  reactionResult: (overrides = {}) => ({
+    action: 'added' as const,
+    reaction: {
+      id: 'reaction-1',
+      messageId: 'msg-1',
+      userId: 1,
+      emoji: '👍',
+      createdAt: new Date('2024-01-01'),
+      user: createTestData.user(),
+    },
+    ...overrides,
+  }),
+
+  reactionStats: (overrides = {}) => ({
+    '👍': 3,
+    '❤️': 2,
+    ...overrides,
+  }),
+
+  readReceiptStats: (overrides = {}) => ({
+    readCount: 3,
+    totalMembers: 5,
+    readPercentage: 60,
+    ...overrides,
+  }),
 }
 
 describe('ConversationController', () => {
@@ -806,6 +936,433 @@ describe('ConversationController', () => {
       // Assert - Kiểm tra kết quả
       expect(result.data).toHaveLength(0)
       expect(result.message).toBe('Danh sách thành viên')
+    })
+  })
+
+  // ===== MESSAGE MANAGEMENT TESTS =====
+
+  describe('getMessages', () => {
+    it('should get conversation messages successfully', async () => {
+      // Arrange - Chuẩn bị dữ liệu lấy tin nhắn
+      const userId = 1
+      const params = createTestData.conversationParams()
+      const query = createTestData.getMessagesQuery()
+      const mockMessages = createTestData.messagesList()
+
+      mockMessageService.getConversationMessages.mockResolvedValue(mockMessages)
+
+      // Act - Thực hiện lấy tin nhắn
+      const result = await controller.getMessages(userId, params, query)
+
+      // Assert - Kiểm tra kết quả
+      expect(result).toEqual(mockMessages)
+      expect(mockMessageService.getConversationMessages).toHaveBeenCalledWith(params.conversationId, userId, query)
+      expect(mockMessageService.getConversationMessages).toHaveBeenCalledTimes(1)
+    })
+
+    it('should handle messages with pagination cursor', async () => {
+      // Arrange - Chuẩn bị dữ liệu với cursor
+      const userId = 1
+      const params = createTestData.conversationParams()
+      const query = createTestData.getMessagesQuery({ cursor: 'msg-100', limit: 20 })
+      const mockMessages = createTestData.messagesList({
+        pagination: {
+          hasMore: true,
+          nextCursor: 'msg-80',
+          prevCursor: 'msg-120',
+        },
+      })
+
+      mockMessageService.getConversationMessages.mockResolvedValue(mockMessages)
+
+      // Act - Thực hiện lấy tin nhắn
+      const result = await controller.getMessages(userId, params, query)
+
+      // Assert - Kiểm tra kết quả
+      expect(result.pagination.hasMore).toBe(true)
+      expect(result.pagination.nextCursor).toBe('msg-80')
+      expect(mockMessageService.getConversationMessages).toHaveBeenCalledWith(params.conversationId, userId, query)
+    })
+
+    it('should handle messages with type filter', async () => {
+      // Arrange - Chuẩn bị dữ liệu với filter type
+      const userId = 1
+      const params = createTestData.conversationParams()
+      const query = createTestData.getMessagesQuery({ type: 'IMAGE' })
+      const mockMessages = createTestData.messagesList({
+        data: [createTestData.message({ type: 'IMAGE' })],
+      })
+
+      mockMessageService.getConversationMessages.mockResolvedValue(mockMessages)
+
+      // Act - Thực hiện lấy tin nhắn
+      const result = await controller.getMessages(userId, params, query)
+
+      // Assert - Kiểm tra kết quả
+      expect(result.data[0].type).toBe('IMAGE')
+      expect(mockMessageService.getConversationMessages).toHaveBeenCalledWith(params.conversationId, userId, query)
+    })
+  })
+
+  describe('getMessageStats', () => {
+    it('should get message stats successfully', async () => {
+      // Arrange - Chuẩn bị dữ liệu thống kê tin nhắn
+      const userId = 1
+      const params = createTestData.conversationParams()
+      const mockStats = createTestData.messageStats()
+
+      mockMessageService.getMessageStats.mockResolvedValue(mockStats)
+
+      // Act - Thực hiện lấy thống kê
+      const result = await controller.getMessageStats(userId, params)
+
+      // Assert - Kiểm tra kết quả
+      expect(result).toEqual({
+        message: 'Thống kê tin nhắn',
+        data: mockStats,
+      })
+      expect(mockMessageService.getMessageStats).toHaveBeenCalledWith(params.conversationId, userId)
+      expect(mockMessageService.getMessageStats).toHaveBeenCalledTimes(1)
+    })
+  })
+
+  describe('searchMessages', () => {
+    it('should search messages successfully', async () => {
+      // Arrange - Chuẩn bị dữ liệu tìm kiếm tin nhắn
+      const userId = 1
+      const query = createTestData.searchMessagesQuery()
+      const mockResults = createTestData.searchResults()
+
+      mockMessageService.searchMessages.mockResolvedValue(mockResults)
+
+      // Act - Thực hiện tìm kiếm
+      const result = await controller.searchMessages(userId, query)
+
+      // Assert - Kiểm tra kết quả
+      expect(result).toEqual(mockResults)
+      expect(mockMessageService.searchMessages).toHaveBeenCalledWith(userId, query.q, {
+        limit: query.limit,
+        cursor: query.cursor,
+        type: query.type,
+        fromUserId: query.fromUserId,
+        dateFrom: undefined,
+        dateTo: undefined,
+      })
+      expect(mockMessageService.searchMessages).toHaveBeenCalledTimes(1)
+    })
+
+    it('should search messages with date range', async () => {
+      // Arrange - Chuẩn bị dữ liệu tìm kiếm với khoảng thời gian
+      const userId = 1
+      const query = createTestData.searchMessagesQuery({
+        dateFrom: '2024-01-01T00:00:00.000Z',
+        dateTo: '2024-01-31T23:59:59.999Z',
+      })
+      const mockResults = createTestData.searchResults()
+
+      mockMessageService.searchMessages.mockResolvedValue(mockResults)
+
+      // Act - Thực hiện tìm kiếm
+      const result = await controller.searchMessages(userId, query)
+
+      // Assert - Kiểm tra kết quả
+      expect(result).toEqual(mockResults)
+      expect(mockMessageService.searchMessages).toHaveBeenCalledWith(userId, query.q, {
+        limit: query.limit,
+        cursor: query.cursor,
+        type: query.type,
+        fromUserId: query.fromUserId,
+        dateFrom: new Date('2024-01-01T00:00:00.000Z'),
+        dateTo: new Date('2024-01-31T23:59:59.999Z'),
+      })
+    })
+  })
+
+  describe('sendMessage', () => {
+    it('should send message successfully', async () => {
+      // Arrange - Chuẩn bị dữ liệu gửi tin nhắn
+      const userId = 1
+      const body = createTestData.sendMessageBody()
+      const mockMessage = createTestData.message()
+
+      mockMessageService.sendMessage.mockResolvedValue(mockMessage)
+
+      // Act - Thực hiện gửi tin nhắn
+      const result = await controller.sendMessage(userId, body)
+
+      // Assert - Kiểm tra kết quả
+      expect(result).toEqual(mockMessage)
+      expect(mockMessageService.sendMessage).toHaveBeenCalledWith(userId, body)
+      expect(mockMessageService.sendMessage).toHaveBeenCalledTimes(1)
+    })
+
+    it('should send message with attachments', async () => {
+      // Arrange - Chuẩn bị dữ liệu gửi tin nhắn với file đính kèm
+      const userId = 1
+      const body = createTestData.sendMessageBody({
+        type: 'IMAGE',
+        attachments: [
+          {
+            type: 'IMAGE',
+            fileName: 'photo.jpg',
+            fileUrl: 'https://example.com/photo.jpg',
+            fileSize: 1024000,
+            mimeType: 'image/jpeg',
+            width: 1920,
+            height: 1080,
+          },
+        ],
+      })
+      const mockMessage = createTestData.message({ type: 'IMAGE' })
+
+      mockMessageService.sendMessage.mockResolvedValue(mockMessage)
+
+      // Act - Thực hiện gửi tin nhắn
+      const result = await controller.sendMessage(userId, body)
+
+      // Assert - Kiểm tra kết quả
+      expect(result).toEqual(mockMessage)
+      expect(mockMessageService.sendMessage).toHaveBeenCalledWith(userId, body)
+    })
+  })
+
+  describe('getMessage', () => {
+    it('should get message by ID successfully', async () => {
+      // Arrange - Chuẩn bị dữ liệu lấy tin nhắn theo ID
+      const userId = 1
+      const params = createTestData.messageParams()
+      const mockMessage = createTestData.message()
+
+      mockMessageService.getMessageById.mockResolvedValue(mockMessage)
+
+      // Act - Thực hiện lấy tin nhắn
+      const result = await controller.getMessage(userId, params)
+
+      // Assert - Kiểm tra kết quả
+      expect(result).toEqual(mockMessage)
+      expect(mockMessageService.getMessageById).toHaveBeenCalledWith(params.messageId, userId)
+      expect(mockMessageService.getMessageById).toHaveBeenCalledTimes(1)
+    })
+  })
+
+  describe('editMessage', () => {
+    it('should edit message successfully', async () => {
+      // Arrange - Chuẩn bị dữ liệu chỉnh sửa tin nhắn
+      const userId = 1
+      const params = createTestData.messageParams()
+      const body = { content: 'Updated content' }
+      const mockMessage = createTestData.message({ content: 'Updated content', isEdited: true })
+
+      mockMessageService.editMessage.mockResolvedValue(mockMessage)
+
+      // Act - Thực hiện chỉnh sửa tin nhắn
+      const result = await controller.editMessage(userId, params, body)
+
+      // Assert - Kiểm tra kết quả
+      expect(result).toEqual(mockMessage)
+      expect(mockMessageService.editMessage).toHaveBeenCalledWith(params.messageId, userId, body.content)
+      expect(mockMessageService.editMessage).toHaveBeenCalledTimes(1)
+    })
+  })
+
+  describe('deleteMessage', () => {
+    it('should delete message for self successfully', async () => {
+      // Arrange - Chuẩn bị dữ liệu xóa tin nhắn cho bản thân
+      const userId = 1
+      const params = createTestData.messageParams()
+      const mockDeletedMessage = createTestData.message({ isDeleted: true, deletedAt: new Date('2024-01-01') })
+
+      mockMessageService.deleteMessage.mockResolvedValue(mockDeletedMessage)
+
+      // Act - Thực hiện xóa tin nhắn
+      const result = await controller.deleteMessage(userId, params, undefined)
+
+      // Assert - Kiểm tra kết quả
+      expect(result).toEqual(mockDeletedMessage)
+      expect(mockMessageService.deleteMessage).toHaveBeenCalledWith(params.messageId, userId, false)
+      expect(mockMessageService.deleteMessage).toHaveBeenCalledTimes(1)
+    })
+
+    it('should delete message for everyone when forEveryone=true', async () => {
+      // Arrange - Chuẩn bị dữ liệu xóa tin nhắn cho mọi người
+      const userId = 1
+      const params = createTestData.messageParams()
+      const mockDeletedMessage = createTestData.message({
+        isDeleted: true,
+        deletedForEveryone: true,
+        deletedAt: new Date('2024-01-01'),
+      })
+
+      mockMessageService.deleteMessage.mockResolvedValue(mockDeletedMessage)
+
+      // Act - Thực hiện xóa tin nhắn cho mọi người
+      const result = await controller.deleteMessage(userId, params, 'true')
+
+      // Assert - Kiểm tra kết quả
+      expect(result).toEqual(mockDeletedMessage)
+      expect(mockMessageService.deleteMessage).toHaveBeenCalledWith(params.messageId, userId, true)
+    })
+
+    it('should handle forEveryone=false correctly', async () => {
+      // Arrange - Chuẩn bị dữ liệu với forEveryone=false
+      const userId = 1
+      const params = createTestData.messageParams()
+      const mockDeletedMessage = createTestData.message({ isDeleted: true, deletedAt: new Date('2024-01-01') })
+
+      mockMessageService.deleteMessage.mockResolvedValue(mockDeletedMessage)
+
+      // Act - Thực hiện xóa tin nhắn
+      const result = await controller.deleteMessage(userId, params, 'false')
+
+      // Assert - Kiểm tra kết quả
+      expect(result).toEqual(mockDeletedMessage)
+      expect(mockMessageService.deleteMessage).toHaveBeenCalledWith(params.messageId, userId, false)
+    })
+  })
+
+  // ===== MESSAGE INTERACTIONS TESTS =====
+
+  describe('markAsRead', () => {
+    it('should mark messages as read successfully', async () => {
+      // Arrange - Chuẩn bị dữ liệu đánh dấu đã đọc
+      const userId = 1
+      const body = createTestData.markAsReadBody()
+      const mockResult = { markedCount: 5 }
+
+      mockMessageService.markAsRead.mockResolvedValue(mockResult)
+
+      // Act - Thực hiện đánh dấu đã đọc
+      const result = await controller.markAsRead(userId, body)
+
+      // Assert - Kiểm tra kết quả
+      expect(result).toEqual({
+        message: 'Đã đánh dấu 5 tin nhắn là đã đọc',
+      })
+      expect(mockMessageService.markAsRead).toHaveBeenCalledWith(body.conversationId, userId, body.messageId)
+      expect(mockMessageService.markAsRead).toHaveBeenCalledTimes(1)
+    })
+
+    it('should mark all messages as read when messageId is not provided', async () => {
+      // Arrange - Chuẩn bị dữ liệu đánh dấu tất cả đã đọc
+      const userId = 1
+      const body = createTestData.markAsReadBody({ messageId: undefined })
+      const mockResult = { markedCount: 10 }
+
+      mockMessageService.markAsRead.mockResolvedValue(mockResult)
+
+      // Act - Thực hiện đánh dấu tất cả đã đọc
+      const result = await controller.markAsRead(userId, body)
+
+      // Assert - Kiểm tra kết quả
+      expect(result.message).toBe('Đã đánh dấu 10 tin nhắn là đã đọc')
+      expect(mockMessageService.markAsRead).toHaveBeenCalledWith(body.conversationId, userId, undefined)
+    })
+  })
+
+  describe('reactToMessage', () => {
+    it('should add reaction to message successfully', async () => {
+      // Arrange - Chuẩn bị dữ liệu thêm reaction
+      const userId = 1
+      const params = createTestData.messageParams()
+      const body = { emoji: '👍' }
+      const mockResult = createTestData.reactionResult()
+
+      mockMessageService.reactToMessage.mockResolvedValue(mockResult)
+
+      // Act - Thực hiện thêm reaction
+      const result = await controller.reactToMessage(userId, params, body)
+
+      // Assert - Kiểm tra kết quả
+      expect(result).toEqual({
+        message: 'Đã thêm reaction',
+        data: mockResult,
+      })
+      expect(mockMessageService.reactToMessage).toHaveBeenCalledWith(params.messageId, userId, body.emoji)
+      expect(mockMessageService.reactToMessage).toHaveBeenCalledTimes(1)
+    })
+
+    it('should remove reaction when reacting with same emoji', async () => {
+      // Arrange - Chuẩn bị dữ liệu xóa reaction
+      const userId = 1
+      const params = createTestData.messageParams()
+      const body = { emoji: '👍' }
+      const mockResult = createTestData.reactionResult({ action: 'removed' })
+
+      mockMessageService.reactToMessage.mockResolvedValue(mockResult)
+
+      // Act - Thực hiện xóa reaction
+      const result = await controller.reactToMessage(userId, params, body)
+
+      // Assert - Kiểm tra kết quả
+      expect(result).toEqual({
+        message: 'Đã xóa reaction',
+        data: mockResult,
+      })
+      expect(mockMessageService.reactToMessage).toHaveBeenCalledWith(params.messageId, userId, body.emoji)
+    })
+  })
+
+  describe('removeReaction', () => {
+    it('should remove reaction successfully', async () => {
+      // Arrange - Chuẩn bị dữ liệu xóa reaction
+      const userId = 1
+      const params = createTestData.messageParams()
+      const emoji = '👍'
+      const mockResponse = { message: 'Đã xóa reaction' }
+
+      mockMessageService.removeReaction.mockResolvedValue(mockResponse)
+
+      // Act - Thực hiện xóa reaction
+      const result = await controller.removeReaction(userId, params, emoji)
+
+      // Assert - Kiểm tra kết quả
+      expect(result).toEqual(mockResponse)
+      expect(mockMessageService.removeReaction).toHaveBeenCalledWith(params.messageId, userId, emoji)
+      expect(mockMessageService.removeReaction).toHaveBeenCalledTimes(1)
+    })
+  })
+
+  describe('getReactionStats', () => {
+    it('should get reaction stats successfully', async () => {
+      // Arrange - Chuẩn bị dữ liệu thống kê reaction
+      const userId = 1
+      const params = createTestData.messageParams()
+      const mockStats = createTestData.reactionStats()
+
+      mockMessageService.getReactionStats.mockResolvedValue(mockStats)
+
+      // Act - Thực hiện lấy thống kê reaction
+      const result = await controller.getReactionStats(userId, params)
+
+      // Assert - Kiểm tra kết quả
+      expect(result).toEqual({
+        message: 'Thống kê reaction',
+        data: mockStats,
+      })
+      expect(mockMessageService.getReactionStats).toHaveBeenCalledWith(params.messageId, userId)
+      expect(mockMessageService.getReactionStats).toHaveBeenCalledTimes(1)
+    })
+  })
+
+  describe('getReadReceiptStats', () => {
+    it('should get read receipt stats successfully', async () => {
+      // Arrange - Chuẩn bị dữ liệu thống kê đã đọc
+      const userId = 1
+      const params = createTestData.messageParams()
+      const mockStats = createTestData.readReceiptStats()
+
+      mockMessageService.getReadReceiptStats.mockResolvedValue(mockStats)
+
+      // Act - Thực hiện lấy thống kê đã đọc
+      const result = await controller.getReadReceiptStats(userId, params)
+
+      // Assert - Kiểm tra kết quả
+      expect(result).toEqual({
+        message: 'Thống kê đã đọc',
+        data: mockStats,
+      })
+      expect(mockMessageService.getReadReceiptStats).toHaveBeenCalledWith(params.messageId, userId)
+      expect(mockMessageService.getReadReceiptStats).toHaveBeenCalledTimes(1)
     })
   })
 })

@@ -1,31 +1,28 @@
 import { Body, Controller, Delete, Get, Param, Post, Put, Query } from '@nestjs/common'
 import { ZodResponse } from 'nestjs-zod'
-import { ConversationService } from './conversation.service'
-import { MessageService } from './message.service'
 import { ActiveUser } from 'src/shared/decorators/active-user.decorator'
-import { MessageResDTO } from 'src/shared/dtos/response.dto'
 import {
-  CreateDirectConversationBodyDTO,
-  CreateGroupConversationBodyDTO,
-  SendMessageBodyDTO,
   AddMembersBodyDTO,
-  UpdateConversationBodyDTO,
-  MarkAsReadBodyDTO,
-  UpdateMemberRoleBodyDTO,
+  ConversationMessageResDTO,
   ConversationParamsDTO,
-  MessageParamsDTO,
-  MemberParamsDTO,
-  GetConversationsQueryDTO,
-  GetMessagesQueryDTO,
-  SearchMessagesQueryDTO,
-  ConversationResDTO,
   ConversationServiceResDTO,
   ConversationsListResDTO,
-  ConversationMessageResDTO,
-  MessagesListResDTO,
-  MessageSearchResultResDTO,
+  CreateDirectConversationBodyDTO,
+  CreateGroupConversationBodyDTO,
+  GetConversationsQueryDTO,
+  GetMessagesQueryDTO,
+  MarkAsReadBodyDTO,
+  MemberParamsDTO,
+  MessageParamsDTO,
   MessageResponseDTO,
+  MessageSearchResultResDTO,
+  MessagesListResDTO,
+  SearchMessagesQueryDTO,
+  SendMessageBodyDTO,
+  UpdateConversationBodyDTO,
 } from './conversation.dto'
+import { ConversationService } from './conversation.service'
+import { MessageService } from './message.service'
 
 @Controller('conversations')
 export class ConversationController {
@@ -170,8 +167,8 @@ export class ConversationController {
   @ZodResponse({ type: MessageSearchResultResDTO as any })
   async searchMessages(@ActiveUser('userId') userId: number, @Query() query: SearchMessagesQueryDTO) {
     return this.messageService.searchMessages(userId, query.q, {
-      page: query.page,
       limit: query.limit,
+      cursor: query.cursor,
       type: query.type,
       fromUserId: query.fromUserId,
       dateFrom: query.dateFrom ? new Date(query.dateFrom) : undefined,

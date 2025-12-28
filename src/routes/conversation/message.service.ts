@@ -1,7 +1,7 @@
-import { Injectable, BadRequestException, ForbiddenException, NotFoundException } from '@nestjs/common'
-import { MessageRepository } from './message.repo'
-import { ConversationRepository } from './conversation.repo'
+import { BadRequestException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common'
 import { SharedUserRepository } from 'src/shared/repositories/shared-user.repo'
+import { ConversationRepository } from './conversation.repo'
+import { MessageRepository } from './message.repo'
 
 @Injectable()
 export class MessageService {
@@ -17,10 +17,9 @@ export class MessageService {
     conversationId: string,
     userId: number,
     options: {
-      page: number
       limit: number
-      before?: string
-      after?: string
+      cursor?: string
+      direction?: 'forward' | 'backward'
       type?: string
     },
   ) {
@@ -31,6 +30,20 @@ export class MessageService {
     }
 
     const result = await this.messageRepo.findConversationMessages(conversationId, options)
+
+    console.log('[getConversationMessages] Result from repo:', {
+      dataLength: result.data?.length,
+      firstMessage: result.data?.[0]
+        ? {
+            id: result.data[0].id,
+            hasReadReceipts: !!result.data[0].readReceipts,
+            readReceiptsType: typeof result.data[0].readReceipts,
+            readReceiptsIsArray: Array.isArray(result.data[0].readReceipts),
+            readReceiptsLength: result.data[0].readReceipts?.length,
+            allKeys: Object.keys(result.data[0]),
+          }
+        : null,
+    })
 
     // Enrich messages with computed fields
     const enrichedMessages = result.data.map((message) => {
@@ -356,8 +369,8 @@ export class MessageService {
     userId: number,
     query: string,
     options: {
-      page: number
       limit: number
+      cursor?: string
       type?: string
       fromUserId?: number
       dateFrom?: Date
@@ -385,10 +398,10 @@ export class MessageService {
       return {
         data: [],
         pagination: {
-          page: options.page,
           limit: options.limit,
-          total: 0,
-          totalPages: 0,
+          cursor: options.cursor || null,
+          hasMore: false,
+          nextCursor: null,
         },
       }
     }

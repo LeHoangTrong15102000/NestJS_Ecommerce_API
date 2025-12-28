@@ -111,7 +111,7 @@ export class ConversationService {
       memberIds: [userId, recipientId],
     })
 
-    return this.getConversationById(conversation.id, userId)
+    return this.getConversationById(conversation!.id, userId)
   }
 
   async createGroupConversation(
@@ -159,13 +159,13 @@ export class ConversationService {
 
     // Create system message about group creation
     await this.messageRepo.create({
-      conversationId: conversation.id,
+      conversationId: conversation!.id,
       fromUserId: ownerId,
       content: `${members.find((m) => m.id === ownerId)?.name} đã tạo nhóm`,
       type: 'SYSTEM',
     })
 
-    return this.getConversationById(conversation.id, ownerId)
+    return this.getConversationById(conversation!.id, ownerId)
   }
 
   async updateConversation(

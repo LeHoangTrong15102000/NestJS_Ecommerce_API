@@ -1,9 +1,9 @@
-import { Test, TestingModule } from '@nestjs/testing'
 import { BadRequestException, ForbiddenException, NotFoundException } from '@nestjs/common'
-import { ConversationService } from '../conversation.service'
-import { ConversationRepository } from '../conversation.repo'
-import { MessageRepository } from '../message.repo'
+import { Test, TestingModule } from '@nestjs/testing'
 import { SharedUserRepository } from '../../../shared/repositories/shared-user.repo'
+import { ConversationRepository } from '../conversation.repo'
+import { ConversationService } from '../conversation.service'
+import { MessageRepository } from '../message.repo'
 
 // Test data factory để tạo dữ liệu test
 const createTestData = {
@@ -196,6 +196,7 @@ const createTestData = {
     attachments: [],
     reactions: [],
     readReceipts: [],
+    conversation: undefined,
     ...overrides,
   }),
 }
@@ -879,6 +880,510 @@ describe('ConversationService', () => {
       await expect(service.createDirectConversation(userId, recipientId)).rejects.toThrow(
         new NotFoundException('Người dùng không tồn tại hoặc không hoạt động'),
       )
+    })
+
+    // NEW: Test for updateConversation with empty name
+    it('should throw error when updating conversation with empty name', async () => {
+      const conversationId = 'conv-1'
+      const userId = 1
+      const mockConversation = createTestData.groupConversation()
+
+      mockConversationRepo.findById.mockResolvedValue(mockConversation)
+      mockConversationRepo.getUserRole.mockResolvedValue('ADMIN')
+
+      await expect(service.updateConversation(conversationId, userId, { name: '   ' })).rejects.toThrow(
+        new BadRequestException('Tên nhóm không được để trống'),
+      )
+    })
+
+    // NEW: Test for updateConversation with description only
+    it('should update conversation with description only', async () => {
+      const conversationId = 'conv-1'
+      const userId = 1
+      const mockConversation = createTestData.groupConversation()
+      const mockUser = createTestData.user()
+
+      mockConversationRepo.findById.mockResolvedValue(mockConversation)
+      mockConversationRepo.getUserRole.mockResolvedValue('ADMIN')
+      mockConversationRepo.update.mockResolvedValue(mockConversation)
+      mockUserRepo.findById.mockResolvedValue(mockUser)
+      mockMessageRepo.create.mockResolvedValue(createTestData.message())
+
+      const result = await service.updateConversation(conversationId, userId, { description: 'New description' })
+
+      expect(mockConversationRepo.update).toHaveBeenCalledWith(conversationId, { description: 'New description' })
+      expect(mockMessageRepo.create).toHaveBeenCalled()
+    })
+
+    // NEW: Test for updateConversation with avatar only
+    it('should update conversation with avatar only', async () => {
+      const conversationId = 'conv-1'
+      const userId = 1
+      const mockConversation = createTestData.groupConversation()
+      const mockUser = createTestData.user()
+
+      mockConversationRepo.findById.mockResolvedValue(mockConversation)
+      mockConversationRepo.getUserRole.mockResolvedValue('ADMIN')
+      mockConversationRepo.update.mockResolvedValue(mockConversation)
+      mockUserRepo.findById.mockResolvedValue(mockUser)
+      mockMessageRepo.create.mockResolvedValue(createTestData.message())
+
+      const result = await service.updateConversation(conversationId, userId, { avatar: 'new-avatar.jpg' })
+
+      expect(mockConversationRepo.update).toHaveBeenCalledWith(conversationId, { avatar: 'new-avatar.jpg' })
+      expect(mockMessageRepo.create).toHaveBeenCalled()
+    })
+
+    // NEW: Test for updateConversation with empty description (should set to null)
+    it('should set description to null when updating with empty string', async () => {
+      const conversationId = 'conv-1'
+      const userId = 1
+      const mockConversation = createTestData.groupConversation()
+      const mockUser = createTestData.user()
+
+      mockConversationRepo.findById.mockResolvedValue(mockConversation)
+      mockConversationRepo.getUserRole.mockResolvedValue('ADMIN')
+      mockConversationRepo.update.mockResolvedValue(mockConversation)
+      mockUserRepo.findById.mockResolvedValue(mockUser)
+      mockMessageRepo.create.mockResolvedValue(createTestData.message())
+
+      const result = await service.updateConversation(conversationId, userId, { description: '' })
+
+      expect(mockConversationRepo.update).toHaveBeenCalledWith(conversationId, { description: null })
+    })
+
+    // NEW: Test for leaveConversation when user is not a member
+    it('should throw error when leaving conversation as non-member', async () => {
+      const conversationId = 'conv-1'
+      const userId = 999
+      const mockConversation = createTestData.groupConversation()
+
+      mockConversationRepo.findById.mockResolvedValue(mockConversation)
+      mockConversationRepo.getUserRole.mockResolvedValue(null)
+
+      await expect(service.leaveConversation(conversationId, userId)).rejects.toThrow(
+        new NotFoundException('Bạn không phải thành viên của cuộc trò chuyện này'),
+      )
+    })
+
+    // NEW: Test for leaveConversation when owner leaves and transfers ownership to admin
+    it('should transfer ownership to admin when owner leaves group', async () => {
+      const conversationId = 'conv-1'
+      const userId = 1 // owner
+      const mockConversation = createTestData.groupConversation({
+        ownerId: 1,
+        members: [
+          createTestData.conversationMember({ userId: 1, role: 'ADMIN' }),
+          createTestData.conversationMember({ userId: 2, role: 'ADMIN' }),
+          createTestData.conversationMember({ userId: 3, role: 'MEMBER' }),
+        ],
+      })
+      const mockUser = createTestData.user()
+
+      mockConversationRepo.findById.mockResolvedValue(mockConversation)
+      mockConversationRepo.getUserRole.mockResolvedValue('ADMIN')
+      mockConversationRepo.update.mockResolvedValue(mockConversation)
+      mockConversationRepo.removeMember.mockResolvedValue({} as any)
+      mockUserRepo.findById.mockResolvedValue(mockUser)
+      mockMessageRepo.create.mockResolvedValue(createTestData.message())
+
+      const result = await service.leaveConversation(conversationId, userId)
+
+      expect(mockConversationRepo.update).toHaveBeenCalledWith(conversationId, { ownerId: 2 })
+      expect(result).toEqual({ message: 'Đã rời khỏi nhóm' })
+    })
+
+    // NEW: Test for leaveConversation when owner leaves and transfers ownership to first member
+    it('should transfer ownership to first member when owner leaves and no admin exists', async () => {
+      const conversationId = 'conv-1'
+      const userId = 1 // owner
+      const mockConversation = createTestData.groupConversation({
+        ownerId: 1,
+        members: [
+          createTestData.conversationMember({ userId: 1, role: 'ADMIN' }),
+          createTestData.conversationMember({ userId: 2, role: 'MEMBER' }),
+          createTestData.conversationMember({ userId: 3, role: 'MEMBER' }),
+        ],
+      })
+      const mockUser = createTestData.user()
+
+      mockConversationRepo.findById.mockResolvedValue(mockConversation)
+      mockConversationRepo.getUserRole.mockResolvedValue('ADMIN')
+      mockConversationRepo.update.mockResolvedValue(mockConversation)
+      mockConversationRepo.updateMemberRole.mockResolvedValue({} as any)
+      mockConversationRepo.removeMember.mockResolvedValue({} as any)
+      mockUserRepo.findById.mockResolvedValue(mockUser)
+      mockMessageRepo.create.mockResolvedValue(createTestData.message())
+
+      const result = await service.leaveConversation(conversationId, userId)
+
+      expect(mockConversationRepo.update).toHaveBeenCalledWith(conversationId, { ownerId: 2 })
+      expect(mockConversationRepo.updateMemberRole).toHaveBeenCalledWith(conversationId, 2, 'ADMIN')
+      expect(result).toEqual({ message: 'Đã rời khỏi nhóm' })
+    })
+
+    // NEW: Test for leaveConversation when last member leaves (should archive)
+    it('should archive conversation when last member leaves', async () => {
+      const conversationId = 'conv-1'
+      const userId = 1
+      const mockConversation = createTestData.groupConversation({
+        ownerId: 1,
+        members: [createTestData.conversationMember({ userId: 1, role: 'ADMIN' })],
+      })
+      const mockUser = createTestData.user()
+
+      mockConversationRepo.findById.mockResolvedValue(mockConversation)
+      mockConversationRepo.getUserRole.mockResolvedValue('ADMIN')
+      mockConversationRepo.archive.mockResolvedValue({} as any)
+      mockConversationRepo.removeMember.mockResolvedValue({} as any)
+      mockUserRepo.findById.mockResolvedValue(mockUser)
+      mockMessageRepo.create.mockResolvedValue(createTestData.message())
+
+      const result = await service.leaveConversation(conversationId, userId)
+
+      expect(mockConversationRepo.archive).toHaveBeenCalledWith(conversationId, true)
+      expect(result).toEqual({ message: 'Đã rời khỏi nhóm' })
+    })
+
+    // NEW: Test for addMembers when member already exists
+    it('should skip adding member if already exists', async () => {
+      const conversationId = 'conv-1'
+      const userId = 1
+      const memberIds = [2, 3]
+      const mockConversation = createTestData.groupConversation()
+      const newMembers = [
+        createTestData.user({ id: 2, status: 'ACTIVE' }),
+        createTestData.user({ id: 3, status: 'ACTIVE' }),
+      ]
+      const mockUser = createTestData.user()
+
+      mockConversationRepo.findById.mockResolvedValue(mockConversation)
+      mockConversationRepo.getUserRole.mockResolvedValue('ADMIN')
+      mockUserRepo.findByIds.mockResolvedValue(newMembers)
+      mockConversationRepo.isUserMember.mockResolvedValueOnce(true).mockResolvedValueOnce(false)
+      mockConversationRepo.addMember.mockResolvedValue(createTestData.conversationMember({ userId: 3 }))
+      mockUserRepo.findById.mockResolvedValue(mockUser)
+      mockMessageRepo.create.mockResolvedValue(createTestData.message())
+
+      const result = await service.addMembers(conversationId, userId, memberIds)
+
+      expect(mockConversationRepo.addMember).toHaveBeenCalledTimes(1)
+      expect(mockConversationRepo.addMember).toHaveBeenCalledWith(conversationId, 3)
+    })
+  })
+
+  // ===== ERROR CASES TESTS =====
+
+  describe('unarchiveConversation', () => {
+    it('should unarchive conversation successfully', async () => {
+      const conversationId = 'conv-1'
+      const userId = 1
+
+      mockConversationRepo.isUserMember.mockResolvedValue(true)
+      mockConversationRepo.archive.mockResolvedValue(createTestData.conversation() as any)
+
+      const result = await service.unarchiveConversation(conversationId, userId)
+
+      expect(result).toEqual({ message: 'Đã khôi phục cuộc trò chuyện' })
+      expect(mockConversationRepo.isUserMember).toHaveBeenCalledWith(conversationId, userId)
+      expect(mockConversationRepo.archive).toHaveBeenCalledWith(conversationId, false)
+    })
+
+    it('should throw ForbiddenException when user is not a member', async () => {
+      const conversationId = 'conv-1'
+      const userId = 1
+
+      mockConversationRepo.isUserMember.mockResolvedValue(false)
+
+      await expect(service.unarchiveConversation(conversationId, userId)).rejects.toThrow(ForbiddenException)
+      expect(mockConversationRepo.isUserMember).toHaveBeenCalledWith(conversationId, userId)
+    })
+  })
+
+  describe('leaveConversation - error cases', () => {
+    it('should throw NotFoundException when conversation not found', async () => {
+      const conversationId = 'conv-1'
+      const userId = 1
+
+      mockConversationRepo.findById.mockResolvedValue(null)
+
+      await expect(service.leaveConversation(conversationId, userId)).rejects.toThrow(NotFoundException)
+      expect(mockConversationRepo.findById).toHaveBeenCalledWith(conversationId)
+    })
+  })
+
+  describe('addMembers - error cases', () => {
+    it('should throw NotFoundException when conversation not found', async () => {
+      const conversationId = 'conv-1'
+      const userId = 1
+      const memberIds = [2, 3]
+
+      mockConversationRepo.findById.mockResolvedValue(null)
+
+      await expect(service.addMembers(conversationId, userId, memberIds)).rejects.toThrow(NotFoundException)
+      expect(mockConversationRepo.findById).toHaveBeenCalledWith(conversationId)
+    })
+
+    it('should throw BadRequestException when adding members to direct conversation', async () => {
+      const conversationId = 'conv-1'
+      const userId = 1
+      const memberIds = [2, 3]
+
+      mockConversationRepo.findById.mockResolvedValue(
+        createTestData.conversation({
+          type: 'DIRECT',
+        }),
+      )
+
+      await expect(service.addMembers(conversationId, userId, memberIds)).rejects.toThrow(BadRequestException)
+    })
+
+    it('should throw BadRequestException when some users are invalid', async () => {
+      const conversationId = 'conv-2'
+      const userId = 1
+      const memberIds = [2, 3, 4]
+
+      mockConversationRepo.findById.mockResolvedValue(
+        createTestData.groupConversation({
+          id: conversationId,
+        }),
+      )
+      mockConversationRepo.getUserRole.mockResolvedValue('ADMIN')
+      mockUserRepo.findByIds.mockResolvedValue([
+        createTestData.user({ id: 2, status: 'ACTIVE' }),
+        createTestData.user({ id: 3, status: 'INACTIVE' }), // Invalid user
+      ])
+
+      await expect(service.addMembers(conversationId, userId, memberIds)).rejects.toThrow(BadRequestException)
+    })
+  })
+
+  describe('removeMember - error cases', () => {
+    it('should throw NotFoundException when conversation not found', async () => {
+      const conversationId = 'conv-1'
+      const userId = 1
+      const memberId = 2
+
+      mockConversationRepo.findById.mockResolvedValue(null)
+
+      await expect(service.removeMember(conversationId, userId, memberId)).rejects.toThrow(NotFoundException)
+    })
+
+    it('should throw BadRequestException when removing from direct conversation', async () => {
+      const conversationId = 'conv-1'
+      const userId = 1
+      const memberId = 2
+
+      mockConversationRepo.findById.mockResolvedValue(
+        createTestData.conversation({
+          type: 'DIRECT',
+        }),
+      )
+
+      await expect(service.removeMember(conversationId, userId, memberId)).rejects.toThrow(BadRequestException)
+    })
+
+    it('should throw ForbiddenException when user is not admin', async () => {
+      const conversationId = 'conv-2'
+      const userId = 1
+      const memberId = 2
+
+      mockConversationRepo.findById.mockResolvedValue(createTestData.groupConversation())
+      mockConversationRepo.getUserRole.mockResolvedValue('MEMBER')
+
+      await expect(service.removeMember(conversationId, userId, memberId)).rejects.toThrow(ForbiddenException)
+    })
+
+    it('should throw BadRequestException when removing conversation owner', async () => {
+      const conversationId = 'conv-2'
+      const userId = 1
+      const memberId = 1 // Owner
+
+      mockConversationRepo.findById.mockResolvedValue(
+        createTestData.groupConversation({
+          ownerId: 1,
+        }),
+      )
+      mockConversationRepo.getUserRole.mockResolvedValue('ADMIN')
+
+      await expect(service.removeMember(conversationId, userId, memberId)).rejects.toThrow(BadRequestException)
+    })
+
+    it('should throw BadRequestException when removing self', async () => {
+      const conversationId = 'conv-2'
+      const userId = 1
+      const memberId = 1 // Same as userId
+
+      mockConversationRepo.findById.mockResolvedValue(
+        createTestData.groupConversation({
+          ownerId: 2,
+        }),
+      )
+      mockConversationRepo.getUserRole.mockResolvedValue('ADMIN')
+
+      await expect(service.removeMember(conversationId, userId, memberId)).rejects.toThrow(BadRequestException)
+    })
+
+    it('should throw NotFoundException when member not found in group', async () => {
+      const conversationId = 'conv-2'
+      const userId = 1
+      const memberId = 999
+
+      mockConversationRepo.findById.mockResolvedValue(
+        createTestData.groupConversation({
+          ownerId: 1,
+          members: [
+            createTestData.conversationMember({
+              userId: 1,
+              role: 'ADMIN',
+            }),
+            createTestData.conversationMember({
+              userId: 2,
+              role: 'MEMBER',
+            }),
+          ],
+        }),
+      )
+      mockConversationRepo.getUserRole.mockResolvedValue('ADMIN')
+
+      await expect(service.removeMember(conversationId, userId, memberId)).rejects.toThrow(NotFoundException)
+    })
+  })
+
+  describe('updateMemberRole - error cases', () => {
+    it('should throw NotFoundException when conversation not found', async () => {
+      const conversationId = 'conv-1'
+      const userId = 1
+      const memberId = 2
+      const role = 'MODERATOR' as const
+
+      mockConversationRepo.findById.mockResolvedValue(null)
+
+      await expect(service.updateMemberRole(conversationId, userId, memberId, role)).rejects.toThrow(NotFoundException)
+    })
+
+    it('should throw BadRequestException when updating role in direct conversation', async () => {
+      const conversationId = 'conv-1'
+      const userId = 1
+      const memberId = 2
+      const role = 'MODERATOR' as const
+
+      mockConversationRepo.findById.mockResolvedValue(
+        createTestData.conversation({
+          type: 'DIRECT',
+        }),
+      )
+
+      await expect(service.updateMemberRole(conversationId, userId, memberId, role)).rejects.toThrow(
+        BadRequestException,
+      )
+    })
+
+    it('should throw ForbiddenException when user is not admin', async () => {
+      const conversationId = 'conv-2'
+      const userId = 1
+      const memberId = 2
+      const role = 'MODERATOR' as const
+
+      mockConversationRepo.findById.mockResolvedValue(createTestData.groupConversation())
+      mockConversationRepo.getUserRole.mockResolvedValue('MEMBER')
+
+      await expect(service.updateMemberRole(conversationId, userId, memberId, role)).rejects.toThrow(ForbiddenException)
+    })
+
+    it('should throw BadRequestException when updating owner role', async () => {
+      const conversationId = 'conv-2'
+      const userId = 1
+      const memberId = 1 // Owner
+      const role = 'MODERATOR' as const
+
+      mockConversationRepo.findById.mockResolvedValue(
+        createTestData.groupConversation({
+          ownerId: 1,
+        }),
+      )
+      mockConversationRepo.getUserRole.mockResolvedValue('ADMIN')
+
+      await expect(service.updateMemberRole(conversationId, userId, memberId, role)).rejects.toThrow(
+        BadRequestException,
+      )
+    })
+
+    it('should throw BadRequestException when updating own role', async () => {
+      const conversationId = 'conv-2'
+      const userId = 1
+      const memberId = 1 // Same as userId
+      const role = 'MODERATOR' as const
+
+      mockConversationRepo.findById.mockResolvedValue(
+        createTestData.groupConversation({
+          ownerId: 2,
+        }),
+      )
+      mockConversationRepo.getUserRole.mockResolvedValue('ADMIN')
+
+      await expect(service.updateMemberRole(conversationId, userId, memberId, role)).rejects.toThrow(
+        BadRequestException,
+      )
+    })
+
+    it('should throw NotFoundException when member not found in group', async () => {
+      const conversationId = 'conv-2'
+      const userId = 1
+      const memberId = 999
+      const role = 'MODERATOR' as const
+
+      mockConversationRepo.findById.mockResolvedValue(
+        createTestData.groupConversation({
+          ownerId: 1,
+          members: [
+            createTestData.conversationMember({
+              userId: 1,
+              role: 'ADMIN',
+            }),
+            createTestData.conversationMember({
+              userId: 2,
+              role: 'MEMBER',
+            }),
+          ],
+        }),
+      )
+      mockConversationRepo.getUserRole.mockResolvedValue('ADMIN')
+
+      await expect(service.updateMemberRole(conversationId, userId, memberId, role)).rejects.toThrow(NotFoundException)
+    })
+  })
+
+  describe('muteConversation - error cases', () => {
+    it('should throw ForbiddenException when user is not a member', async () => {
+      const conversationId = 'conv-1'
+      const userId = 1
+
+      mockConversationRepo.isUserMember.mockResolvedValue(false)
+
+      await expect(service.muteConversation(conversationId, userId)).rejects.toThrow(ForbiddenException)
+    })
+  })
+
+  describe('unmuteConversation - error cases', () => {
+    it('should throw ForbiddenException when user is not a member', async () => {
+      const conversationId = 'conv-1'
+      const userId = 1
+
+      mockConversationRepo.isUserMember.mockResolvedValue(false)
+
+      await expect(service.unmuteConversation(conversationId, userId)).rejects.toThrow(ForbiddenException)
+    })
+  })
+
+  describe('getConversationMembers - error cases', () => {
+    it('should throw ForbiddenException when user is not a member', async () => {
+      const conversationId = 'conv-1'
+      const userId = 1
+
+      mockConversationRepo.isUserMember.mockResolvedValue(false)
+
+      await expect(service.getConversationMembers(conversationId, userId)).rejects.toThrow(ForbiddenException)
     })
   })
 })

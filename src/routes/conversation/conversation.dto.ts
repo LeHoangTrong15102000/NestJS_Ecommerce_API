@@ -99,19 +99,19 @@ export const GetConversationsQuerySchema = z.object({
 })
 
 export const GetMessagesQuerySchema = z.object({
-  q: z.string().min(1).max(100).describe('Từ khóa tìm kiếm'),
-  page: z.coerce.number().int().positive().default(1),
-  limit: z.coerce.number().int().positive().max(50).default(20),
+  limit: z.coerce.number().int().positive().max(100).default(50).describe('Số lượng tin nhắn mỗi trang'),
+  cursor: z.string().optional().describe('Message ID để phân trang từ đó'),
+  direction: z
+    .enum(['forward', 'backward'])
+    .default('backward')
+    .describe('Hướng phân trang: forward=mới hơn, backward=cũ hơn'),
   type: z.enum(['TEXT', 'IMAGE', 'VIDEO', 'AUDIO', 'FILE', 'STICKER', 'SYSTEM', 'LOCATION', 'CONTACT']).optional(),
-  fromUserId: z.coerce.number().int().positive().optional(),
-  dateFrom: z.iso.datetime().optional(),
-  dateTo: z.iso.datetime().optional(),
 })
 
 export const SearchMessagesQuerySchema = z.object({
   q: z.string().min(1).max(100).describe('Từ khóa tìm kiếm'),
-  page: z.coerce.number().int().positive().default(1),
-  limit: z.coerce.number().int().positive().max(50).default(20),
+  limit: z.coerce.number().int().positive().max(50).default(20).describe('Số lượng kết quả mỗi trang'),
+  cursor: z.string().optional().describe('Message ID để phân trang từ đó'),
   type: z.enum(['TEXT', 'IMAGE', 'VIDEO', 'AUDIO', 'FILE', 'STICKER', 'SYSTEM', 'LOCATION', 'CONTACT']).optional(),
   fromUserId: z.coerce.number().int().positive().optional(),
   dateFrom: z.iso.datetime().optional(),
@@ -268,13 +268,12 @@ export const ConversationsListSchema = z.object({
 export const MessagesListSchema = z.object({
   data: z.array(ConversationMessageSchema),
   pagination: z.object({
-    page: z.number(),
-    limit: z.number(),
-    total: z.number(),
-    totalPages: z.number(),
-    hasMore: z.boolean(),
-    nextCursor: z.string().nullable(),
-    prevCursor: z.string().nullable(),
+    limit: z.number().describe('Số lượng tin nhắn mỗi trang'),
+    cursor: z.string().nullable().optional().describe('Cursor hiện tại'),
+    direction: z.enum(['forward', 'backward']).optional().describe('Hướng phân trang'),
+    hasMore: z.boolean().describe('Còn tin nhắn cũ hơn không'),
+    nextCursor: z.string().nullable().describe('Cursor để fetch tin nhắn cũ hơn'),
+    prevCursor: z.string().nullable().describe('Cursor để fetch tin nhắn mới hơn'),
   }),
 })
 
@@ -291,10 +290,10 @@ export const MessageSearchResultSchema = z.object({
     }),
   ),
   pagination: z.object({
-    page: z.number(),
-    limit: z.number(),
-    total: z.number(),
-    totalPages: z.number(),
+    limit: z.number().describe('Số lượng kết quả mỗi trang'),
+    cursor: z.string().nullable().optional().describe('Cursor hiện tại'),
+    hasMore: z.boolean().describe('Còn kết quả không'),
+    nextCursor: z.string().nullable().describe('Cursor để fetch trang tiếp theo'),
   }),
   facets: z
     .object({

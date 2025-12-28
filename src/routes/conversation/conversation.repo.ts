@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common'
+import { Prisma } from '@prisma/client'
 import { SerializeAll } from 'src/shared/decorators/serialize.decorator'
 import { PrismaService } from 'src/shared/services/prisma.service'
-import { Prisma } from '@prisma/client'
 
 @Injectable()
 @SerializeAll()
@@ -10,7 +10,7 @@ export class ConversationRepository {
 
   // ===== CONVERSATION CRUD =====
 
-  create(data: {
+  async create(data: {
     type: 'DIRECT' | 'GROUP'
     name?: string
     description?: string
@@ -18,7 +18,7 @@ export class ConversationRepository {
     ownerId?: number
     memberIds: number[]
   }) {
-    return this.prisma.conversation.create({
+    const conversation = await this.prisma.conversation.create({
       data: {
         type: data.type,
         name: data.name,
@@ -32,27 +32,79 @@ export class ConversationRepository {
           })),
         },
       },
-      include: this.getConversationInclude(),
     })
+
+    // Query lại với include để đảm bảo có members
+    const result = await this.prisma.conversation.findUnique({
+      where: { id: conversation.id },
+      include: {
+        owner: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            avatar: true,
+            status: true,
+          },
+        },
+        members: {
+          include: {
+            user: {
+              select: {
+                id: true,
+                name: true,
+                email: true,
+                avatar: true,
+                status: true,
+              },
+            },
+          },
+        },
+      },
+    })
+
+    return result
   }
 
-  findById(id: string, userId?: number) {
-    const where: Prisma.ConversationWhereInput = { id }
-
-    // Nếu có userId, đảm bảo user là thành viên
-    if (userId) {
-      where.members = {
-        some: {
-          userId,
-          isActive: true,
+  async findById(id: string, userId?: number) {
+    const result = await this.prisma.conversation.findUnique({
+      where: { id },
+      include: {
+        owner: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            avatar: true,
+            status: true,
+          },
         },
+        members: {
+          include: {
+            user: {
+              select: {
+                id: true,
+                name: true,
+                email: true,
+                avatar: true,
+                status: true,
+              },
+            },
+          },
+          orderBy: [{ role: 'asc' as const }, { joinedAt: 'asc' as const }],
+        },
+      },
+    })
+
+    // Nếu có userId, check xem user có phải là thành viên không
+    if (userId && result) {
+      const isMember = result.members?.some((m) => m.userId === userId && m.isActive)
+      if (!isMember) {
+        return null
       }
     }
 
-    return this.prisma.conversation.findFirst({
-      where,
-      include: this.getConversationInclude(userId),
-    })
+    return result
   }
 
   async findUserConversations(
@@ -103,7 +155,31 @@ export class ConversationRepository {
     const [conversations, total, stats] = await Promise.all([
       this.prisma.conversation.findMany({
         where,
-        include: this.getConversationInclude(userId),
+        include: {
+          owner: {
+            select: {
+              id: true,
+              name: true,
+              email: true,
+              avatar: true,
+              status: true,
+            },
+          },
+          members: {
+            include: {
+              user: {
+                select: {
+                  id: true,
+                  name: true,
+                  email: true,
+                  avatar: true,
+                  status: true,
+                },
+              },
+            },
+            orderBy: [{ role: 'asc' as const }, { joinedAt: 'asc' as const }],
+          },
+        },
         orderBy: [{ lastMessageAt: 'desc' }, { updatedAt: 'desc' }],
         skip,
         take: limit,
@@ -511,7 +587,7 @@ export class ConversationRepository {
         },
       },
       members: {
-        where: { isActive: true },
+        // Removed where: { isActive: true } filter to avoid conflict with findById filter
         include: {
           user: {
             select: {
