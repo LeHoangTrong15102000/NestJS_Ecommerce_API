@@ -1,11 +1,11 @@
 import { CACHE_MANAGER } from '@nestjs/cache-manager'
 import {
-  Injectable,
   CanActivate,
   ExecutionContext,
-  UnauthorizedException,
   ForbiddenException,
   Inject,
+  Injectable,
+  UnauthorizedException,
 } from '@nestjs/common'
 import { Cache } from 'cache-manager'
 import { keyBy } from 'lodash'
@@ -68,6 +68,11 @@ export class AccessTokenGuard implements CanActivate {
     const path: string = request.route.path
     const method = request.method as keyof typeof HTTPMethod
     const cacheKey = `role:${roleId}`
+
+    // DEBUG: Log path and method for conversation routes
+    if (path?.includes('conversation')) {
+      console.log('[AccessTokenGuard] DEBUG - Path:', path, 'Method:', method)
+    }
     // 1. Thử lấy từ cache
     let cachedRole = await this.cacheManager.get<CachedRole>(cacheKey)
     // 2. Nếu không có trong cache, thì truy vấn từ cơ sở dữ liệu

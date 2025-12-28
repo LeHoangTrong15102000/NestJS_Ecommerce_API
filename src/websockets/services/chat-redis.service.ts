@@ -1,11 +1,11 @@
 import { Injectable, Logger } from '@nestjs/common'
-import { createClient, RedisClientType } from 'redis'
+import Redis from 'ioredis'
 import envConfig from 'src/shared/config'
 
 @Injectable()
 export class ChatRedisService {
   private readonly logger = new Logger(ChatRedisService.name)
-  private readonly redis: RedisClientType
+  private readonly redis: Redis
 
   // Redis key prefixes
   private readonly KEYS = {
@@ -16,20 +16,34 @@ export class ChatRedisService {
   } as const
 
   constructor() {
-    // Sử dụng Redis client tương tự như websocket.adapter.ts
-    this.redis = createClient({ url: envConfig.REDIS_URL })
+    // Initialize ioredis client with retry strategy
+    this.redis = new Redis(envConfig.REDIS_URL, {
+      retryStrategy: (times) => {
+        const delay = Math.min(times * 50, 2000)
+        return delay
+      },
+      maxRetriesPerRequest: 3,
+      enableOfflineQueue: true,
+    })
 
     this.redis.on('connect', () => {
       this.logger.log('Connected to Redis for chat cache')
+    })
+
+    this.redis.on('ready', () => {
+      this.logger.log('Redis is ready for chat cache')
     })
 
     this.redis.on('error', (error) => {
       this.logger.error('Redis connection error:', error)
     })
 
-    // Connect to Redis
-    this.redis.connect().catch((error) => {
-      this.logger.error('Failed to connect to Redis:', error)
+    this.redis.on('close', () => {
+      this.logger.warn('Redis connection closed')
+    })
+
+    this.redis.on('reconnecting', () => {
+      this.logger.log('Reconnecting to Redis...')
     })
   }
 
@@ -52,7 +66,7 @@ export class ChatRedisService {
       }
 
       // Update Redis với TTL 1 hour
-      await this.redis.setEx(userKey, 3600, JSON.stringify(currentSockets))
+      await this.redis.setex(userKey, 3600, JSON.stringify(currentSockets))
     } catch (error) {
       this.logger.error(`Error adding online user ${userId}:`, error)
     }
@@ -78,7 +92,7 @@ export class ChatRedisService {
         return true // User went offline
       } else {
         // User vẫn còn socket connections khác
-        await this.redis.setEx(userKey, 3600, JSON.stringify(updatedSockets))
+        await this.redis.setex(userKey, 3600, JSON.stringify(updatedSockets))
         return false // User still online
       }
     } catch (error) {
@@ -143,7 +157,7 @@ export class ChatRedisService {
   async setSocketUser(socketId: string, userInfo: Record<string, any>): Promise<void> {
     try {
       const socketKey = `${this.KEYS.USER_SOCKETS}:${socketId}`
-      await this.redis.setEx(socketKey, 3600, JSON.stringify(userInfo)) // TTL 1 hour
+      await this.redis.setex(socketKey, 3600, JSON.stringify(userInfo)) // TTL 1 hour
     } catch (error) {
       this.logger.error(`Error setting socket user info for ${socketId}:`, error)
     }
@@ -194,7 +208,7 @@ export class ChatRedisService {
       }
 
       // Update với TTL
-      await this.redis.setEx(typingKey, expiresInSeconds, JSON.stringify(currentTyping))
+      await this.redis.setex(typingKey, expiresInSeconds, JSON.stringify(currentTyping))
     } catch (error) {
       this.logger.error(`Error setting typing for user ${userId} in conversation ${conversationId}:`, error)
     }
@@ -219,7 +233,7 @@ export class ChatRedisService {
         await this.redis.del(typingKey)
       } else {
         // Update danh sách
-        await this.redis.setEx(typingKey, 10, JSON.stringify(updatedTyping))
+        await this.redis.setex(typingKey, 10, JSON.stringify(updatedTyping))
       }
     } catch (error) {
       this.logger.error(`Error removing typing for user ${userId} in conversation ${conversationId}:`, error)
@@ -272,7 +286,7 @@ export class ChatRedisService {
       }
 
       // Store as JSON với TTL 5 phút
-      await this.redis.setEx(userConversationsKey, 300, JSON.stringify(conversationIds))
+      await this.redis.setex(userConversationsKey, 300, JSON.stringify(conversationIds))
     } catch (error) {
       this.logger.error(`Error caching conversations for user ${userId}:`, error)
     }
@@ -336,7 +350,7 @@ export class ChatRedisService {
    */
   async disconnect(): Promise<void> {
     try {
-      await this.redis.disconnect()
+      await this.redis.quit()
       this.logger.log('Disconnected from Redis')
     } catch (error) {
       this.logger.error('Error disconnecting from Redis:', error)
