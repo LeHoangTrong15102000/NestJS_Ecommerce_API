@@ -17,7 +17,7 @@ export default tseslint.config(
         ...globals.node,
         ...globals.jest,
       },
-      ecmaVersion: 5,
+      ecmaVersion: 2021,
       sourceType: 'module',
       parserOptions: {
         projectService: true,
@@ -34,9 +34,9 @@ export default tseslint.config(
       '@typescript-eslint/no-unsafe-argument': 'off',
       '@typescript-eslint/no-unsafe-member-access': 'off',
       '@typescript-eslint/no-unsafe-call': 'off',
-      '@typescript-eslint/no-unused-vars': 'off',
+      '@typescript-eslint/no-unused-vars': ['warn', { argsIgnorePattern: '^_', varsIgnorePattern: '^_' }],
       '@typescript-eslint/no-unsafe-return': 'off',
-      'prettier/prettier': 'off',
+      'prettier/prettier': 'warn',
     },
   },
   {

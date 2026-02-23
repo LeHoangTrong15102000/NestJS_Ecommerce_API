@@ -33,6 +33,12 @@ const config: Config = {
     '!src/**/*.error.ts',
     '!src/**/*.constant.ts',
     '!src/main.ts',
+    // Exclude test/demo modules and boilerplate files
+    '!src/routes/payment_test/**',
+    '!src/websockets/**/*.old.ts',
+    '!src/**/*.module.ts',
+    '!src/shared/config.ts',
+    '!src/shared/modules/**',
   ],
   coverageDirectory: './coverage',
   coverageReporters: ['text', 'lcov', 'html', 'json'],
@@ -56,7 +62,7 @@ const config: Config = {
   detectOpenHandles: true,
 
   // Parallel execution - giảm workers để tránh memory overflow
-  maxWorkers: 2,
+  maxWorkers: process.env.CI ? 2 : '50%', // Use 50% of cores locally, 2 in CI
 
   // Verbose output for debugging
   verbose: false,

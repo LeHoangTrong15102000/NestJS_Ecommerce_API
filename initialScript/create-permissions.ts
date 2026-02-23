@@ -19,6 +19,9 @@ async function bootstrap() {
     },
   })
 
+  // Danh sách các HTTP method hợp lệ trong Prisma enum HTTPMethod
+  const validMethods = Object.values(HTTPMethod) as string[]
+
   const availableRoutes: { path: string; method: keyof typeof HTTPMethod; name: string; module: string }[] =
     router.stack
       .map((layer) => {
@@ -35,6 +38,7 @@ async function bootstrap() {
         }
       })
       .filter((item) => item !== undefined)
+      .filter((item) => validMethods.includes(item.method)) // Lọc bỏ các method không hợp lệ (VD: ACL)
 
   // Tạo object permissionInDbMap với cái key là [method-path]
   const permissionInDbMap: Record<string, (typeof permissionsInDb)[0]> = permissionsInDb.reduce((acc, item) => {

@@ -1,8 +1,15 @@
-import { PrismaClient, VoucherType } from '@prisma/client'
+import { PrismaService } from 'src/shared/services/prisma.service'
+import { VoucherType } from '@prisma/client'
 
-const prisma = new PrismaClient()
+const prisma = new PrismaService()
 
-async function main() {
+export const addVoucherSample = async () => {
+  const existingVoucherCount = await prisma.voucher.count()
+  if (existingVoucherCount > 0) {
+    console.log(`Đã có ${existingVoucherCount} vouchers trong database. Bỏ qua việc thêm dữ liệu mẫu.`)
+    return
+  }
+
   console.log('🎫 Bắt đầu tạo dữ liệu mẫu cho Voucher...')
 
   // Lấy admin user để làm creator
@@ -315,11 +322,25 @@ async function main() {
   }
 }
 
-main()
-  .catch((e) => {
-    console.error('❌ Script failed:', e)
+const main = async () => {
+  try {
+    await addVoucherSample()
+  } catch (error) {
+    console.error('❌ Script thất bại:', error)
     process.exit(1)
-  })
-  .finally(() => {
-    void prisma.$disconnect()
-  })
+  } finally {
+    await prisma.$disconnect()
+  }
+}
+
+if (require.main === module) {
+  main()
+    .then(() => {
+      console.log('\n🏁 Script hoàn thành thành công!')
+      process.exit(0)
+    })
+    .catch((error) => {
+      console.error('💥 Script thất bại:', error)
+      process.exit(1)
+    })
+}

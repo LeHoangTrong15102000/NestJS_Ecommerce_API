@@ -344,6 +344,13 @@ export class AuthService {
         ip,
       })
       const remainingTimeInSeconds = decodedRefreshToken.exp - Math.floor(Date.now() / 1000)
+
+      // Add this check right after the calculation
+      if (remainingTimeInSeconds <= 0) {
+        await this.authRepository.deleteRefreshToken({ token: refreshToken })
+        throw new UnauthorizedException('Refresh token has expired')
+      }
+
       // 4. Xóa refreshToken cũ
       const $deleteRefreshToken = this.authRepository.deleteRefreshToken({ token: refreshToken })
       // 5. Tao accessToken và refreshToken mới

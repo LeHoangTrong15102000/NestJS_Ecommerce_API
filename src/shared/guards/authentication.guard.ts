@@ -23,33 +23,6 @@ export class AuthenticationGuard implements CanActivate {
     const authTypeValue = this.getAuthTypeValue(context)
     const guards = authTypeValue.authTypes.map((authType) => this.authTypeGuardMap[authType])
 
-    // let error = new UnauthorizedException()
-    // if (authTypeValue.options.condition === ConditionGuard.Or) {
-    //   for (const instance of guards) {
-    //     const canActivate = await Promise.resolve(instance.canActivate(context)).catch((err) => {
-    //       error = err
-    //       return false
-    //     })
-    //     if (canActivate) {
-    //       return true
-    //     }
-    //   }
-    //   throw error
-    // }
-    // // Mặc định sử dụng AuthType.Bearer
-    // else {
-    //   for (const instance of guards) {
-    //     const canActivate = await Promise.resolve(instance.canActivate(context)).catch((err) => {
-    //       error = err
-    //       return false
-    //     })
-    //     if (!canActivate) {
-    //       throw new UnauthorizedException()
-    //     }
-    //   }
-    //   return true
-    // }
-
     return authTypeValue.options.condition === ConditionGuard.And
       ? this.handleAndCondition(guards, context)
       : this.handleOrCondition(guards, context)

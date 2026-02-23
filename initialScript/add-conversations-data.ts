@@ -255,13 +255,15 @@ export const addConversationsData = async () => {
 
     console.log(`✅ Đã tạo ${groupConversations.length} group conversations`)
 
-    // Bước 5: Tạo Messages cho các conversations
-    console.log('\n📨 BƯỚC 5: Tạo Messages mẫu...')
+    // Bước 5: Tạo Messages cho các conversations (BATCH OPTIMIZED)
+    console.log('\n📨 BƯỚC 5: Tạo Messages mẫu (batch mode)...')
 
     const allConversations = [...directConversations, ...groupConversations]
     let totalMessages = 0
 
-    for (const conversation of allConversations) {
+    for (let convIdx = 0; convIdx < allConversations.length; convIdx++) {
+      const conversation = allConversations[convIdx]
+
       // Lấy danh sách members của conversation
       const members = await prisma.conversationMember.findMany({
         where: {
@@ -271,26 +273,44 @@ export const addConversationsData = async () => {
         include: { user: true },
       })
 
-      // Tạo 10-50 messages cho mỗi conversation
-      const messageCount = Math.floor(Math.random() * 41) + 10 // 10-50 messages
+      if (members.length === 0) continue
+
+      // Tạo 10-30 messages cho mỗi conversation (giảm từ 10-50 để nhanh hơn)
+      const messageCount = Math.floor(Math.random() * 21) + 10 // 10-30 messages
+
+      // --- Bước 5a: Chuẩn bị data messages và tạo batch ---
+      const messageDataList: Array<{
+        conversationId: string
+        fromUserId: number
+        content: string
+        type: string
+        createdAt: Date
+        attachmentData: Array<{
+          type: string
+          fileName: string
+          fileUrl: string
+          fileSize: number
+          mimeType: string
+          width?: number
+          height?: number
+        }>
+      }> = []
 
       for (let i = 0; i < messageCount; i++) {
         const sender = pickRandom(members) as any
         const content = pickRandom(SAMPLE_MESSAGES)
+        const messageTypes = ['TEXT', 'TEXT', 'TEXT', 'TEXT', 'IMAGE', 'FILE']
+        const messageType = pickRandom(messageTypes)
+        const createdAt = new Date(Date.now() - Math.random() * 7 * 24 * 60 * 60 * 1000)
 
-        // Random message type
-        const messageTypes = ['TEXT', 'TEXT', 'TEXT', 'TEXT', 'IMAGE', 'FILE'] // TEXT nhiều hơn
-        const messageType = pickRandom(messageTypes) as any
-
-        // Tạo attachments cho message không phải TEXT
-        const attachments =
+        const attachmentData =
           messageType !== 'TEXT'
             ? [
                 {
-                  type: messageType === 'IMAGE' ? 'IMAGE' : 'DOCUMENT',
+                  type: (messageType === 'IMAGE' ? 'IMAGE' : 'DOCUMENT') as string,
                   fileName: messageType === 'IMAGE' ? `image-${i}.jpg` : `document-${i}.pdf`,
                   fileUrl: messageType === 'IMAGE' ? pickRandom(SAMPLE_IMAGE_URLS) : 'https://example.com/document.pdf',
-                  fileSize: Math.floor(Math.random() * 5000000) + 100000, // 100KB - 5MB
+                  fileSize: Math.floor(Math.random() * 5000000) + 100000,
                   mimeType: messageType === 'IMAGE' ? 'image/jpeg' : 'application/pdf',
                   width: messageType === 'IMAGE' ? 1920 : undefined,
                   height: messageType === 'IMAGE' ? 1080 : undefined,
@@ -298,65 +318,140 @@ export const addConversationsData = async () => {
               ]
             : []
 
-        // Tạo message với timestamp trong quá khứ
-        const createdAt = new Date(Date.now() - Math.random() * 7 * 24 * 60 * 60 * 1000) // Trong vòng 7 ngày qua
-
-        const message = await prisma.conversationMessage.create({
-          data: {
-            conversationId: conversation.id,
-            fromUserId: sender.userId,
-            content: messageType === 'TEXT' ? content : attachments.length > 0 ? 'Gửi file đính kèm' : content,
-            type: messageType,
-            createdAt: createdAt,
-            attachments: {
-              create: attachments as any,
-            },
-          },
+        messageDataList.push({
+          conversationId: conversation.id,
+          fromUserId: sender.userId,
+          content: messageType === 'TEXT' ? content : attachmentData.length > 0 ? 'Gửi file đính kèm' : content,
+          type: messageType,
+          createdAt,
+          attachmentData,
         })
+      }
 
-        // Random tạo reactions cho một số messages
+      // Sort messageDataList theo createdAt để đảm bảo thứ tự nhất quán
+      messageDataList.sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime())
+
+      // Ghi nhận số messages hiện có trước khi tạo batch (để tránh lẫn với data cũ nếu chạy lại)
+      const existingMessageCount = await prisma.conversationMessage.count({
+        where: { conversationId: conversation.id },
+      })
+
+      // Batch tạo messages
+      await prisma.conversationMessage.createMany({
+        data: messageDataList.map((m) => ({
+          conversationId: m.conversationId,
+          fromUserId: m.fromUserId,
+          content: m.content,
+          type: m.type as any,
+          createdAt: m.createdAt,
+        })),
+      })
+
+      // Query lại CHỈ messages vừa tạo (skip messages cũ)
+      const createdMessages = await prisma.conversationMessage.findMany({
+        where: { conversationId: conversation.id },
+        orderBy: { createdAt: 'asc' },
+        skip: existingMessageCount,
+      })
+
+      // --- Bước 5b: Batch tạo attachments ---
+      const attachmentBatch: Array<{
+        messageId: string
+        type: any
+        fileName: string
+        fileUrl: string
+        fileSize: number
+        mimeType: string
+        width?: number
+        height?: number
+      }> = []
+
+      for (let i = 0; i < messageDataList.length; i++) {
+        const msgData = messageDataList[i]
+        // Map message theo index (messages được tạo theo thứ tự createdAt)
+        const matchedMessage = createdMessages[i]
+        if (!matchedMessage) continue
+
+        for (const att of msgData.attachmentData) {
+          attachmentBatch.push({
+            messageId: matchedMessage.id,
+            type: att.type as any,
+            fileName: att.fileName,
+            fileUrl: att.fileUrl,
+            fileSize: att.fileSize,
+            mimeType: att.mimeType,
+            width: att.width,
+            height: att.height,
+          })
+        }
+      }
+
+      if (attachmentBatch.length > 0) {
+        await prisma.messageAttachment.createMany({ data: attachmentBatch as any })
+      }
+
+      // --- Bước 5c: Batch tạo reactions ---
+      const reactionBatch: Array<{ messageId: string; userId: number; emoji: string }> = []
+      const reactionUniqueSet = new Set<string>() // Tránh trùng unique constraint [messageId, userId, emoji]
+
+      for (const message of createdMessages) {
         if (Math.random() > 0.7) {
-          // 30% messages có reactions
           const reactorCount = Math.floor(Math.random() * Math.min(members.length, 5)) + 1
-          const reactors = members.sort(() => 0.5 - Math.random()).slice(0, reactorCount)
+          const shuffledMembers = [...members].sort(() => 0.5 - Math.random()).slice(0, reactorCount)
 
-          for (const reactor of reactors) {
-            if ((reactor as any).userId !== sender.userId) {
-              // Không react message của chính mình
-              await prisma.messageReaction.create({
-                data: {
+          for (const reactor of shuffledMembers) {
+            if ((reactor as any).userId !== message.fromUserId) {
+              const emoji = pickRandom(SAMPLE_REACTIONS)
+              const uniqueKey = `${message.id}-${(reactor as any).userId}-${emoji}`
+              if (!reactionUniqueSet.has(uniqueKey)) {
+                reactionUniqueSet.add(uniqueKey)
+                reactionBatch.push({
                   messageId: message.id,
                   userId: (reactor as any).userId,
-                  emoji: pickRandom(SAMPLE_REACTIONS),
-                },
+                  emoji,
+                })
+              }
+            }
+          }
+        }
+      }
+
+      if (reactionBatch.length > 0) {
+        await prisma.messageReaction.createMany({
+          data: reactionBatch,
+          skipDuplicates: true,
+        })
+      }
+
+      // --- Bước 5d: Batch tạo read receipts ---
+      const receiptBatch: Array<{ messageId: string; userId: number; readAt: Date }> = []
+      const receiptUniqueSet = new Set<string>() // Tránh trùng unique constraint [messageId, userId]
+
+      for (const message of createdMessages) {
+        for (const member of members) {
+          if ((member as any).userId !== message.fromUserId && Math.random() > 0.3) {
+            const uniqueKey = `${message.id}-${(member as any).userId}`
+            if (!receiptUniqueSet.has(uniqueKey)) {
+              receiptUniqueSet.add(uniqueKey)
+              receiptBatch.push({
+                messageId: message.id,
+                userId: (member as any).userId,
+                readAt: new Date(message.createdAt.getTime() + Math.random() * 60 * 60 * 1000),
               })
             }
           }
         }
-
-        // Random tạo read receipts
-        for (const member of members) {
-          if ((member as any).userId !== sender.userId && Math.random() > 0.3) {
-            // 70% chance đã đọc
-            await prisma.messageReadReceipt.create({
-              data: {
-                messageId: message.id,
-                userId: (member as any).userId,
-                readAt: new Date(createdAt.getTime() + Math.random() * 60 * 60 * 1000), // Đọc trong vòng 1h sau khi gửi
-              },
-            })
-          }
-        }
-
-        totalMessages++
       }
 
-      // Cập nhật lastMessage và lastMessageAt cho conversation
-      const lastMessage = await prisma.conversationMessage.findFirst({
-        where: { conversationId: conversation.id },
-        orderBy: { createdAt: 'desc' },
-      })
+      if (receiptBatch.length > 0) {
+        await prisma.messageReadReceipt.createMany({
+          data: receiptBatch,
+          skipDuplicates: true,
+        })
+      }
 
+      // --- Bước 5e: Cập nhật lastMessage và unreadCount ---
+      const lastMessage = createdMessages[createdMessages.length - 1]
       if (lastMessage) {
         await prisma.conversation.update({
           where: { id: conversation.id },
@@ -367,23 +462,28 @@ export const addConversationsData = async () => {
         })
       }
 
-      // Cập nhật unread count cho members
-      for (const member of members) {
-        const unreadCount = await prisma.conversationMessage.count({
-          where: {
-            conversationId: conversation.id,
-            fromUserId: { not: member.userId },
-            readReceipts: {
-              none: { userId: member.userId },
+      // Batch cập nhật unread count cho members (dùng Promise.all)
+      await Promise.all(
+        members.map(async (member) => {
+          const unreadCount = await prisma.conversationMessage.count({
+            where: {
+              conversationId: conversation.id,
+              fromUserId: { not: member.userId },
+              readReceipts: {
+                none: { userId: member.userId },
+              },
             },
-          },
-        })
+          })
 
-        await prisma.conversationMember.update({
-          where: { id: member.id },
-          data: { unreadCount },
-        })
-      }
+          return prisma.conversationMember.update({
+            where: { id: member.id },
+            data: { unreadCount },
+          })
+        }),
+      )
+
+      totalMessages += messageCount
+      console.log(`  📝 Conversation ${convIdx + 1}/${allConversations.length}: ${messageCount} messages created`)
     }
 
     console.log(`✅ Đã tạo ${totalMessages} messages`)

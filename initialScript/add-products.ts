@@ -1,5 +1,4 @@
 import { PrismaService } from 'src/shared/services/prisma.service'
-import { Prisma } from '@prisma/client'
 
 const prisma = new PrismaService()
 
@@ -299,6 +298,17 @@ const addProducts = async () => {
     return
   }
 
+  // Lấy admin user để làm creator
+  const adminUser = await prisma.user.findFirst({
+    where: { deletedAt: null },
+    orderBy: { id: 'asc' },
+  })
+
+  if (!adminUser) {
+    console.log('⚠️  Chưa có user nào. Vui lòng chạy script init-seed-data trước.')
+    return
+  }
+
   const languages = await prisma.language.findMany({ where: { deletedAt: null }, select: { id: true } })
   if (languages.length === 0) {
     console.log('⚠️  Chưa có ngôn ngữ nào. Vui lòng chạy script add-languages.ts trước.')
@@ -344,8 +354,8 @@ const addProducts = async () => {
         variants: input.variants as unknown as { value: string; options: string[] }[],
         publishedAt: input.published ? new Date() : null,
         categories: { connect: categoryIds.map((id) => ({ id })) },
-        skus: { createMany: { data: input.skus.map((sku) => ({ ...sku, createdById: 1 })) } },
-        createdById: 1,
+        skus: { createMany: { data: input.skus.map((sku) => ({ ...sku, createdById: adminUser.id })) } },
+        createdById: adminUser.id,
       },
     })
     createdProducts += 1
