@@ -5,6 +5,7 @@ import { LanguageRepo } from 'src/routes/language/language.repo'
 
 import { NotFoundRecordException } from 'src/shared/error'
 import { isNotFoundPrismaError, isUniqueConstraintPrismaError } from 'src/shared/helpers'
+import { MESSAGES } from 'src/shared/constants/app.constant'
 
 @Injectable()
 export class LanguageService {
@@ -64,7 +65,7 @@ export class LanguageService {
       // Đây là cái id mà chúng ta truyền vào chứ không phải là do postgres nó generate ra nên là chỗ này mình cần phải xóa cứng nó
       await this.languageRepo.delete(id, true)
       return {
-        message: 'Delete successfully',
+        message: MESSAGES.DELETE_SUCCESS,
       }
     } catch (error) {
       if (isNotFoundPrismaError(error)) {

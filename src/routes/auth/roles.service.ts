@@ -9,7 +9,7 @@ export class RolesService {
   constructor(private readonly prismaService: PrismaService) {}
 
   async getClientRoleId() {
-    if (this.clientRoleId) {
+    if (this.clientRoleId !== null) {
       return this.clientRoleId
     }
     const role: RoleType = await this.prismaService.$queryRaw`

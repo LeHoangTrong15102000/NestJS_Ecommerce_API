@@ -1,6 +1,6 @@
-import { Body, Controller, Get, HttpCode, HttpStatus, Ip, Post, Query, Req, Res } from '@nestjs/common'
-
-import { AuthService } from 'src/routes/auth/auth.service'
+import { Body, Controller, Get, HttpCode, HttpStatus, Ip, Post, Query, Res } from '@nestjs/common'
+import { Throttle } from '@nestjs/throttler'
+import { Response } from 'express'
 import { ZodResponse } from 'nestjs-zod'
 import {
   DisableTwoFactorBodyDTO,
@@ -16,14 +16,14 @@ import {
   SendOTPBodyDTO,
   TwoFactorEnableResDTO,
 } from 'src/routes/auth/auth.dto'
-import { UserAgent } from 'src/shared/decorators/user-agent.decorator'
-import { MessageResDTO } from 'src/shared/dtos/response.dto'
-import { IsPublic } from 'src/shared/decorators/auth.decorator'
+import { AuthService } from 'src/routes/auth/auth.service'
 import { GoogleService } from 'src/routes/auth/google.service'
-import { Response } from 'express'
 import envConfig from 'src/shared/config'
-import { EmptyBodyDTO } from 'src/shared/dtos/request.dto'
 import { ActiveUser } from 'src/shared/decorators/active-user.decorator'
+import { IsPublic } from 'src/shared/decorators/auth.decorator'
+import { UserAgent } from 'src/shared/decorators/user-agent.decorator'
+import { EmptyBodyDTO } from 'src/shared/dtos/request.dto'
+import { MessageResDTO } from 'src/shared/dtos/response.dto'
 
 @Controller('auth')
 export class AuthController {
@@ -33,6 +33,7 @@ export class AuthController {
   ) {}
 
   // Nếu mà sử dụng cái ZodSerializerDto(RegisterBodyDTO) như thế kia thì cần phải vào cái AppModule khai báo thêm thằng APP_PIPE vào để mà sử dụng global -> Cách mà team Zod recommend chúng ta sử dụng theo
+  @Throttle({ short: { limit: 3, ttl: 60000 } }) // 3 requests per minute
   @Post('register')
   // Sử dụng ZodSerializerDto để mà validation output của APIendpoint, nó sẽ chuẩn hóa dữ liệu, ví dụ như là RegisterRes chúng ta không muốn trả về `password` mà trong res lại có password thì nó sẽ báo lỗi và xử lý chỗ này
   // Nên là khi mà thêm ZodSerializerDto này vào thì nó sẽ chuẩn hóa dữ liệu(output) trả về cho chúng ta theo đúng cái class ví dụ `RegisterResDTO` mà chúng ta cung cấp
@@ -43,6 +44,7 @@ export class AuthController {
     return this.authService.register(body)
   }
 
+  @Throttle({ short: { limit: 3, ttl: 300000 } }) // 3 requests per 5 minutes
   @Post('otp')
   @ZodResponse({ type: MessageResDTO })
   @IsPublic()
@@ -51,6 +53,7 @@ export class AuthController {
   }
 
   // Dùng Decorator userAgent và IP của người dùng
+  @Throttle({ short: { limit: 5, ttl: 60000 } }) // 5 requests per minute
   @Post('login')
   @ZodResponse({ type: LoginResDTO })
   @IsPublic()
@@ -66,6 +69,7 @@ export class AuthController {
   @Post('refresh-token')
   @ZodResponse({ type: RefreshTokenResDTO })
   @HttpCode(HttpStatus.OK)
+  @IsPublic()
   refreshToken(@Body() body: RefreshTokenBodyDTO, @UserAgent() userAgent: string, @Ip() ip: string) {
     return this.authService.refreshToken({
       refreshToken: body.refreshToken,
@@ -77,6 +81,7 @@ export class AuthController {
   @Post('logout')
   // Do thằng logout chỉ trả về message mà thôi
   @ZodResponse({ type: MessageResDTO })
+  @IsPublic()
   logout(@Body() body: LogoutBodyDTO) {
     return this.authService.logout(body.refreshToken)
   }
@@ -119,6 +124,7 @@ export class AuthController {
   // @ZodSerializerDto(ChangePasswordBodyDTO)
   // async changePassword(@Body() body: ChangePasswordBodyDTO) {}
 
+  @Throttle({ short: { limit: 3, ttl: 300000 } }) // 3 requests per 5 minutes
   @Post('forgot-password')
   @IsPublic()
   @ZodResponse({ type: MessageResDTO })

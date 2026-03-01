@@ -1,9 +1,19 @@
 {
-  "moduleFileExtensions": ["js", "json", "ts"],
-  "rootDir": ".",
+  "preset": "ts-jest",
   "testEnvironment": "node",
-  "testRegex": ".e2e-spec.ts$",
+  "moduleFileExtensions": ["js", "json", "ts", "tsx"],
+  "rootDir": "..",
+  "testRegex": "test/e2e/.*\\.e2e-spec\\.ts$",
   "transform": {
-    "^.+\\.(t|j)s$": "ts-jest"
-  }
+    "^.+\\.(t|j)s$": "ts-jest",
+    "^.+\\.tsx$": "ts-jest"
+  },
+  "moduleNameMapper": {
+    "^src/(.*)$": "<rootDir>/src/$1",
+    "^emails/(.*)$": "<rootDir>/emails/$1"
+  },
+  "setupFilesAfterEnv": ["<rootDir>/test/setup.ts"],
+  "testTimeout": 60000,
+  "verbose": true,
+  "maxWorkers": 1
 }

@@ -1,7 +1,6 @@
 import { TypeOfVerificationCode } from 'src/shared/constants/auth.constant'
 import { RoleSchema } from 'src/shared/models/shared-role.model'
 import { UserSchema } from 'src/shared/models/shared-user.model'
-import { createContext } from 'vm'
 import { z } from 'zod'
 
 // Tạo ra RegisterBodySchema -> Đây là cách mà tạo ra một RegisterBodySchema
@@ -137,7 +136,7 @@ export const GoogleAuthStateSchema = DeviceSchema.pick({
 })
 
 export const GetAuthorizationUrlResSchema = z.object({
-  url: z.string().url(),
+  url: z.url(),
 })
 
 export const ForgotPasswordBodySchema = z
@@ -159,7 +158,7 @@ export const ForgotPasswordBodySchema = z
   })
 
 export const ResetPasswordBodySchema = z.object({
-  email: z.string().email(),
+  email: z.email(),
 })
 
 // Về cái setup thì cái body chúng ta sẽ không gửi lên cái gì hết

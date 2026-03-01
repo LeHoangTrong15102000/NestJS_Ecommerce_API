@@ -73,10 +73,7 @@ export class WebsocketAdapter extends IoAdapter {
     }
 
     try {
-      await Promise.all([
-        waitForReady(pubClient, 'PubClient'),
-        waitForReady(subClient, 'SubClient'),
-      ])
+      await Promise.all([waitForReady(pubClient, 'PubClient'), waitForReady(subClient, 'SubClient')])
       this.adapterConstructor = createAdapter(pubClient, subClient)
       this.logger.log('Redis pub/sub adapter connected successfully')
     } catch (error) {

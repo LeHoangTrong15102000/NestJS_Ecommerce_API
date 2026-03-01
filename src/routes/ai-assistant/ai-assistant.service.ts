@@ -4,6 +4,12 @@ import Anthropic from '@anthropic-ai/sdk'
 import { AIAssistantRepo } from './ai-assistant.repo'
 import { AIMessageRole } from '@prisma/client'
 import { CreateAIConversationDto, SendAIMessageDto, StreamingCallbacks } from './ai-assistant.dto'
+import { DEFAULT_AI_CONFIG } from './ai-assistant.model'
+
+interface AIConversationMessage {
+  role: AIMessageRole
+  content: string
+}
 
 @Injectable()
 export class AIAssistantService {
@@ -20,7 +26,7 @@ export class AIAssistantService {
 
     this.anthropic = new Anthropic({
       apiKey: apiKey,
-      timeout: 15000, // 15 giây timeout
+      timeout: DEFAULT_AI_CONFIG.timeout,
     })
   }
 
@@ -96,7 +102,9 @@ export class AIAssistantService {
   /**
    * Chuyển đổi messages thành format cho Anthropic
    */
-  private formatMessagesForAnthropic(messages: any[]): Array<{ role: 'user' | 'assistant'; content: string }> {
+  private formatMessagesForAnthropic(
+    messages: AIConversationMessage[],
+  ): Array<{ role: 'user' | 'assistant'; content: string }> {
     return messages.map((msg) => ({
       role: msg.role === AIMessageRole.USER ? ('user' as const) : ('assistant' as const),
       content: msg.content,
@@ -119,7 +127,7 @@ export class AIAssistantService {
       }
 
       const response = await this.anthropic.messages.create({
-        model: 'claude-3-haiku-20240307',
+        model: DEFAULT_AI_CONFIG.model,
         max_tokens: 30,
         temperature: 0.3,
         system:
@@ -133,8 +141,8 @@ export class AIAssistantService {
       })
 
       const title = response.content
-        .filter((block) => block.type === 'text')
-        .map((block) => (block as any).text)
+        .filter((block): block is Anthropic.TextBlock => block.type === 'text')
+        .map((block) => block.text)
         .join('')
 
       return title.slice(0, 50).trim() || firstMessage.slice(0, 50) + (firstMessage.length > 50 ? '...' : '')
@@ -237,8 +245,7 @@ export class AIAssistantService {
         role: AIMessageRole.ASSISTANT,
         content: aiResponseText,
         responseTime,
-        model: 'claude-3-haiku-20240307',
-        contextUsed: conversation.context,
+        model: DEFAULT_AI_CONFIG.model,
       })
 
       // Update conversation title nếu là tin nhắn đầu tiên
@@ -263,7 +270,7 @@ export class AIAssistantService {
   /**
    * Generate AI response sử dụng Anthropic Claude
    */
-  async generateResponse(previousMessages: any[], userMessage: string): Promise<string> {
+  async generateResponse(previousMessages: AIConversationMessage[], userMessage: string): Promise<string> {
     try {
       const apiKey = envConfig.ANTHROPIC_API_KEY
 
@@ -278,31 +285,41 @@ export class AIAssistantService {
       const allMessages = [...previousMessages, { role: AIMessageRole.USER, content: userMessage }]
 
       const response = await this.anthropic.messages.create({
-        model: 'claude-3-haiku-20240307', // Model nhanh và rẻ nhất
-        max_tokens: 200, // Tăng token để có response đầy đủ hơn
-        temperature: 0.7,
+        model: DEFAULT_AI_CONFIG.model,
+        max_tokens: DEFAULT_AI_CONFIG.maxTokens,
+        temperature: DEFAULT_AI_CONFIG.temperature,
         system: this.getSystemPrompt(),
         messages: this.formatMessagesForAnthropic(allMessages),
       })
 
       // Lấy text từ response
       const text = response.content
-        .filter((block) => block.type === 'text')
-        .map((block) => (block as any).text)
+        .filter((block): block is Anthropic.TextBlock => block.type === 'text')
+        .map((block) => block.text)
         .join('')
 
       this.logger.log('✅ Anthropic Claude API response thành công')
       return text || this.getFallbackResponse(userMessage, 'general')
-    } catch (error: any) {
+    } catch (error: unknown) {
       this.logger.error('❌ Lỗi khi gọi Anthropic API:', error)
 
+      const apiError = error as { status?: number; message?: string }
+
       // Kiểm tra loại lỗi cụ thể
-      if (error.status === 429 || error.message?.includes('quota') || error.message?.includes('rate limit')) {
+      if (
+        apiError.status === 429 ||
+        apiError.message?.includes('quota') ||
+        apiError.message?.includes('rate limit')
+      ) {
         this.logger.log('💳 Lỗi quota/rate limit Anthropic - sử dụng fallback response')
         return this.getFallbackResponse(userMessage, 'quota')
       }
 
-      if (error.status === 401 || error.message?.includes('authentication') || error.message?.includes('api key')) {
+      if (
+        apiError.status === 401 ||
+        apiError.message?.includes('authentication') ||
+        apiError.message?.includes('api key')
+      ) {
         this.logger.log('🔑 Lỗi authentication Anthropic - sử dụng fallback response')
         return this.getFallbackResponse(userMessage, 'auth')
       }
@@ -314,52 +331,112 @@ export class AIAssistantService {
   }
 
   /**
+   * Simulate streaming for fallback response when no API key
+   */
+  private simulateFallbackStreaming(
+    userMessage: string,
+    callbacks: StreamingCallbacks,
+    signal?: AbortSignal,
+  ): Promise<void> {
+    return new Promise<void>((resolve) => {
+      this.logger.log('🚫 Không có ANTHROPIC_API_KEY - sử dụng fallback streaming')
+      const fallbackText = this.getFallbackResponse(userMessage)
+
+      const words = fallbackText.split(' ')
+      let resolved = false
+
+      for (let i = 0; i < words.length; i++) {
+        setTimeout(() => {
+          if (resolved || (signal && signal.aborted)) {
+            if (!resolved) {
+              resolved = true
+              resolve()
+            }
+            return
+          }
+          callbacks.onChunk(words[i] + ' ')
+          if (i === words.length - 1) {
+            resolved = true
+            callbacks.onComplete()
+            resolve()
+          }
+        }, i * 100)
+      }
+
+      if (signal) {
+        signal.addEventListener(
+          'abort',
+          () => {
+            if (!resolved) {
+              resolved = true
+              resolve()
+            }
+          },
+          { once: true },
+        )
+      }
+    })
+  }
+
+  /**
+   * Create Anthropic streaming request
+   */
+  private setupAnthropicStream(previousMessages: AIConversationMessage[], userMessage: string) {
+    const allMessages = [...previousMessages, { role: AIMessageRole.USER, content: userMessage }]
+
+    return this.anthropic.messages.stream({
+      model: DEFAULT_AI_CONFIG.model,
+      max_tokens: DEFAULT_AI_CONFIG.maxTokens,
+      temperature: DEFAULT_AI_CONFIG.temperature,
+      system: this.getSystemPrompt(),
+      messages: this.formatMessagesForAnthropic(allMessages),
+    })
+  }
+
+  /**
+   * Classify and handle streaming errors
+   */
+  private handleStreamingError(error: unknown, callbacks: StreamingCallbacks): void {
+    this.logger.error('❌ Lỗi khởi tạo streaming:', error)
+    const apiError = error as { status?: number; message?: string }
+
+    if (apiError.status === 429) {
+      callbacks.onError('Quota limit reached')
+    } else if (apiError.status === 401) {
+      callbacks.onError('Authentication failed')
+    } else {
+      callbacks.onError(apiError.message || 'Failed to initialize streaming')
+    }
+  }
+
+  /**
    * Generate streaming response cho real-time chat
    */
   generateStreamingResponse(
-    previousMessages: any[],
+    previousMessages: AIConversationMessage[],
     userMessage: string,
     callbacks: StreamingCallbacks,
+    signal?: AbortSignal,
   ): Promise<void> {
     return new Promise<void>((resolve) => {
       try {
         const apiKey = envConfig.ANTHROPIC_API_KEY
 
-        // Kiểm tra API key trước khi gọi Anthropic
         if (!apiKey) {
-          this.logger.log('🚫 Không có ANTHROPIC_API_KEY - sử dụng fallback streaming')
-          const fallbackText = this.getFallbackResponse(userMessage)
-
-          // Simulate streaming cho fallback response
-          const words = fallbackText.split(' ')
-          for (let i = 0; i < words.length; i++) {
-            setTimeout(() => {
-              callbacks.onChunk(words[i] + ' ')
-              if (i === words.length - 1) {
-                callbacks.onComplete()
-                resolve()
-              }
-            }, i * 100) // 100ms delay between words
-          }
+          this.simulateFallbackStreaming(userMessage, callbacks, signal).then(resolve)
           return
         }
 
         this.logger.log('🤖 Đang khởi tạo Anthropic Claude Streaming...')
 
-        const allMessages = [...previousMessages, { role: AIMessageRole.USER, content: userMessage }]
+        const stream = this.setupAnthropicStream(previousMessages, userMessage)
 
-        // Tạo streaming request với Anthropic
-        const stream = this.anthropic.messages.stream({
-          model: 'claude-3-haiku-20240307',
-          max_tokens: 200,
-          temperature: 0.7,
-          system: this.getSystemPrompt(),
-          messages: this.formatMessagesForAnthropic(allMessages),
-        })
+        if (signal) {
+          signal.addEventListener('abort', () => stream.abort(), { once: true })
+        }
 
         this.logger.log('📡 Đang nhận streaming data từ Claude...')
 
-        // Handle stream events
         stream.on('text', (chunk: string) => {
           callbacks.onChunk(chunk)
         })
@@ -370,20 +447,13 @@ export class AIAssistantService {
           resolve()
         })
 
-        stream.on('error', (error: any) => {
+        stream.on('error', (error: Error) => {
           this.logger.error('❌ Lỗi streaming:', error)
           callbacks.onError(error.message || 'Streaming error')
           resolve()
         })
-      } catch (error: any) {
-        this.logger.error('❌ Lỗi khởi tạo streaming:', error)
-        if (error.status === 429) {
-          callbacks.onError('Quota limit reached')
-        } else if (error.status === 401) {
-          callbacks.onError('Authentication failed')
-        } else {
-          callbacks.onError(error.message || 'Failed to initialize streaming')
-        }
+      } catch (error: unknown) {
+        this.handleStreamingError(error, callbacks)
         resolve()
       }
     })
@@ -453,4 +523,3 @@ export class AIAssistantService {
     }
   }
 }
-

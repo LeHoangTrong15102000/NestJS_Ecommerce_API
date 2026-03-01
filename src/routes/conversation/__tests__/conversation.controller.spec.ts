@@ -180,7 +180,7 @@ const createTestData = {
     reactions: [],
     readReceipts: [],
     replyTo: null,
-    conversation: null,
+    conversation: undefined,
     isReadByCurrentUser: false,
     readByCount: 0,
     ...overrides,

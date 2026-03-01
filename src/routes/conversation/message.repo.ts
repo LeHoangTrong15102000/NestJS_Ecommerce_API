@@ -1,10 +1,17 @@
 import { Injectable } from '@nestjs/common'
-import { Prisma } from '@prisma/client'
+import { MessageType, Prisma } from '@prisma/client'
 import { SerializeAll } from 'src/shared/decorators/serialize.decorator'
 import { PrismaService } from 'src/shared/services/prisma.service'
 
 @Injectable()
-@SerializeAll()
+@SerializeAll([
+  'resolveCursor',
+  'buildMessageQuery',
+  'getSearchFacets',
+  'getMessageInclude',
+  'getMessageIncludeWithConversation',
+  'normalizeMessage',
+])
 export class MessageRepository {
   constructor(private readonly prisma: PrismaService) {}
 
@@ -41,79 +48,7 @@ export class MessageRepository {
             }
           : undefined,
       },
-      include: {
-        fromUser: {
-          select: {
-            id: true,
-            name: true,
-            email: true,
-            avatar: true,
-            status: true,
-          },
-        },
-        replyTo: {
-          select: {
-            id: true,
-            content: true,
-            type: true,
-            fromUserId: true,
-            createdAt: true,
-            isDeleted: true,
-            deletedForEveryone: true,
-            fromUser: {
-              select: {
-                id: true,
-                name: true,
-                email: true,
-                avatar: true,
-                status: true,
-              },
-            },
-            attachments: {
-              select: {
-                id: true,
-                type: true,
-                fileName: true,
-                fileUrl: true,
-                thumbnail: true,
-                width: true,
-                height: true,
-              },
-            },
-          },
-        },
-        attachments: {
-          orderBy: { createdAt: 'asc' as const },
-        },
-        reactions: {
-          include: {
-            user: {
-              select: {
-                id: true,
-                name: true,
-                email: true,
-                avatar: true,
-                status: true,
-              },
-            },
-          },
-          orderBy: { createdAt: 'asc' as const },
-        },
-        readReceipts: {
-          include: {
-            user: {
-              select: {
-                id: true,
-                name: true,
-                email: true,
-                avatar: true,
-                status: true,
-              },
-            },
-          },
-          orderBy: { readAt: 'asc' as const },
-        },
-      },
+      include: this.getMessageInclude(),
     })
 
     return this.normalizeMessage(message)
@@ -122,79 +57,7 @@ export class MessageRepository {
   async findById(id: string) {
     const message = await this.prisma.conversationMessage.findUnique({
       where: { id },
-      include: {
-        fromUser: {
-          select: {
-            id: true,
-            name: true,
-            email: true,
-            avatar: true,
-            status: true,
-          },
-        },
-        replyTo: {
-          select: {
-            id: true,
-            content: true,
-            type: true,
-            fromUserId: true,
-            createdAt: true,
-            isDeleted: true,
-            deletedForEveryone: true,
-            fromUser: {
-              select: {
-                id: true,
-                name: true,
-                email: true,
-                avatar: true,
-                status: true,
-              },
-            },
-            attachments: {
-              select: {
-                id: true,
-                type: true,
-                fileName: true,
-                fileUrl: true,
-                thumbnail: true,
-                width: true,
-                height: true,
-              },
-            },
-          },
-        },
-        attachments: {
-          orderBy: { createdAt: 'asc' as const },
-        },
-        reactions: {
-          include: {
-            user: {
-              select: {
-                id: true,
-                name: true,
-                email: true,
-                avatar: true,
-                status: true,
-              },
-            },
-          },
-          orderBy: { createdAt: 'asc' as const },
-        },
-        readReceipts: {
-          include: {
-            user: {
-              select: {
-                id: true,
-                name: true,
-                email: true,
-                avatar: true,
-                status: true,
-              },
-            },
-          },
-          orderBy: { readAt: 'asc' as const },
-        },
-      },
+      include: this.getMessageInclude(),
     })
 
     return message ? this.normalizeMessage(message) : null
@@ -217,168 +80,90 @@ export class MessageRepository {
   ) {
     const { limit, cursor, direction = 'backward', type } = options
 
-    const where: Prisma.ConversationMessageWhereInput = {
-      conversationId,
-      isDeleted: false,
-    }
+    const cursorWhere = await this.resolveCursor(cursor, direction)
+    const messages = await this.buildMessageQuery(conversationId, type, cursorWhere, limit)
 
-    // Filter by message type
-    if (type) {
-      where.type = type as any
-    }
-
-    // Cursor-based filtering
-    if (cursor) {
-      const cursorMessage = await this.prisma.conversationMessage.findUnique({
-        where: { id: cursor },
-        select: { createdAt: true, id: true },
-      })
-
-      if (!cursorMessage) {
-        throw new Error('Invalid cursor: Message not found')
-      }
-
-      // Backward = load older messages (createdAt < cursor)
-      // Forward = load newer messages (createdAt > cursor)
-      if (direction === 'backward') {
-        where.createdAt = { lt: cursorMessage.createdAt }
-      } else {
-        where.createdAt = { gt: cursorMessage.createdAt }
-      }
-    }
-
-    // Fetch messages (always order by createdAt desc for consistency)
-    const messages = await this.prisma.conversationMessage.findMany({
-      where,
-      include: {
-        fromUser: {
-          select: {
-            id: true,
-            name: true,
-            email: true,
-            avatar: true,
-            status: true,
-          },
-        },
-        replyTo: {
-          select: {
-            id: true,
-            content: true,
-            type: true,
-            fromUserId: true,
-            createdAt: true,
-            isDeleted: true,
-            deletedForEveryone: true,
-            fromUser: {
-              select: {
-                id: true,
-                name: true,
-                email: true,
-                avatar: true,
-                status: true,
-              },
-            },
-            attachments: {
-              select: {
-                id: true,
-                type: true,
-                fileName: true,
-                fileUrl: true,
-                thumbnail: true,
-                width: true,
-                height: true,
-              },
-            },
-          },
-        },
-        attachments: {
-          orderBy: { createdAt: 'asc' as const },
-        },
-        reactions: {
-          include: {
-            user: {
-              select: {
-                id: true,
-                name: true,
-                email: true,
-                avatar: true,
-                status: true,
-              },
-            },
-          },
-          orderBy: { createdAt: 'asc' as const },
-        },
-        readReceipts: {
-          include: {
-            user: {
-              select: {
-                id: true,
-                name: true,
-                email: true,
-                avatar: true,
-                status: true,
-              },
-            },
-          },
-          orderBy: { readAt: 'asc' as const },
-        },
-      },
-      orderBy: { createdAt: 'desc' },
-      take: limit + 1, // Fetch one extra to check if there are more
-    })
-
-    // Check if there are more messages
     const hasMore = messages.length > limit
     const resultMessages = hasMore ? messages.slice(0, limit) : messages
+    const normalizedMessages = resultMessages.map((msg) => this.normalizeMessage(msg))
 
-    // Normalize messages - inline to avoid this context issues
-    const normalizedMessages = resultMessages.map((msg) => {
-      const msgAny = msg as any // Cast to any to access conversation field for search results
-
-      // Inline normalization to avoid this context loss in .map() callback
-      return {
-        id: msgAny.id,
-        conversationId: msgAny.conversationId,
-        fromUserId: msgAny.fromUserId,
-        content: msgAny.content,
-        type: msgAny.type,
-        replyToId: msgAny.replyToId,
-        isEdited: msgAny.isEdited,
-        editedAt: msgAny.editedAt,
-        isDeleted: msgAny.isDeleted,
-        deletedAt: msgAny.deletedAt,
-        deletedForEveryone: msgAny.deletedForEveryone,
-        createdAt: msgAny.createdAt,
-        updatedAt: msgAny.updatedAt,
-        fromUser: msgAny.fromUser,
-        replyTo: msgAny.replyTo
-          ? {
-              ...msgAny.replyTo,
-              attachments: msgAny.replyTo.attachments || [],
-            }
-          : null,
-        attachments: msgAny.attachments || [],
-        reactions: msgAny.reactions || [],
-        readReceipts: msgAny.readReceipts || [],
-        conversation: msgAny.conversation || undefined,
-      }
-    })
-
-    // Generate cursors for next/prev pages
     const nextCursor = hasMore && resultMessages.length > 0 ? resultMessages[resultMessages.length - 1].id : null
     const prevCursor = resultMessages.length > 0 ? resultMessages[0].id : null
 
     return {
-      data: normalizedMessages.reverse(), // Reverse to show newest first
+      data: normalizedMessages.reverse(),
       pagination: {
         limit,
         cursor,
         direction,
         hasMore,
-        nextCursor, // Cursor to fetch older messages
-        prevCursor, // Cursor to fetch newer messages
+        nextCursor,
+        prevCursor,
       },
     }
+  }
+
+  /**
+   * Resolve cursor to a createdAt filter for pagination
+   * @param cursor - Message ID to paginate from
+   * @param direction - Pagination direction
+   * @returns Prisma where clause for createdAt filter
+   */
+  private async resolveCursor(
+    cursor: string | undefined,
+    direction: 'forward' | 'backward',
+  ): Promise<Prisma.ConversationMessageWhereInput['createdAt']> {
+    if (!cursor) {
+      return undefined
+    }
+
+    const cursorMessage = await this.prisma.conversationMessage.findUnique({
+      where: { id: cursor },
+      select: { createdAt: true, id: true },
+    })
+
+    if (!cursorMessage) {
+      throw new Error('Invalid cursor: Message not found')
+    }
+
+    // Backward = load older messages (createdAt < cursor)
+    // Forward = load newer messages (createdAt > cursor)
+    return direction === 'backward' ? { lt: cursorMessage.createdAt } : { gt: cursorMessage.createdAt }
+  }
+
+  /**
+   * Build and execute the Prisma query for fetching messages
+   * @param conversationId - Conversation ID
+   * @param type - Optional message type filter
+   * @param cursorWhere - Cursor-based createdAt filter
+   * @param limit - Number of messages to fetch
+   * @returns Array of messages from database
+   */
+  private buildMessageQuery(
+    conversationId: string,
+    type: string | undefined,
+    cursorWhere: Prisma.ConversationMessageWhereInput['createdAt'],
+    limit: number,
+  ) {
+    const where: Prisma.ConversationMessageWhereInput = {
+      conversationId,
+      isDeleted: false,
+    }
+
+    if (type) {
+      where.type = type as MessageType
+    }
+
+    if (cursorWhere) {
+      where.createdAt = cursorWhere
+    }
+
+    return this.prisma.conversationMessage.findMany({
+      where,
+      include: this.getMessageInclude(),
+      orderBy: { createdAt: 'desc' },
+      take: limit + 1,
+    })
   }
 
   /**
@@ -412,7 +197,7 @@ export class MessageRepository {
     }
 
     if (type) {
-      where.type = type as any
+      where.type = type as MessageType
     }
 
     if (fromUserId) {
@@ -445,87 +230,7 @@ export class MessageRepository {
     const [messages, facets] = await Promise.all([
       this.prisma.conversationMessage.findMany({
         where,
-        include: {
-          fromUser: {
-            select: {
-              id: true,
-              name: true,
-              email: true,
-              avatar: true,
-              status: true,
-            },
-          },
-          replyTo: {
-            select: {
-              id: true,
-              content: true,
-              type: true,
-              fromUserId: true,
-              createdAt: true,
-              isDeleted: true,
-              deletedForEveryone: true,
-              fromUser: {
-                select: {
-                  id: true,
-                  name: true,
-                  email: true,
-                  avatar: true,
-                  status: true,
-                },
-              },
-              attachments: {
-                select: {
-                  id: true,
-                  type: true,
-                  fileName: true,
-                  fileUrl: true,
-                  thumbnail: true,
-                  width: true,
-                  height: true,
-                },
-              },
-            },
-          },
-          attachments: {
-            orderBy: { createdAt: 'asc' as const },
-          },
-          reactions: {
-            include: {
-              user: {
-                select: {
-                  id: true,
-                  name: true,
-                  email: true,
-                  avatar: true,
-                  status: true,
-                },
-              },
-            },
-            orderBy: { createdAt: 'asc' as const },
-          },
-          readReceipts: {
-            include: {
-              user: {
-                select: {
-                  id: true,
-                  name: true,
-                  email: true,
-                  avatar: true,
-                  status: true,
-                },
-              },
-            },
-            orderBy: { readAt: 'asc' as const },
-          },
-          conversation: {
-            select: {
-              id: true,
-              name: true,
-              type: true,
-              avatar: true,
-            },
-          },
-        },
+        include: this.getMessageIncludeWithConversation(),
         orderBy: { createdAt: 'desc' },
         take: limit + 1, // Fetch one extra to check if there are more
       }),
@@ -568,79 +273,7 @@ export class MessageRepository {
     const message = await this.prisma.conversationMessage.update({
       where: { id },
       data,
-      include: {
-        fromUser: {
-          select: {
-            id: true,
-            name: true,
-            email: true,
-            avatar: true,
-            status: true,
-          },
-        },
-        replyTo: {
-          select: {
-            id: true,
-            content: true,
-            type: true,
-            fromUserId: true,
-            createdAt: true,
-            isDeleted: true,
-            deletedForEveryone: true,
-            fromUser: {
-              select: {
-                id: true,
-                name: true,
-                email: true,
-                avatar: true,
-                status: true,
-              },
-            },
-            attachments: {
-              select: {
-                id: true,
-                type: true,
-                fileName: true,
-                fileUrl: true,
-                thumbnail: true,
-                width: true,
-                height: true,
-              },
-            },
-          },
-        },
-        attachments: {
-          orderBy: { createdAt: 'asc' as const },
-        },
-        reactions: {
-          include: {
-            user: {
-              select: {
-                id: true,
-                name: true,
-                email: true,
-                avatar: true,
-                status: true,
-              },
-            },
-          },
-          orderBy: { createdAt: 'asc' as const },
-        },
-        readReceipts: {
-          include: {
-            user: {
-              select: {
-                id: true,
-                name: true,
-                email: true,
-                avatar: true,
-                status: true,
-              },
-            },
-          },
-          orderBy: { readAt: 'asc' as const },
-        },
-      },
+      include: this.getMessageInclude(),
     })
 
     return this.normalizeMessage(message)
@@ -660,79 +293,7 @@ export class MessageRepository {
     const message = await this.prisma.conversationMessage.update({
       where: { id },
       data: updateData,
-      include: {
-        fromUser: {
-          select: {
-            id: true,
-            name: true,
-            email: true,
-            avatar: true,
-            status: true,
-          },
-        },
-        replyTo: {
-          select: {
-            id: true,
-            content: true,
-            type: true,
-            fromUserId: true,
-            createdAt: true,
-            isDeleted: true,
-            deletedForEveryone: true,
-            fromUser: {
-              select: {
-                id: true,
-                name: true,
-                email: true,
-                avatar: true,
-                status: true,
-              },
-            },
-            attachments: {
-              select: {
-                id: true,
-                type: true,
-                fileName: true,
-                fileUrl: true,
-                thumbnail: true,
-                width: true,
-                height: true,
-              },
-            },
-          },
-        },
-        attachments: {
-          orderBy: { createdAt: 'asc' as const },
-        },
-        reactions: {
-          include: {
-            user: {
-              select: {
-                id: true,
-                name: true,
-                email: true,
-                avatar: true,
-                status: true,
-              },
-            },
-          },
-          orderBy: { createdAt: 'asc' as const },
-        },
-        readReceipts: {
-          include: {
-            user: {
-              select: {
-                id: true,
-                name: true,
-                email: true,
-                avatar: true,
-                status: true,
-              },
-            },
-          },
-          orderBy: { readAt: 'asc' as const },
-        },
-      },
+      include: this.getMessageInclude(),
     })
 
     return this.normalizeMessage(message)
@@ -933,11 +494,12 @@ export class MessageRepository {
 
     const totalMembers = message?.conversation._count.members || 0
     const authorId = message?.fromUserId
+    const membersExcludingAuthor = authorId ? Math.max(0, totalMembers - 1) : totalMembers
 
     return {
       readCount: count,
-      totalMembers: authorId ? totalMembers - 1 : totalMembers, // Exclude author
-      readPercentage: totalMembers > 1 ? (count / (totalMembers - 1)) * 100 : 0,
+      totalMembers: membersExcludingAuthor,
+      readPercentage: membersExcludingAuthor > 0 ? (count / membersExcludingAuthor) * 100 : 0,
     }
   }
 
@@ -1136,6 +698,20 @@ export class MessageRepository {
           },
         },
         orderBy: { readAt: 'asc' as const },
+      },
+    }
+  }
+
+  private getMessageIncludeWithConversation() {
+    return {
+      ...this.getMessageInclude(),
+      conversation: {
+        select: {
+          id: true,
+          name: true,
+          type: true,
+          avatar: true,
+        },
       },
     }
   }

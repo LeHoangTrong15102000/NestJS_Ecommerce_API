@@ -17,14 +17,14 @@ export const VoucherResponseSchema = z.object({
   usageLimit: z.number().nullable(),
   usedCount: z.number(),
   userUsageLimit: z.number().nullable(),
-  startDate: z.date(),
-  endDate: z.date(),
+  startDate: z.iso.datetime(),
+  endDate: z.iso.datetime(),
   isActive: z.boolean(),
   sellerId: z.number().nullable(),
   applicableProducts: z.array(z.number()),
   excludedProducts: z.array(z.number()),
-  createdAt: z.date(),
-  updatedAt: z.date(),
+  createdAt: z.iso.datetime(),
+  updatedAt: z.iso.datetime(),
 })
 
 export type VoucherResponse = z.infer<typeof VoucherResponseSchema>
@@ -35,8 +35,8 @@ export const UserVoucherResponseSchema = z.object({
   userId: z.number(),
   voucherId: z.number(),
   usedCount: z.number(),
-  usedAt: z.date().nullable(),
-  savedAt: z.date(),
+  usedAt: z.iso.datetime().nullable(),
+  savedAt: z.iso.datetime(),
   voucher: VoucherResponseSchema,
 })
 
@@ -47,7 +47,7 @@ export const VoucherWithUserInfoSchema = VoucherResponseSchema.extend({
   userVoucher: z
     .object({
       usedCount: z.number(),
-      savedAt: z.date(),
+      savedAt: z.iso.datetime(),
       canUse: z.boolean(),
     })
     .nullable(),

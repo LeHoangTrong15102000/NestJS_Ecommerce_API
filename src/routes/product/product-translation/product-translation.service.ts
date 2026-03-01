@@ -7,6 +7,7 @@ import {
   CreateProductTranslationBodyType,
   UpdateProductTranslationBodyType,
 } from 'src/routes/product/product-translation/product-translation.model'
+import { MESSAGES } from 'src/shared/constants/app.constant'
 
 @Injectable()
 export class ProductTranslationService {
@@ -60,7 +61,7 @@ export class ProductTranslationService {
         deletedById,
       })
       return {
-        message: 'Delete successfully',
+        message: MESSAGES.DELETE_SUCCESS,
       }
     } catch (error) {
       if (isNotFoundPrismaError(error)) {

@@ -25,8 +25,8 @@ const createTestData = {
     maxDiscount: 50000,
     usageLimit: 100,
     userUsageLimit: 1,
-    startDate: new Date(Date.now() + 86400000), // Tomorrow
-    endDate: new Date(Date.now() + 7 * 86400000), // Next week
+    startDate: new Date(Date.now() + 86400000).toISOString(), // Tomorrow
+    endDate: new Date(Date.now() + 7 * 86400000).toISOString(), // Next week
     isActive: true,
     applicableProducts: [1, 2, 3],
     excludedProducts: [4, 5],

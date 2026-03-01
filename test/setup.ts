@@ -1,38 +1,16 @@
 import { PrismaClient } from '@prisma/client'
-import { execSync } from 'child_process'
-import { randomBytes } from 'crypto'
 
 // Global test database setup
 declare global {
   var __GLOBAL_PRISMA__: PrismaClient | undefined
 }
 
-// Test database name with random suffix to avoid conflicts
-const testDbName = `test_ecommerce_${randomBytes(8).toString('hex')}`
-
 /**
  * Setup test database before all tests
  */
 beforeAll(async () => {
-  // Create test database
-  const originalDbUrl = process.env.DATABASE_URL
-  const testDbUrl = originalDbUrl?.replace(/\/[^\/]+$/, `/${testDbName}`)
-
-  // Set test database URL
-  process.env.DATABASE_URL = testDbUrl
-
-  // Create database and run migrations
-  execSync(`npx prisma db push --force-reset`, { stdio: 'inherit' })
-
-  // Initialize global Prisma client
-  global.__GLOBAL_PRISMA__ = new PrismaClient({
-    datasources: {
-      db: {
-        url: testDbUrl,
-      },
-    },
-  })
-
+  // Initialize global Prisma client using existing DATABASE_URL
+  global.__GLOBAL_PRISMA__ = new PrismaClient()
   await global.__GLOBAL_PRISMA__.$connect()
 })
 
@@ -42,15 +20,6 @@ beforeAll(async () => {
 afterAll(async () => {
   if (global.__GLOBAL_PRISMA__) {
     await global.__GLOBAL_PRISMA__.$disconnect()
-  }
-
-  // Drop test database
-  try {
-    execSync(`npx prisma db execute --command "DROP DATABASE IF EXISTS ${testDbName}"`, {
-      stdio: 'inherit',
-    })
-  } catch (error) {
-    console.warn(`Failed to drop test database: ${error}`)
   }
 })
 

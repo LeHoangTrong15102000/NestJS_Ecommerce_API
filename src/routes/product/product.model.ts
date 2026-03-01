@@ -30,7 +30,7 @@ function generateSKUs(variants: VariantsType) {
 
 export const ProductSchema = z.object({
   id: z.number(),
-  publishedAt: z.coerce.date().nullable(),
+  publishedAt: z.iso.datetime().nullable(),
   name: z.string().trim().max(500),
   basePrice: z.number().min(0),
   virtualPrice: z.number().min(0),
@@ -77,12 +77,7 @@ export const GetProductsQuerySchema = z.object({
  * Dành cho Admin và Seller
  */
 export const GetManageProductsQuerySchema = GetProductsQuerySchema.extend({
-  isPublic: z.preprocess((val) => {
-    if (val === 'true') return true
-    if (val === 'false') return false
-    if (val === undefined) return undefined
-    return val // sẽ bị fail trong z.boolean() nếu là giá trị rác
-  }, z.boolean().optional()),
+  isPublic: z.stringbool().optional(),
   createdById: z.coerce.number().int().positive(),
 })
 
@@ -90,6 +85,11 @@ export const GetProductsResSchema = z.object({
   data: z.array(
     ProductSchema.extend({
       productTranslations: z.array(ProductTranslationSchema),
+      _count: z
+        .object({
+          orders: z.number(),
+        })
+        .optional(),
     }),
   ),
   totalItems: z.number(),

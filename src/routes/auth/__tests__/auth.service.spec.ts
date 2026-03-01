@@ -1,25 +1,38 @@
+import { UnauthorizedException } from '@nestjs/common'
+import { JsonWebTokenError } from '@nestjs/jwt'
 import { Test, TestingModule } from '@nestjs/testing'
-import { AuthService } from '../auth.service'
-import { AuthRepository } from '../auth.repo'
+import { TypeOfVerificationCode } from '../../../shared/constants/auth.constant'
+import { InvalidPasswordException } from '../../../shared/error'
+import { isNotFoundPrismaError, isUniqueConstraintPrismaError } from '../../../shared/helpers'
+import { SharedRoleRepository } from '../../../shared/repositories/shared-role.repo'
+import { SharedUserRepository } from '../../../shared/repositories/shared-user.repo'
+import { TwoFactorService } from '../../../shared/services/2fa.service'
+import { EmailService } from '../../../shared/services/email.service'
 import { HashingService } from '../../../shared/services/hashing.service'
 import { TokenService } from '../../../shared/services/token.service'
-import { EmailService } from '../../../shared/services/email.service'
-import { TwoFactorService } from '../../../shared/services/2fa.service'
-import { SharedUserRepository } from '../../../shared/repositories/shared-user.repo'
-import { SharedRoleRepository } from '../../../shared/repositories/shared-role.repo'
 import {
   EmailAlreadyExistsException,
   EmailNotFoundException,
-  InvalidOTPException,
-  OTPExpiredException,
+  FailedToSendOTPException,
+  InvalidTOTPAndCodeException,
+  InvalidTOTPException,
+  RefreshTokenAlreadyUsedException,
+  TOTPAlreadyEnabledException,
   TOTPNotEnabledException,
 } from '../auth.error'
-import { TypeOfVerificationCode } from '../../../shared/constants/auth.constant'
-import { isUniqueConstraintPrismaError } from '../../../shared/helpers'
+import { AuthRepository } from '../auth.repo'
+import { AuthService } from '../auth.service'
+
+jest.mock('../../../shared/helpers', () => ({
+  isUniqueConstraintPrismaError: jest.fn(),
+  isNotFoundPrismaError: jest.fn(),
+  generateOTP: jest.fn(() => '123456'),
+}))
 
 const mockIsUniqueConstraintPrismaError = isUniqueConstraintPrismaError as jest.MockedFunction<
   typeof isUniqueConstraintPrismaError
 >
+const mockIsNotFoundPrismaError = isNotFoundPrismaError as jest.MockedFunction<typeof isNotFoundPrismaError>
 
 // Simple test data factory để tránh memory leak
 const createTestData = {
@@ -95,6 +108,9 @@ describe('AuthService', () => {
       findUniqueUserIncludeRole: jest.fn(),
       createDevice: jest.fn(),
       createRefreshToken: jest.fn(),
+      deleteRefreshToken: jest.fn(),
+      updateDevice: jest.fn(),
+      findUniqueRefreshTokenIncludeUserRole: jest.fn(),
     } as any
 
     mockHashingService = {
@@ -116,10 +132,12 @@ describe('AuthService', () => {
 
     mockTwoFactorService = {
       verifyTOTP: jest.fn(),
+      generateTOTPSecret: jest.fn(),
     } as any
 
     mockSharedUserRepo = {
       findUnique: jest.fn(),
+      updateUser: jest.fn(),
     } as any
 
     mockSharedRoleRepo = {
@@ -300,6 +318,27 @@ describe('AuthService', () => {
       // Act & Assert - Thực hiện test và kiểm tra lỗi
       await expect(service.register(validRegisterData)).rejects.toThrow(EmailAlreadyExistsException)
     })
+
+    it('should rethrow error when error is not unique constraint violation', async () => {
+      // Arrange - Chuẩn bị dữ liệu với lỗi khác
+      const mockVerificationCode = createTestData.verificationCode({
+        email: validRegisterData.email,
+        code: validRegisterData.code,
+        type: TypeOfVerificationCode.REGISTER,
+        expiresAt: new Date(Date.now() + 60000).toISOString(),
+      })
+
+      mockAuthRepo.findUniqueVerificationCode.mockResolvedValue(mockVerificationCode)
+      mockSharedRoleRepo.getClientRoleId.mockResolvedValue(1)
+      mockHashingService.hash.mockResolvedValue('hashedPassword')
+
+      const genericError = new Error('Database connection failed')
+      mockAuthRepo.createUser.mockRejectedValue(genericError)
+      mockIsUniqueConstraintPrismaError.mockReturnValue(false)
+
+      // Act & Assert - Thực hiện test và kiểm tra lỗi được rethrow
+      await expect(service.register(validRegisterData)).rejects.toThrow(genericError)
+    })
   })
 
   describe('sendOTP', () => {
@@ -363,6 +402,53 @@ describe('AuthService', () => {
 
       // Act & Assert - Thực hiện test và kiểm tra lỗi
       await expect(service.sendOTP(otpData)).rejects.toThrow(EmailNotFoundException)
+    })
+
+    it('should send OTP successfully for forgot password', async () => {
+      // Arrange - Chuẩn bị dữ liệu gửi OTP cho quên mật khẩu
+      const otpData = {
+        email: 'existing@example.com',
+        type: TypeOfVerificationCode.FORGOT_PASSWORD,
+      }
+
+      const existingUser = createTestData.user({ email: otpData.email })
+
+      mockSharedUserRepo.findUnique.mockResolvedValue(existingUser)
+      mockAuthRepo.createVerificationCode.mockResolvedValue(
+        createTestData.verificationCode({
+          email: otpData.email,
+          type: otpData.type,
+        }),
+      )
+      mockEmailService.sendOTP.mockResolvedValue({
+        data: { id: 'test-id' },
+        error: null,
+      })
+
+      // Act - Thực hiện gửi OTP
+      const result = await service.sendOTP(otpData)
+
+      // Assert - Kiểm tra kết quả
+      expect(result).toEqual({ message: 'Gửi mã OTP thành công' })
+      expect(mockEmailService.sendOTP).toHaveBeenCalled()
+    })
+
+    it('should throw FailedToSendOTPException when email service fails', async () => {
+      // Arrange - Chuẩn bị dữ liệu với lỗi gửi email
+      const otpData = {
+        email: 'test@example.com',
+        type: TypeOfVerificationCode.REGISTER,
+      }
+
+      mockSharedUserRepo.findUnique.mockResolvedValue(null)
+      mockAuthRepo.createVerificationCode.mockResolvedValue(createTestData.verificationCode())
+      mockEmailService.sendOTP.mockResolvedValue({
+        data: null,
+        error: { message: 'Failed to send email', name: 'validation_error' },
+      } as any)
+
+      // Act & Assert - Thực hiện test và kiểm tra lỗi
+      await expect(service.sendOTP(otpData)).rejects.toThrow(FailedToSendOTPException)
     })
   })
 
@@ -448,6 +534,515 @@ describe('AuthService', () => {
 
       // Act & Assert - Thực hiện test và kiểm tra lỗi
       await expect(service.login(loginDataWith2FA)).rejects.toThrow(TOTPNotEnabledException)
+    })
+
+    it('should throw InvalidPasswordException when password is incorrect', async () => {
+      // Arrange - Chuẩn bị dữ liệu với mật khẩu sai
+      const mockUser = {
+        ...createTestData.user(),
+        role: createTestData.role({ id: 1, name: 'CLIENT' }),
+      }
+
+      mockAuthRepo.findUniqueUserIncludeRole.mockResolvedValue(mockUser as any)
+      mockHashingService.compare.mockResolvedValue(false) // Mật khẩu không khớp
+
+      // Act & Assert - Thực hiện test và kiểm tra lỗi
+      await expect(service.login(validLoginData)).rejects.toThrow(InvalidPasswordException)
+    })
+
+    it('should throw InvalidTOTPAndCodeException when 2FA enabled but no code provided', async () => {
+      // Arrange - Chuẩn bị dữ liệu với 2FA đã bật nhưng không gửi mã
+      const mockUser = {
+        ...createTestData.user(),
+        totpSecret: 'secret123', // Đã bật 2FA
+        role: createTestData.role({ id: 1, name: 'CLIENT' }),
+      }
+
+      mockAuthRepo.findUniqueUserIncludeRole.mockResolvedValue(mockUser as any)
+      mockHashingService.compare.mockResolvedValue(true)
+
+      // Act & Assert - Thực hiện test và kiểm tra lỗi
+      await expect(service.login(validLoginData)).rejects.toThrow(InvalidTOTPAndCodeException)
+    })
+
+    it('should login successfully with valid TOTP code', async () => {
+      // Arrange - Chuẩn bị dữ liệu đăng nhập với TOTP code hợp lệ
+      const loginDataWithTOTP = {
+        ...validLoginData,
+        totpCode: '123456',
+      }
+
+      const mockUser = {
+        ...createTestData.user(),
+        totpSecret: 'secret123', // Đã bật 2FA
+        role: createTestData.role({ id: 1, name: 'CLIENT' }),
+      }
+
+      const mockTokens = createTestData.tokens()
+      const mockDevice = { id: 1, userId: mockUser.id, userAgent: 'test-agent' }
+
+      mockAuthRepo.findUniqueUserIncludeRole.mockResolvedValue(mockUser as any)
+      mockHashingService.compare.mockResolvedValue(true)
+      mockTwoFactorService.verifyTOTP.mockReturnValue(true) // TOTP hợp lệ
+      mockAuthRepo.createDevice.mockResolvedValue(mockDevice as any)
+      mockTokenService.signAccessToken.mockImplementation(() => mockTokens.accessToken)
+      mockTokenService.signRefreshToken.mockImplementation(() => mockTokens.refreshToken)
+      mockTokenService.verifyRefreshToken.mockResolvedValue({
+        exp: Math.floor(Date.now() / 1000) + 3600,
+        userId: mockUser.id,
+      } as any)
+      mockAuthRepo.createRefreshToken.mockResolvedValue({} as any)
+
+      // Act - Thực hiện đăng nhập
+      const result = await service.login(loginDataWithTOTP)
+
+      // Assert - Kiểm tra kết quả
+      expect(result).toEqual(mockTokens)
+      expect(mockTwoFactorService.verifyTOTP).toHaveBeenCalledWith({
+        email: mockUser.email,
+        secret: mockUser.totpSecret,
+        token: loginDataWithTOTP.totpCode,
+      })
+    })
+
+    it('should throw InvalidTOTPException when TOTP code is invalid', async () => {
+      // Arrange - Chuẩn bị dữ liệu với TOTP code không hợp lệ
+      const loginDataWithTOTP = {
+        ...validLoginData,
+        totpCode: '999999',
+      }
+
+      const mockUser = {
+        ...createTestData.user(),
+        totpSecret: 'secret123',
+        role: createTestData.role({ id: 1, name: 'CLIENT' }),
+      }
+
+      mockAuthRepo.findUniqueUserIncludeRole.mockResolvedValue(mockUser as any)
+      mockHashingService.compare.mockResolvedValue(true)
+      mockTwoFactorService.verifyTOTP.mockReturnValue(false) // TOTP không hợp lệ
+
+      // Act & Assert - Thực hiện test và kiểm tra lỗi
+      await expect(service.login(loginDataWithTOTP)).rejects.toThrow(InvalidTOTPException)
+    })
+
+    it('should login successfully with valid OTP code when 2FA enabled', async () => {
+      // Arrange - Chuẩn bị dữ liệu đăng nhập với OTP code hợp lệ
+      const loginDataWithOTP = {
+        ...validLoginData,
+        code: '123456',
+      }
+
+      const mockUser = {
+        ...createTestData.user(),
+        totpSecret: 'secret123', // Đã bật 2FA
+        role: createTestData.role({ id: 1, name: 'CLIENT' }),
+      }
+
+      const mockVerificationCode = createTestData.verificationCode({
+        email: mockUser.email,
+        code: loginDataWithOTP.code,
+        type: TypeOfVerificationCode.LOGIN,
+        expiresAt: new Date(Date.now() + 60000).toISOString(),
+      })
+
+      const mockTokens = createTestData.tokens()
+      const mockDevice = { id: 1, userId: mockUser.id, userAgent: 'test-agent' }
+
+      mockAuthRepo.findUniqueUserIncludeRole.mockResolvedValue(mockUser as any)
+      mockHashingService.compare.mockResolvedValue(true)
+      mockAuthRepo.findUniqueVerificationCode.mockResolvedValue(mockVerificationCode)
+      mockAuthRepo.deleteVerificationCode.mockResolvedValue({} as any)
+      mockAuthRepo.createDevice.mockResolvedValue(mockDevice as any)
+      mockTokenService.signAccessToken.mockImplementation(() => mockTokens.accessToken)
+      mockTokenService.signRefreshToken.mockImplementation(() => mockTokens.refreshToken)
+      mockTokenService.verifyRefreshToken.mockResolvedValue({
+        exp: Math.floor(Date.now() / 1000) + 3600,
+        userId: mockUser.id,
+      } as any)
+      mockAuthRepo.createRefreshToken.mockResolvedValue({} as any)
+
+      // Act - Thực hiện đăng nhập
+      const result = await service.login(loginDataWithOTP)
+
+      // Assert - Kiểm tra kết quả
+      expect(result).toEqual(mockTokens)
+      expect(mockAuthRepo.deleteVerificationCode).toHaveBeenCalledWith({
+        email_type: {
+          email: mockUser.email,
+          type: TypeOfVerificationCode.LOGIN,
+        },
+      })
+    })
+  })
+
+  describe('refreshToken', () => {
+    const validRefreshTokenData = {
+      refreshToken: 'valid-refresh-token',
+      userAgent: 'test-agent',
+      ip: '127.0.0.1',
+    }
+
+    it('should refresh token successfully', async () => {
+      // Arrange - Chuẩn bị dữ liệu refresh token hợp lệ
+      const mockUser = {
+        ...createTestData.user(),
+        role: createTestData.role({ id: 1, name: 'CLIENT' }),
+      }
+
+      const mockRefreshTokenInDb = {
+        token: validRefreshTokenData.refreshToken,
+        userId: mockUser.id,
+        deviceId: 1,
+        expiresAt: new Date(Date.now() + 3600000),
+        user: mockUser,
+      }
+
+      const mockTokens = createTestData.tokens()
+      const decodedToken = {
+        userId: mockUser.id,
+        exp: Math.floor(Date.now() / 1000) + 3600,
+      }
+
+      mockTokenService.verifyRefreshToken.mockResolvedValue(decodedToken as any)
+      mockAuthRepo.findUniqueRefreshTokenIncludeUserRole.mockResolvedValue(mockRefreshTokenInDb as any)
+      mockAuthRepo.updateDevice.mockResolvedValue({} as any)
+      mockAuthRepo.deleteRefreshToken.mockResolvedValue({} as any)
+      mockTokenService.signAccessToken.mockImplementation(() => mockTokens.accessToken)
+      mockTokenService.signRefreshToken.mockImplementation(() => mockTokens.refreshToken)
+      mockAuthRepo.createRefreshToken.mockResolvedValue({} as any)
+
+      // Act - Thực hiện refresh token
+      const result = await service.refreshToken(validRefreshTokenData)
+
+      // Assert - Kiểm tra kết quả
+      expect(result).toEqual(mockTokens)
+      expect(mockAuthRepo.updateDevice).toHaveBeenCalledWith(1, {
+        userAgent: validRefreshTokenData.userAgent,
+        ip: validRefreshTokenData.ip,
+      })
+      expect(mockAuthRepo.deleteRefreshToken).toHaveBeenCalledWith({
+        token: validRefreshTokenData.refreshToken,
+      })
+    })
+
+    it('should throw RefreshTokenAlreadyUsedException when token not found in database', async () => {
+      // Arrange - Chuẩn bị dữ liệu với token không tồn tại trong DB
+      const decodedToken = {
+        userId: 1,
+        exp: Math.floor(Date.now() / 1000) + 3600,
+      }
+
+      mockTokenService.verifyRefreshToken.mockResolvedValue(decodedToken as any)
+      mockAuthRepo.findUniqueRefreshTokenIncludeUserRole.mockResolvedValue(null)
+
+      // Act & Assert - Thực hiện test và kiểm tra lỗi
+      await expect(service.refreshToken(validRefreshTokenData)).rejects.toThrow(RefreshTokenAlreadyUsedException)
+    })
+
+    it('should throw UnauthorizedException when refresh token is expired', async () => {
+      // Arrange - Chuẩn bị dữ liệu với token hết hạn
+      const expiredError = new JsonWebTokenError('jwt expired')
+      expiredError.name = 'TokenExpiredError'
+
+      mockTokenService.verifyRefreshToken.mockRejectedValue(expiredError)
+
+      // Act & Assert - Thực hiện test và kiểm tra lỗi
+      await expect(service.refreshToken(validRefreshTokenData)).rejects.toThrow(UnauthorizedException)
+      await expect(service.refreshToken(validRefreshTokenData)).rejects.toThrow('Refresh token has expired')
+    })
+
+    it('should throw UnauthorizedException when refresh token is invalid', async () => {
+      // Arrange - Chuẩn bị dữ liệu với token không hợp lệ
+      const invalidError = new JsonWebTokenError('invalid token')
+
+      mockTokenService.verifyRefreshToken.mockRejectedValue(invalidError)
+
+      // Act & Assert - Thực hiện test và kiểm tra lỗi
+      await expect(service.refreshToken(validRefreshTokenData)).rejects.toThrow(UnauthorizedException)
+      await expect(service.refreshToken(validRefreshTokenData)).rejects.toThrow('Invalid refresh token')
+    })
+
+    it('should throw UnauthorizedException for unexpected errors', async () => {
+      // Arrange - Chuẩn bị dữ liệu với lỗi không mong đợi
+      const unexpectedError = new Error('Unexpected database error')
+
+      mockTokenService.verifyRefreshToken.mockRejectedValue(unexpectedError)
+
+      // Act & Assert - Thực hiện test và kiểm tra lỗi fallback (throw class constructor)
+      await expect(service.refreshToken(validRefreshTokenData)).rejects.toThrow(
+        "Class constructor UnauthorizedException cannot be invoked without 'new'",
+      )
+    })
+  })
+
+  describe('logout', () => {
+    const validRefreshToken = 'valid-refresh-token'
+
+    it('should logout successfully', async () => {
+      // Arrange - Chuẩn bị dữ liệu logout hợp lệ
+      const mockDeletedRefreshToken = {
+        token: validRefreshToken,
+        userId: 1,
+        deviceId: 1,
+        expiresAt: new Date(),
+      }
+
+      mockTokenService.verifyRefreshToken.mockResolvedValue({ userId: 1 } as any)
+      mockAuthRepo.deleteRefreshToken.mockResolvedValue(mockDeletedRefreshToken as any)
+      mockAuthRepo.updateDevice.mockResolvedValue({} as any)
+
+      // Act - Thực hiện logout
+      const result = await service.logout(validRefreshToken)
+
+      // Assert - Kiểm tra kết quả
+      expect(result).toEqual({ message: 'Đăng xuất thành công' })
+      expect(mockAuthRepo.deleteRefreshToken).toHaveBeenCalledWith({ token: validRefreshToken })
+      expect(mockAuthRepo.updateDevice).toHaveBeenCalledWith(1, { isActive: false })
+    })
+
+    it('should throw UnauthorizedException when refresh token is expired during logout', async () => {
+      // Arrange - Chuẩn bị dữ liệu với token hết hạn
+      const expiredError = new JsonWebTokenError('jwt expired')
+      expiredError.name = 'TokenExpiredError'
+
+      mockTokenService.verifyRefreshToken.mockRejectedValue(expiredError)
+
+      // Act & Assert - Thực hiện test và kiểm tra lỗi
+      await expect(service.logout(validRefreshToken)).rejects.toThrow(UnauthorizedException)
+      await expect(service.logout(validRefreshToken)).rejects.toThrow('Refresh token has expired')
+    })
+
+    it('should throw UnauthorizedException when refresh token is invalid during logout', async () => {
+      // Arrange - Chuẩn bị dữ liệu với token không hợp lệ
+      const invalidError = new JsonWebTokenError('invalid token')
+
+      mockTokenService.verifyRefreshToken.mockRejectedValue(invalidError)
+
+      // Act & Assert - Thực hiện test và kiểm tra lỗi
+      await expect(service.logout(validRefreshToken)).rejects.toThrow(UnauthorizedException)
+      await expect(service.logout(validRefreshToken)).rejects.toThrow('Invalid refresh token')
+    })
+
+    it('should throw UnauthorizedException when refresh token not found in database', async () => {
+      // Arrange - Chuẩn bị dữ liệu với token không tồn tại trong DB
+      const notFoundError = new Error('Record not found')
+      ;(notFoundError as any).code = 'P2025'
+
+      mockTokenService.verifyRefreshToken.mockResolvedValue({ userId: 1 } as any)
+      mockAuthRepo.deleteRefreshToken.mockRejectedValue(notFoundError)
+      mockIsNotFoundPrismaError.mockReturnValue(true)
+
+      // Act & Assert - Thực hiện test và kiểm tra lỗi
+      await expect(service.logout(validRefreshToken)).rejects.toThrow(UnauthorizedException)
+      await expect(service.logout(validRefreshToken)).rejects.toThrow('Refresh token has been used or revoked')
+    })
+
+    it('should throw UnauthorizedException for unexpected errors during logout', async () => {
+      // Arrange - Chuẩn bị dữ liệu với lỗi không mong đợi
+      const unexpectedError = new Error('Database connection failed')
+
+      mockTokenService.verifyRefreshToken.mockResolvedValue({ userId: 1 } as any)
+      mockAuthRepo.deleteRefreshToken.mockRejectedValue(unexpectedError)
+      mockIsNotFoundPrismaError.mockReturnValue(false)
+
+      // Act & Assert - Thực hiện test và kiểm tra lỗi fallback
+      await expect(service.logout(validRefreshToken)).rejects.toThrow(UnauthorizedException)
+      await expect(service.logout(validRefreshToken)).rejects.toThrow('An error occurred during logout device')
+    })
+  })
+
+  describe('forgotPassword', () => {
+    const validForgotPasswordData = {
+      email: 'test@example.com',
+      code: '123456',
+      newPassword: 'newPassword123',
+      confirmNewPassword: 'newPassword123',
+    }
+
+    it('should reset password successfully', async () => {
+      // Arrange - Chuẩn bị dữ liệu reset password hợp lệ
+      const mockUser = createTestData.user({ email: validForgotPasswordData.email })
+      const mockVerificationCode = createTestData.verificationCode({
+        email: validForgotPasswordData.email,
+        code: validForgotPasswordData.code,
+        type: TypeOfVerificationCode.FORGOT_PASSWORD,
+        expiresAt: new Date(Date.now() + 60000).toISOString(),
+      })
+
+      mockSharedUserRepo.findUnique.mockResolvedValue(mockUser)
+      mockAuthRepo.findUniqueVerificationCode.mockResolvedValue(mockVerificationCode)
+      mockHashingService.hash.mockResolvedValue('hashedNewPassword')
+      mockSharedUserRepo.updateUser.mockResolvedValue({} as any)
+      mockAuthRepo.deleteVerificationCode.mockResolvedValue({} as any)
+
+      // Act - Thực hiện reset password
+      const result = await service.forgotPassword(validForgotPasswordData)
+
+      // Assert - Kiểm tra kết quả
+      expect(result).toEqual({ message: 'Đổi mật khẩu thành công.' })
+      expect(mockHashingService.hash).toHaveBeenCalledWith(validForgotPasswordData.newPassword)
+      expect(mockSharedUserRepo.updateUser).toHaveBeenCalledWith(
+        { id: mockUser.id },
+        { password: 'hashedNewPassword', updatedById: mockUser.id },
+      )
+      expect(mockAuthRepo.deleteVerificationCode).toHaveBeenCalledWith({
+        email_type: {
+          email: validForgotPasswordData.email,
+          type: TypeOfVerificationCode.FORGOT_PASSWORD,
+        },
+      })
+    })
+
+    it('should throw EmailNotFoundException when user does not exist', async () => {
+      // Arrange - Chuẩn bị dữ liệu với user không tồn tại
+      mockSharedUserRepo.findUnique.mockResolvedValue(null)
+
+      // Act & Assert - Thực hiện test và kiểm tra lỗi
+      await expect(service.forgotPassword(validForgotPasswordData)).rejects.toThrow(EmailNotFoundException)
+    })
+  })
+
+  describe('enableTwoFactorAuth', () => {
+    const userId = 1
+
+    it('should enable 2FA successfully', async () => {
+      // Arrange - Chuẩn bị dữ liệu enable 2FA
+      const mockUser = createTestData.user({ id: userId, totpSecret: null })
+      const mockTOTPData = {
+        secret: 'JBSWY3DPEHPK3PXP',
+        uri: 'otpauth://totp/TestApp:test@example.com?secret=JBSWY3DPEHPK3PXP&issuer=TestApp',
+      }
+
+      mockSharedUserRepo.findUnique.mockResolvedValue(mockUser)
+      mockTwoFactorService.generateTOTPSecret.mockReturnValue(mockTOTPData)
+      mockSharedUserRepo.updateUser.mockResolvedValue({} as any)
+
+      // Act - Thực hiện enable 2FA
+      const result = await service.enableTwoFactorAuth(userId)
+
+      // Assert - Kiểm tra kết quả
+      expect(result).toEqual(mockTOTPData)
+      expect(mockTwoFactorService.generateTOTPSecret).toHaveBeenCalledWith(mockUser.email)
+      expect(mockSharedUserRepo.updateUser).toHaveBeenCalledWith(
+        { id: userId },
+        { totpSecret: mockTOTPData.secret, updatedById: userId },
+      )
+    })
+
+    it('should throw EmailNotFoundException when user does not exist', async () => {
+      // Arrange - Chuẩn bị dữ liệu với user không tồn tại
+      mockSharedUserRepo.findUnique.mockResolvedValue(null)
+
+      // Act & Assert - Thực hiện test và kiểm tra lỗi
+      await expect(service.enableTwoFactorAuth(userId)).rejects.toThrow(EmailNotFoundException)
+    })
+
+    it('should throw TOTPAlreadyEnabledException when 2FA is already enabled', async () => {
+      // Arrange - Chuẩn bị dữ liệu với 2FA đã được bật
+      const mockUser = createTestData.user({ id: userId, totpSecret: 'existing-secret' })
+
+      mockSharedUserRepo.findUnique.mockResolvedValue(mockUser)
+
+      // Act & Assert - Thực hiện test và kiểm tra lỗi
+      await expect(service.enableTwoFactorAuth(userId)).rejects.toThrow(TOTPAlreadyEnabledException)
+    })
+  })
+
+  describe('disableTwoFactorAuth', () => {
+    const userId = 1
+
+    it('should disable 2FA successfully with TOTP code', async () => {
+      // Arrange - Chuẩn bị dữ liệu disable 2FA với TOTP code
+      const disableData = {
+        userId,
+        totpCode: '123456',
+      }
+
+      const mockUser = createTestData.user({ id: userId, totpSecret: 'secret123' })
+
+      mockSharedUserRepo.findUnique.mockResolvedValue(mockUser)
+      mockTwoFactorService.verifyTOTP.mockReturnValue(true)
+      mockSharedUserRepo.updateUser.mockResolvedValue({} as any)
+
+      // Act - Thực hiện disable 2FA
+      const result = await service.disableTwoFactorAuth(disableData)
+
+      // Assert - Kiểm tra kết quả
+      expect(result).toEqual({ message: 'Tắt 2FA thành công' })
+      expect(mockTwoFactorService.verifyTOTP).toHaveBeenCalledWith({
+        email: mockUser.email,
+        secret: mockUser.totpSecret,
+        token: disableData.totpCode,
+      })
+      expect(mockSharedUserRepo.updateUser).toHaveBeenCalledWith(
+        { id: userId },
+        { totpSecret: null, updatedById: userId },
+      )
+    })
+
+    it('should disable 2FA successfully with OTP code', async () => {
+      // Arrange - Chuẩn bị dữ liệu disable 2FA với OTP code
+      const disableData = {
+        userId,
+        code: '123456',
+      }
+
+      const mockUser = createTestData.user({ id: userId, totpSecret: 'secret123' })
+      const mockVerificationCode = createTestData.verificationCode({
+        email: mockUser.email,
+        code: disableData.code,
+        type: TypeOfVerificationCode.DISABLE_2FA,
+      })
+
+      mockSharedUserRepo.findUnique.mockResolvedValue(mockUser)
+      mockAuthRepo.findUniqueVerificationCode.mockResolvedValue(mockVerificationCode)
+      mockSharedUserRepo.updateUser.mockResolvedValue({} as any)
+
+      // Act - Thực hiện disable 2FA
+      const result = await service.disableTwoFactorAuth(disableData)
+
+      // Assert - Kiểm tra kết quả
+      expect(result).toEqual({ message: 'Tắt 2FA thành công' })
+      expect(mockAuthRepo.findUniqueVerificationCode).toHaveBeenCalledWith({
+        email_type: {
+          email: mockUser.email,
+          type: TypeOfVerificationCode.DISABLE_2FA,
+        },
+      })
+    })
+
+    it('should throw EmailNotFoundException when user does not exist', async () => {
+      // Arrange - Chuẩn bị dữ liệu với user không tồn tại
+      const disableData = { userId, totpCode: '123456' }
+
+      mockSharedUserRepo.findUnique.mockResolvedValue(null)
+
+      // Act & Assert - Thực hiện test và kiểm tra lỗi
+      await expect(service.disableTwoFactorAuth(disableData)).rejects.toThrow(EmailNotFoundException)
+    })
+
+    it('should throw TOTPNotEnabledException when 2FA is not enabled', async () => {
+      // Arrange - Chuẩn bị dữ liệu với 2FA chưa được bật
+      const disableData = { userId, totpCode: '123456' }
+      const mockUser = createTestData.user({ id: userId, totpSecret: null })
+
+      mockSharedUserRepo.findUnique.mockResolvedValue(mockUser)
+
+      // Act & Assert - Thực hiện test và kiểm tra lỗi
+      await expect(service.disableTwoFactorAuth(disableData)).rejects.toThrow(TOTPNotEnabledException)
+    })
+
+    it('should throw InvalidTOTPException when TOTP code is invalid', async () => {
+      // Arrange - Chuẩn bị dữ liệu với TOTP code không hợp lệ
+      const disableData = { userId, totpCode: '999999' }
+      const mockUser = createTestData.user({ id: userId, totpSecret: 'secret123' })
+
+      mockSharedUserRepo.findUnique.mockResolvedValue(mockUser)
+      mockTwoFactorService.verifyTOTP.mockReturnValue(false)
+
+      // Act & Assert - Thực hiện test và kiểm tra lỗi
+      await expect(service.disableTwoFactorAuth(disableData)).rejects.toThrow(InvalidTOTPException)
     })
   })
 })

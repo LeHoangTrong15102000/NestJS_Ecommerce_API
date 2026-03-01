@@ -4,6 +4,7 @@ import { CreateCategoryBodyType, UpdateCategoryBodyType } from 'src/routes/categ
 import { NotFoundRecordException } from 'src/shared/error'
 import { isNotFoundPrismaError } from 'src/shared/helpers'
 import { I18nContext } from 'nestjs-i18n'
+import { MESSAGES } from 'src/shared/constants/app.constant'
 
 @Injectable()
 export class CategoryService {
@@ -57,7 +58,7 @@ export class CategoryService {
         deletedById,
       })
       return {
-        message: 'Delete successfully',
+        message: MESSAGES.DELETE_SUCCESS,
       }
     } catch (error) {
       if (isNotFoundPrismaError(error)) {

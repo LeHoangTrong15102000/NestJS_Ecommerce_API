@@ -1,29 +1,31 @@
 import { BadRequestException, Injectable } from '@nestjs/common'
-import { SerializeAll } from 'src/shared/decorators/serialize.decorator'
 import { parse } from 'date-fns'
 import { WebhookPaymentBodyType } from 'src/routes/payment/payment.model'
 import { PaymentProducer } from 'src/routes/payment/payment.producer'
 import { OrderStatus } from 'src/shared/constants/order.constant'
 import { PREFIX_PAYMENT_CODE } from 'src/shared/constants/other.constant'
 import { PaymentStatus } from 'src/shared/constants/payment.constant'
-import { OrderIncludeProductSKUSnapshotType } from 'src/shared/models/shared-order.model'
+import { SerializeAll } from 'src/shared/decorators/serialize.decorator'
 import { PrismaService } from 'src/shared/services/prisma.service'
 
 @Injectable()
-@SerializeAll()
+@SerializeAll(['getTotalPrice'])
 export class PaymentRepo {
   constructor(
     private readonly prismaService: PrismaService,
     private readonly paymentProducer: PaymentProducer,
   ) {}
 
-  private getTotalPrice(orders: OrderIncludeProductSKUSnapshotType[]): number {
-    return orders.reduce((total, order) => {
-      const orderTotal = order.items.reduce((totalPrice, productSku) => {
-        return totalPrice + productSku.skuPrice * productSku.quantity
-      }, 0)
-      return total + orderTotal
+  private getTotalPrice(orders: any[]): number {
+    const result = orders.reduce((total, order) => {
+      // Handle Prisma Decimal type by converting to number
+      const amount =
+        typeof order.totalAmount === 'object' && order.totalAmount !== null
+          ? Number(order.totalAmount.toString())
+          : Number(order.totalAmount)
+      return total + amount
     }, 0)
+    return result
   }
 
   async receiver(body: WebhookPaymentBodyType): Promise<number> {
@@ -45,11 +47,24 @@ export class PaymentRepo {
       throw new BadRequestException('Transaction already exists')
     }
     const userId = await this.prismaService.$transaction(async (tx) => {
+      // Parse transactionDate - support both ISO format and 'yyyy-MM-dd HH:mm:ss' format
+      let transactionDate: Date
+      try {
+        // Try ISO format first
+        transactionDate = new Date(body.transactionDate)
+        if (isNaN(transactionDate.getTime())) {
+          // If ISO fails, try custom format
+          transactionDate = parse(body.transactionDate, 'yyyy-MM-dd HH:mm:ss', new Date())
+        }
+      } catch {
+        transactionDate = parse(body.transactionDate, 'yyyy-MM-dd HH:mm:ss', new Date())
+      }
+
       await tx.paymentTransaction.create({
         data: {
           id: body.id,
           gateway: body.gateway,
-          transactionDate: parse(body.transactionDate, 'yyyy-MM-dd HH:mm:ss', new Date()),
+          transactionDate,
           accountNumber: body.accountNumber,
           subAccount: body.subAccount,
           amountIn,
@@ -76,6 +91,9 @@ export class PaymentRepo {
         },
         include: {
           orders: {
+            where: {
+              deletedAt: null,
+            },
             include: {
               items: true,
             },
@@ -85,8 +103,11 @@ export class PaymentRepo {
       if (!payment) {
         throw new BadRequestException(`Cannot find payment with id ${paymentId}`)
       }
-      const userId = payment.orders[0].userId
       const { orders } = payment
+      if (!orders || orders.length === 0) {
+        throw new BadRequestException(`No orders found for payment ${paymentId}`)
+      }
+      const userId = orders[0].userId
       const totalPrice = this.getTotalPrice(orders as any)
       if (totalPrice !== body.transferAmount) {
         throw new BadRequestException(`Price not match, expected ${totalPrice} but got ${body.transferAmount}`)
@@ -107,6 +128,7 @@ export class PaymentRepo {
             id: {
               in: orders.map((order) => order.id),
             },
+            deletedAt: null,
           },
           data: {
             status: OrderStatus.PENDING_PICKUP,

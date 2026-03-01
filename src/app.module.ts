@@ -1,48 +1,51 @@
-import { Module } from '@nestjs/common'
+import { createKeyv } from '@keyv/redis'
+import { BullModule } from '@nestjs/bullmq'
+import { CacheModule } from '@nestjs/cache-manager'
+import { Logger, Module } from '@nestjs/common'
+import { APP_FILTER, APP_GUARD, APP_INTERCEPTOR, APP_PIPE } from '@nestjs/core'
+import { ScheduleModule } from '@nestjs/schedule'
+import { ThrottlerModule } from '@nestjs/throttler'
+import { AcceptLanguageResolver, I18nModule, QueryResolver } from 'nestjs-i18n'
+import { ZodSerializerInterceptor } from 'nestjs-zod'
+import path from 'path'
+import { RemoveRefreshTokenCronjob } from 'src/cronjobs/remove-refresh-token.cronjob'
+import { WishlistPriceCheckCronjob } from 'src/cronjobs/wishlist-price-check.cronjob'
+import { PaymentConsumer } from 'src/queues/payment.consumer'
+import { WishlistConsumer } from 'src/queues/wishlist.consumer'
+import { AddressModule } from 'src/routes/address/address.module'
+import { AIAssistantModule } from 'src/routes/ai-assistant/ai-assistant.module'
+import { AuthModule } from 'src/routes/auth/auth.module'
+import { BrandTranslationModule } from 'src/routes/brand/brand-translation/brand-translation.module'
+import { BrandModule } from 'src/routes/brand/brand.module'
+import { CartModule } from 'src/routes/cart/cart.module'
+import { CategoryTranslationModule } from 'src/routes/category/category-translation/category-translation.module'
+import { CategoryModule } from 'src/routes/category/category.module'
+import { ConversationModule } from 'src/routes/conversation/conversation.module'
+import { LanguageModule } from 'src/routes/language/language.module'
+import { MediaModule } from 'src/routes/media/media.module'
+import { OrderModule } from 'src/routes/order/order.module'
+import { PaymentModule } from 'src/routes/payment/payment.module'
+import { PermissionModule } from 'src/routes/permission/permission.module'
+import { ProductTranslationModule } from 'src/routes/product/product-translation/product-translation.module'
+import { ProductModule } from 'src/routes/product/product.module'
+import { ProfileModule } from 'src/routes/profile/profile.module'
+import { ReviewModule } from 'src/routes/review/review.module'
+import { RoleModule } from 'src/routes/role/role.module'
+import { UserModule } from 'src/routes/user/user.module'
+import { VoucherModule } from 'src/routes/voucher/voucher.module'
+import { WishlistModule } from 'src/routes/wishlist/wishlist.module'
+import envConfig from 'src/shared/config'
+import { CatchEverythingFilter } from 'src/shared/filters/catch-everything.filter'
+import { HttpExceptionFilter } from 'src/shared/filters/http-exception.filter'
+import { AuthenticationGuard } from 'src/shared/guards/authentication.guard'
+import { ThrottlerBehindProxyGuard } from 'src/shared/guards/throttler-behind-proxy.guard'
+import CustomZodValidationPipe from 'src/shared/pipes/custom-zod-validation.pipe'
+import { SharedModule } from 'src/shared/shared.module'
+import { WebsocketModule } from 'src/websockets/websocket.module'
 import { AppController } from './app.controller'
 import { AppService } from './app.service'
-import { SharedModule } from 'src/shared/shared.module'
-import { AuthModule } from 'src/routes/auth/auth.module'
-import { APP_FILTER, APP_GUARD, APP_INTERCEPTOR, APP_PIPE } from '@nestjs/core'
-import CustomZodValidationPipe from 'src/shared/pipes/custom-zod-validation.pipe'
-import { ZodOutputInterceptor } from 'src/shared/interceptors/zod-output.interceptor'
-import { HttpExceptionFilter } from 'src/shared/filters/http-exception.filter'
-import { CatchEverythingFilter } from 'src/shared/filters/catch-everything.filter'
-import { LanguageModule } from 'src/routes/language/language.module'
-import { RoleModule } from 'src/routes/role/role.module'
-import { PermissionModule } from 'src/routes/permission/permission.module'
-import { ProfileModule } from 'src/routes/profile/profile.module'
-import { UserModule } from 'src/routes/user/user.module'
-import { MediaModule } from 'src/routes/media/media.module'
-import { AcceptLanguageResolver, I18nModule, QueryResolver } from 'nestjs-i18n'
-import path from 'path'
-import { BrandModule } from 'src/routes/brand/brand.module'
-import { BrandTranslationModule } from 'src/routes/brand/brand-translation/brand-translation.module'
-import { ProductModule } from 'src/routes/product/product.module'
-import { ProductTranslationModule } from 'src/routes/product/product-translation/product-translation.module'
-import { CartModule } from 'src/routes/cart/cart.module'
-import { OrderModule } from 'src/routes/order/order.module'
-import { WebsocketModule } from 'src/websockets/websocket.module'
-import { PaymentModule } from 'src/routes/payment/payment.module'
-import { ConversationModule } from 'src/routes/conversation/conversation.module'
-import { SharedChatModule } from 'src/shared/modules/shared-chat.module'
-import { BullModule } from '@nestjs/bullmq'
-import envConfig from 'src/shared/config'
-import { PaymentConsumer } from 'src/queues/payment.consumer'
-import { ThrottlerBehindProxyGuard } from 'src/shared/guards/throttler-behind-proxy.guard'
-import { ReviewModule } from 'src/routes/review/review.module'
-import { AddressModule } from 'src/routes/address/address.module'
-import { VoucherModule } from 'src/routes/voucher/voucher.module'
-import { AIAssistantModule } from 'src/routes/ai-assistant/ai-assistant.module'
-import { ThrottlerModule } from '@nestjs/throttler'
-import { ZodSerializerInterceptor } from 'nestjs-zod'
-import { ScheduleModule } from '@nestjs/schedule'
-import { RemoveRefreshTokenCronjob } from 'src/cronjobs/remove-refresh-token.cronjob'
-import { CacheModule } from '@nestjs/cache-manager'
-import { createKeyv } from '@keyv/redis'
 
 import { LoggerModule } from 'nestjs-pino'
-import pino from 'pino'
 
 // console.log(path.resolve('src/i18n/'))
 
@@ -81,18 +84,62 @@ import pino from 'pino'
         // stream: pino.destination(1),
       },
     }),
+    // Redis Cache - using Redis Cloud
     CacheModule.registerAsync({
       isGlobal: true,
       useFactory: () => {
-        return {
-          stores: [createKeyv(envConfig.REDIS_URL)],
-        }
+        const logger = new Logger('CacheModule')
+        const store = createKeyv(
+          {
+            url: envConfig.REDIS_URL,
+            socket: {
+              connectTimeout: 15000,
+              reconnectStrategy: (retries: number) => {
+                if (retries > 10) {
+                  logger.error('Cache Redis: max retries reached, stopping reconnection')
+                  return new Error('Cache Redis: max retries reached')
+                }
+                logger.warn(`Cache Redis: reconnecting, attempt ${retries}`)
+                return Math.min(retries * 200, 5000)
+              },
+            },
+          },
+          {
+            useUnlink: true,
+            throwOnConnectError: process.env.NODE_ENV === 'production',
+          },
+        )
+        return { stores: [store] }
       },
     }),
     ScheduleModule.forRoot({}),
+    // BullMQ for background job processing
     BullModule.forRoot({
       connection: {
         url: envConfig.REDIS_URL,
+        connectTimeout: 15000,
+        commandTimeout: 10000,
+        maxRetriesPerRequest: 3,
+        enableOfflineQueue: true,
+        retryStrategy: (times: number) => {
+          if (times > 10) return null
+          return Math.min(times * 200, 5000)
+        },
+      },
+      defaultJobOptions: {
+        attempts: 3,
+        backoff: {
+          type: 'exponential',
+          delay: 2000,
+        },
+        removeOnComplete: {
+          age: 3600, // 1 hour
+          count: 1000,
+        },
+        removeOnFail: {
+          age: 86400, // 24 hours
+          count: 5000,
+        },
       },
     }),
     I18nModule.forRoot({
@@ -110,16 +157,15 @@ import pino from 'pino'
         {
           name: 'short',
           ttl: 60000, // 1 minute
-          limit: 5,
+          limit: process.env.NODE_ENV === 'test' ? 1000000 : 30,
         },
         {
           name: 'long',
           ttl: 120000, // 2 minutes
-          limit: 7,
+          limit: process.env.NODE_ENV === 'test' ? 1000000 : 60,
         },
       ],
     }),
-    SharedChatModule,
     WebsocketModule,
     SharedModule,
     AuthModule,
@@ -131,6 +177,8 @@ import pino from 'pino'
     MediaModule,
     BrandModule,
     BrandTranslationModule,
+    CategoryModule,
+    CategoryTranslationModule,
     ProductModule,
     ProductTranslationModule,
     CartModule,
@@ -141,6 +189,7 @@ import pino from 'pino'
     AddressModule,
     VoucherModule,
     AIAssistantModule,
+    WishlistModule,
   ],
   controllers: [AppController],
   providers: [
@@ -155,24 +204,31 @@ import pino from 'pino'
       provide: APP_INTERCEPTOR,
       useClass: ZodSerializerInterceptor,
     },
-    // Khi mà có lỗi liên quan đến validate thì nó sẽ chạy vào thằng Filter này của Zod và quăng ra lỗi
-    // Mỗi
-    // Khi mà validation bị lỗi thì nó sẽ chạy vào cái HttpExceptionFilter này và nó sẽ show cái lỗi ra terminal -> Thì đây là cái công dụng của HttpExceptionFilter
+    // Filters - NestJS executes filters in REVERSE order of registration
+    // CatchEverythingFilter registered FIRST → executes LAST (fallback for non-HTTP exceptions including Prisma errors)
+    {
+      provide: APP_FILTER,
+      useClass: CatchEverythingFilter,
+    },
+    // HttpExceptionFilter registered SECOND → executes FIRST (handles HttpException + ZodSerializationException logging)
     {
       provide: APP_FILTER,
       useClass: HttpExceptionFilter,
     },
+    // Guards - ThrottlerBehindProxyGuard FIRST (rate limit), then AuthenticationGuard (auth)
     {
       provide: APP_GUARD,
       useClass: ThrottlerBehindProxyGuard,
     },
-    // Thằng CatchEverythingFilter này sẽ trả về format lỗi cho chúng ta khi mà bị lỗi
-    // {
-    //   provide: APP_FILTER,
-    //   useClass: CatchEverythingFilter,
-    // },
-    PaymentConsumer, // test xem khi mà Order xong thì nó đưa vào cái Queue rồi nó có chạy cái hàm ở trong PaymentConsumer hay không
+    {
+      provide: APP_GUARD,
+      useClass: AuthenticationGuard,
+    },
+    // Background job consumers (requires Redis)
+    PaymentConsumer, // Process payment jobs from queue
+    WishlistConsumer, // Process wishlist background jobs (price check, alerts)
     RemoveRefreshTokenCronjob,
+    WishlistPriceCheckCronjob, // Daily price check cron job
   ],
 })
 export class AppModule {}

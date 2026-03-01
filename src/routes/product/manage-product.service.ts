@@ -10,6 +10,7 @@ import { NotFoundRecordException } from 'src/shared/error'
 import { isNotFoundPrismaError } from 'src/shared/helpers'
 import { I18nContext } from 'nestjs-i18n'
 import { RoleName } from 'src/shared/constants/role.constant'
+import { MESSAGES } from 'src/shared/constants/app.constant'
 
 @Injectable()
 export class ManageProductService {
@@ -142,7 +143,7 @@ export class ManageProductService {
         deletedById,
       })
       return {
-        message: 'Delete successfully',
+        message: MESSAGES.DELETE_SUCCESS,
       }
     } catch (error) {
       if (isNotFoundPrismaError(error)) {

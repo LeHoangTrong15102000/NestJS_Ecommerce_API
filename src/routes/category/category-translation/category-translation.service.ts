@@ -7,6 +7,7 @@ import {
   CreateCategoryTranslationBodyType,
   UpdateCategoryTranslationBodyType,
 } from 'src/routes/category/category-translation/category-translation.model'
+import { MESSAGES } from 'src/shared/constants/app.constant'
 
 @Injectable()
 export class CategoryTranslationService {
@@ -68,7 +69,7 @@ export class CategoryTranslationService {
         deletedById,
       })
       return {
-        message: 'Delete successfully',
+        message: MESSAGES.DELETE_SUCCESS,
       }
     } catch (error) {
       if (isNotFoundPrismaError(error)) {

@@ -10,8 +10,8 @@ export const CartItemSchema = z.object({
   skuId: z.number(),
   userId: z.number(),
 
-  createdAt: z.coerce.date(),
-  updatedAt: z.coerce.date(),
+  createdAt: z.iso.datetime(),
+  updatedAt: z.iso.datetime(),
 })
 
 export const GetCartItemParamsSchema = z.object({

@@ -1,100 +1,58 @@
-import { Injectable, Logger } from '@nestjs/common'
+import { Inject, Injectable, Logger } from '@nestjs/common'
 import Redis from 'ioredis'
-import envConfig from 'src/shared/config'
+import { SocketUserInfo } from '../websocket.interfaces'
+import { CHAT_REDIS } from '../websocket.constants'
 
 @Injectable()
 export class ChatRedisService {
   private readonly logger = new Logger(ChatRedisService.name)
-  private readonly redis: Redis
 
   // Redis key prefixes
   private readonly KEYS = {
-    ONLINE_USERS: 'chat:online_users', // Hash: userId -> JSON of socket IDs
-    USER_SOCKETS: 'chat:user_sockets', // Hash: socketId -> JSON of user info
-    TYPING_USERS: 'chat:typing', // Hash: conversationId -> JSON of user IDs
-    USER_CONVERSATIONS: 'chat:user_conversations', // Set: userId -> conversation IDs
+    ONLINE_USERS: 'chat:online_users', // Set: userId -> set of socket IDs
+    USER_SOCKETS: 'chat:user_sockets', // String: socketId -> JSON of user info
+    TYPING_USERS: 'chat:typing', // Set: conversationId -> set of user IDs
+    TYPING_EXPIRY: 'chat:typing_exp', // String: conversationId:userId -> expiry marker
+    USER_CONVERSATIONS: 'chat:user_conversations', // String: userId -> JSON of conversation IDs
   } as const
 
-  constructor() {
-    // Initialize ioredis client with retry strategy
-    this.redis = new Redis(envConfig.REDIS_URL, {
-      retryStrategy: (times) => {
-        const delay = Math.min(times * 50, 2000)
-        return delay
-      },
-      maxRetriesPerRequest: 3,
-      enableOfflineQueue: true,
-    })
+  private readonly TTL = {
+    ONLINE_USER: 3600, // 1 hour
+    SOCKET_USER: 3600, // 1 hour
+    TYPING: 10, // 10 seconds
+    USER_CONVERSATIONS: 300, // 5 minutes
+  } as const
 
-    this.redis.on('connect', () => {
-      this.logger.log('Connected to Redis for chat cache')
-    })
-
-    this.redis.on('ready', () => {
-      this.logger.log('Redis is ready for chat cache')
-    })
-
-    this.redis.on('error', (error) => {
-      this.logger.error('Redis connection error:', error)
-    })
-
-    this.redis.on('close', () => {
-      this.logger.warn('Redis connection closed')
-    })
-
-    this.redis.on('reconnecting', () => {
-      this.logger.log('Reconnecting to Redis...')
-    })
-  }
+  constructor(@Inject(CHAT_REDIS) private readonly redis: Redis) {}
 
   // ===== ONLINE USERS MANAGEMENT =====
 
   /**
-   * Thêm user online với socket ID
+   * Thêm user online với socket ID (atomic SADD)
    */
   async addOnlineUser(userId: number, socketId: string): Promise<void> {
     try {
       const userKey = `${this.KEYS.ONLINE_USERS}:${userId}`
-
-      // Lấy socket IDs hiện tại của user
-      const currentSocketsJson = await this.redis.get(userKey)
-      const currentSockets = currentSocketsJson ? JSON.parse(currentSocketsJson) : []
-
-      // Thêm socket ID mới (tránh duplicate)
-      if (!currentSockets.includes(socketId)) {
-        currentSockets.push(socketId)
-      }
-
-      // Update Redis với TTL 1 hour
-      await this.redis.setex(userKey, 3600, JSON.stringify(currentSockets))
+      await this.redis.sadd(userKey, socketId)
+      await this.redis.expire(userKey, this.TTL.ONLINE_USER)
     } catch (error) {
       this.logger.error(`Error adding online user ${userId}:`, error)
     }
   }
 
   /**
-   * Xóa user offline hoặc remove socket ID
+   * Xóa user offline hoặc remove socket ID (atomic SREM)
    */
   async removeOnlineUser(userId: number, socketId: string): Promise<boolean> {
     try {
       const userKey = `${this.KEYS.ONLINE_USERS}:${userId}`
-
-      // Lấy socket IDs hiện tại
-      const currentSocketsJson = await this.redis.get(userKey)
-      if (!currentSocketsJson) return false
-
-      const currentSockets = JSON.parse(currentSocketsJson)
-      const updatedSockets = currentSockets.filter((id: string) => id !== socketId)
-
-      if (updatedSockets.length === 0) {
-        // User hoàn toàn offline
+      await this.redis.srem(userKey, socketId)
+      const remaining = await this.redis.scard(userKey)
+      if (remaining === 0) {
         await this.redis.del(userKey)
         return true // User went offline
-      } else {
-        // User vẫn còn socket connections khác
-        await this.redis.setex(userKey, 3600, JSON.stringify(updatedSockets))
-        return false // User still online
       }
+      return false // User still online
     } catch (error) {
       this.logger.error(`Error removing online user ${userId}:`, error)
       return false
@@ -116,12 +74,44 @@ export class ChatRedisService {
   }
 
   /**
+   * Batch check if multiple users are online using Redis pipeline EXISTS (single round-trip)
+   */
+  async areUsersOnline(userIds: number[]): Promise<Map<number, boolean>> {
+    const result = new Map<number, boolean>()
+
+    if (userIds.length === 0) {
+      return result
+    }
+
+    try {
+      const pipeline = this.redis.pipeline()
+      for (const id of userIds) {
+        pipeline.exists(`${this.KEYS.ONLINE_USERS}:${id}`)
+      }
+      const values = await pipeline.exec()
+
+      for (let i = 0; i < userIds.length; i++) {
+        // pipeline.exec() returns [error, result][] — result of EXISTS is 0 or 1
+        const [err, exists] = values![i]
+        result.set(userIds[i], !err && exists === 1)
+      }
+    } catch (error) {
+      this.logger.error('Error batch checking online status:', error)
+      for (const id of userIds) {
+        result.set(id, false)
+      }
+    }
+
+    return result
+  }
+
+  /**
    * Lấy danh sách tất cả users online
    */
   async getOnlineUsers(): Promise<number[]> {
     try {
       const pattern = `${this.KEYS.ONLINE_USERS}:*`
-      const keys = await this.redis.keys(pattern)
+      const keys = await this.scanKeys(pattern)
 
       return keys
         .map((key) => {
@@ -136,13 +126,12 @@ export class ChatRedisService {
   }
 
   /**
-   * Lấy socket IDs của user
+   * Lấy socket IDs của user (atomic SMEMBERS)
    */
   async getUserSocketIds(userId: number): Promise<string[]> {
     try {
       const userKey = `${this.KEYS.ONLINE_USERS}:${userId}`
-      const socketsJson = await this.redis.get(userKey)
-      return socketsJson ? JSON.parse(socketsJson) : []
+      return await this.redis.smembers(userKey)
     } catch (error) {
       this.logger.error(`Error getting socket IDs for user ${userId}:`, error)
       return []
@@ -154,10 +143,10 @@ export class ChatRedisService {
   /**
    * Lưu thông tin user cho socket
    */
-  async setSocketUser(socketId: string, userInfo: Record<string, any>): Promise<void> {
+  async setSocketUser(socketId: string, userInfo: SocketUserInfo): Promise<void> {
     try {
       const socketKey = `${this.KEYS.USER_SOCKETS}:${socketId}`
-      await this.redis.setex(socketKey, 3600, JSON.stringify(userInfo)) // TTL 1 hour
+      await this.redis.setex(socketKey, this.TTL.SOCKET_USER, JSON.stringify(userInfo))
     } catch (error) {
       this.logger.error(`Error setting socket user info for ${socketId}:`, error)
     }
@@ -166,7 +155,7 @@ export class ChatRedisService {
   /**
    * Lấy thông tin user từ socket ID
    */
-  async getSocketUser(socketId: string): Promise<Record<string, any> | null> {
+  async getSocketUser(socketId: string): Promise<SocketUserInfo | null> {
     try {
       const socketKey = `${this.KEYS.USER_SOCKETS}:${socketId}`
       const userInfoJson = await this.redis.get(socketKey)
@@ -192,62 +181,74 @@ export class ChatRedisService {
   // ===== TYPING INDICATORS MANAGEMENT =====
 
   /**
-   * Set user đang typing trong conversation
+   * Set user đang typing trong conversation (atomic SADD + per-user expiry key)
    */
   async setUserTyping(conversationId: string, userId: number, expiresInSeconds: number = 10): Promise<void> {
     try {
       const typingKey = `${this.KEYS.TYPING_USERS}:${conversationId}`
+      const expiryKey = `${this.KEYS.TYPING_EXPIRY}:${conversationId}:${userId}`
 
-      // Lấy danh sách users đang typing
-      const currentTypingJson = await this.redis.get(typingKey)
-      const currentTyping = currentTypingJson ? JSON.parse(currentTypingJson) : []
-
-      // Thêm user nếu chưa có
-      if (!currentTyping.includes(userId)) {
-        currentTyping.push(userId)
-      }
-
-      // Update với TTL
-      await this.redis.setex(typingKey, expiresInSeconds, JSON.stringify(currentTyping))
+      const pipeline = this.redis.pipeline()
+      pipeline.sadd(typingKey, String(userId))
+      pipeline.set(expiryKey, '1', 'EX', expiresInSeconds || this.TTL.TYPING)
+      await pipeline.exec()
     } catch (error) {
       this.logger.error(`Error setting typing for user ${userId} in conversation ${conversationId}:`, error)
     }
   }
 
   /**
-   * Remove user khỏi typing
+   * Remove user khỏi typing (atomic SREM + DEL expiry key)
    */
   async removeUserTyping(conversationId: string, userId: number): Promise<void> {
     try {
       const typingKey = `${this.KEYS.TYPING_USERS}:${conversationId}`
+      const expiryKey = `${this.KEYS.TYPING_EXPIRY}:${conversationId}:${userId}`
 
-      // Lấy danh sách users đang typing
-      const currentTypingJson = await this.redis.get(typingKey)
-      if (!currentTypingJson) return
-
-      const currentTyping = JSON.parse(currentTypingJson)
-      const updatedTyping = currentTyping.filter((id: number) => id !== userId)
-
-      if (updatedTyping.length === 0) {
-        // Không ai typing nữa
-        await this.redis.del(typingKey)
-      } else {
-        // Update danh sách
-        await this.redis.setex(typingKey, 10, JSON.stringify(updatedTyping))
-      }
+      const pipeline = this.redis.pipeline()
+      pipeline.srem(typingKey, String(userId))
+      pipeline.del(expiryKey)
+      await pipeline.exec()
     } catch (error) {
       this.logger.error(`Error removing typing for user ${userId} in conversation ${conversationId}:`, error)
     }
   }
 
   /**
-   * Lấy danh sách users đang typing trong conversation
+   * Lấy danh sách users đang typing trong conversation (SMEMBERS + filter by expiry)
    */
   async getTypingUsers(conversationId: string): Promise<number[]> {
     try {
       const typingKey = `${this.KEYS.TYPING_USERS}:${conversationId}`
-      const typingJson = await this.redis.get(typingKey)
-      return typingJson ? JSON.parse(typingJson) : []
+      const members = await this.redis.smembers(typingKey)
+
+      if (members.length === 0) return []
+
+      // Check which users still have valid expiry keys
+      const pipeline = this.redis.pipeline()
+      for (const member of members) {
+        pipeline.exists(`${this.KEYS.TYPING_EXPIRY}:${conversationId}:${member}`)
+      }
+      const results = await pipeline.exec()
+
+      const activeUsers: number[] = []
+      const expiredUsers: string[] = []
+
+      for (let i = 0; i < members.length; i++) {
+        const [err, exists] = results![i]
+        if (!err && exists === 1) {
+          activeUsers.push(parseInt(members[i], 10))
+        } else {
+          expiredUsers.push(members[i])
+        }
+      }
+
+      // Cleanup expired users from the Set
+      if (expiredUsers.length > 0) {
+        await this.redis.srem(typingKey, ...expiredUsers)
+      }
+
+      return activeUsers.filter((id) => !isNaN(id))
     } catch (error) {
       this.logger.error(`Error getting typing users for conversation ${conversationId}:`, error)
       return []
@@ -259,13 +260,19 @@ export class ChatRedisService {
    */
   async removeUserFromAllTyping(userId: number): Promise<void> {
     try {
-      const pattern = `${this.KEYS.TYPING_USERS}:*`
-      const keys = await this.redis.keys(pattern)
+      const typingPattern = `${this.KEYS.TYPING_USERS}:*`
+      const typingKeys = await this.scanKeys(typingPattern)
 
-      for (const key of keys) {
-        const conversationId = key.split(':').pop()!
-        await this.removeUserTyping(conversationId, userId)
+      if (typingKeys.length === 0) return
+
+      // Remove user from all typing Sets and delete expiry keys
+      const pipeline = this.redis.pipeline()
+      for (const key of typingKeys) {
+        const conversationId = key.replace(`${this.KEYS.TYPING_USERS}:`, '')
+        pipeline.srem(key, String(userId))
+        pipeline.del(`${this.KEYS.TYPING_EXPIRY}:${conversationId}:${userId}`)
       }
+      await pipeline.exec()
     } catch (error) {
       this.logger.error(`Error removing user ${userId} from all typing:`, error)
     }
@@ -285,8 +292,8 @@ export class ChatRedisService {
         return
       }
 
-      // Store as JSON với TTL 5 phút
-      await this.redis.setex(userConversationsKey, 300, JSON.stringify(conversationIds))
+      // Store as JSON với TTL
+      await this.redis.setex(userConversationsKey, this.TTL.USER_CONVERSATIONS, JSON.stringify(conversationIds))
     } catch (error) {
       this.logger.error(`Error caching conversations for user ${userId}:`, error)
     }
@@ -321,6 +328,20 @@ export class ChatRedisService {
   // ===== UTILITY METHODS =====
 
   /**
+   * Scan keys using SCAN command instead of KEYS for production safety
+   */
+  private async scanKeys(pattern: string): Promise<string[]> {
+    const keys: string[] = []
+    let cursor = '0'
+    do {
+      const [nextCursor, foundKeys] = await this.redis.scan(cursor, 'MATCH', pattern, 'COUNT', 100)
+      cursor = nextCursor
+      keys.push(...foundKeys)
+    } while (cursor !== '0')
+    return keys
+  }
+
+  /**
    * Cleanup expired keys (có thể schedule định kỳ)
    */
   cleanup(): void {
@@ -342,18 +363,6 @@ export class ChatRedisService {
     } catch (error) {
       this.logger.error('Redis health check failed:', error)
       return false
-    }
-  }
-
-  /**
-   * Disconnect Redis (for graceful shutdown)
-   */
-  async disconnect(): Promise<void> {
-    try {
-      await this.redis.quit()
-      this.logger.log('Disconnected from Redis')
-    } catch (error) {
-      this.logger.error('Error disconnecting from Redis:', error)
     }
   }
 }

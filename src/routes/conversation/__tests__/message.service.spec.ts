@@ -200,6 +200,7 @@ describe('MessageService', () => {
       incrementUnreadCount: jest.fn(),
       updateMemberLastRead: jest.fn(),
       findUserConversations: jest.fn(),
+      findUserConversationIds: jest.fn(),
       getUserConversations: jest.fn(),
     } as any
 
@@ -1229,13 +1230,9 @@ describe('MessageService', () => {
       const userId = 1
       const query = 'test'
       const options = { limit: 20 }
-      const mockConversations = [createTestData.conversation({ id: 'conv-1' })]
       const mockSearchResult = createTestData.searchResult()
 
-      mockConversationRepo.findUserConversations.mockResolvedValue({
-        data: mockConversations,
-        pagination: { total: 1, hasMore: false },
-      })
+      mockConversationRepo.findUserConversationIds.mockResolvedValue(['conv-1'])
       mockMessageRepo.searchMessages.mockResolvedValue(mockSearchResult)
 
       // Act - Thực hiện tìm kiếm
@@ -1243,6 +1240,7 @@ describe('MessageService', () => {
 
       // Assert - Kiểm tra kết quả
       expect(result).toEqual(mockSearchResult)
+      expect(mockConversationRepo.findUserConversationIds).toHaveBeenCalledWith(userId)
       expect(mockMessageRepo.searchMessages).toHaveBeenCalledWith(['conv-1'], query, options)
     })
 
@@ -1251,12 +1249,8 @@ describe('MessageService', () => {
       const userId = 1
       const query = 'test'
       const options = { limit: 20, conversationId: 'conv-2' }
-      const mockConversations = [createTestData.conversation({ id: 'conv-1' })]
 
-      mockConversationRepo.findUserConversations.mockResolvedValue({
-        data: mockConversations,
-        pagination: { total: 1, hasMore: false },
-      })
+      mockConversationRepo.findUserConversationIds.mockResolvedValue(['conv-1'])
 
       // Act & Assert - Kiểm tra lỗi
       await expect(service.searchMessages(userId, query, options)).rejects.toThrow(ForbiddenException)
@@ -1270,13 +1264,9 @@ describe('MessageService', () => {
       const userId = 1
       const query = 'test'
       const options = { limit: 20, conversationId: 'conv-1' }
-      const mockConversations = [createTestData.conversation({ id: 'conv-1' })]
       const mockSearchResult = createTestData.searchResult()
 
-      mockConversationRepo.findUserConversations.mockResolvedValue({
-        data: mockConversations,
-        pagination: { total: 1, hasMore: false },
-      })
+      mockConversationRepo.findUserConversationIds.mockResolvedValue(['conv-1'])
       mockMessageRepo.searchMessages.mockResolvedValue(mockSearchResult)
 
       // Act - Thực hiện tìm kiếm
@@ -1293,10 +1283,7 @@ describe('MessageService', () => {
       const query = 'test'
       const options = { limit: 20 }
 
-      mockConversationRepo.findUserConversations.mockResolvedValue({
-        data: [],
-        pagination: { total: 0, hasMore: false },
-      })
+      mockConversationRepo.findUserConversationIds.mockResolvedValue([])
 
       // Act - Thực hiện tìm kiếm
       const result = await service.searchMessages(userId, query, options)

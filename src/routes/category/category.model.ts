@@ -22,7 +22,11 @@ export const CreateCategoryBodySchema = CategorySchema.pick({
   name: true,
   logo: true,
   parentCategoryId: true,
-}).strict()
+})
+  .extend({
+    parentCategoryId: z.number().int().positive().nullable().optional(),
+  })
+  .strict()
 
 export const UpdateCategoryBodySchema = CreateCategoryBodySchema
 

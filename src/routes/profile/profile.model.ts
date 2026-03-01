@@ -1,11 +1,13 @@
-import { z } from 'zod'
 import { UserSchema } from 'src/shared/models/shared-user.model'
+import { z } from 'zod'
 
 export const UpdateMeBodySchema = UserSchema.pick({
   name: true,
   phoneNumber: true,
   avatar: true,
-}).strict()
+})
+  .partial({ avatar: true })
+  .strict()
 
 export const ChangePasswordBodySchema = UserSchema.pick({
   password: true,

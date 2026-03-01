@@ -1,4 +1,5 @@
 import { Injectable, HttpException } from '@nestjs/common'
+import { Address } from '@prisma/client'
 import { AddressRepository } from './address.repo'
 import { CreateAddressBody, UpdateAddressBody, ListAddressesQuery } from './address.dto'
 import { AddressResponse, AddressStatsResponse } from './address.model'
@@ -159,7 +160,7 @@ export class AddressService {
     }
   }
 
-  private formatAddressResponse(address: any): AddressResponse {
+  private formatAddressResponse(address: Address): AddressResponse {
     return {
       id: address.id,
       userId: address.userId,
@@ -175,8 +176,8 @@ export class AddressService {
       fullAddress: address.fullAddress,
       isDefault: address.isDefault,
       isActive: address.isActive,
-      createdAt: address.createdAt,
-      updatedAt: address.updatedAt,
+      createdAt: address.createdAt instanceof Date ? address.createdAt.toISOString() : String(address.createdAt),
+      updatedAt: address.updatedAt instanceof Date ? address.updatedAt.toISOString() : String(address.updatedAt),
     }
   }
 }

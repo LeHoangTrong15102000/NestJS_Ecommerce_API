@@ -7,11 +7,13 @@ import {
   UpdateReviewResType,
 } from 'src/routes/review/review.model'
 import { OrderStatus } from 'src/shared/constants/order.constant'
+import { SerializeAll } from 'src/shared/decorators/serialize.decorator'
 import { isUniqueConstraintPrismaError } from 'src/shared/helpers'
 import { PaginationQueryType } from 'src/shared/models/request.model'
 import { PrismaService } from 'src/shared/services/prisma.service'
 
 @Injectable()
+@SerializeAll()
 export class ReviewRepository {
   constructor(private readonly prismaService: PrismaService) {}
 
@@ -47,7 +49,7 @@ export class ReviewRepository {
       }),
     ])
     return {
-      data,
+      data: data as any,
       totalItems,
       page: pagination.page,
       limit: pagination.limit,
@@ -133,7 +135,7 @@ export class ReviewRepository {
         ...review,
         medias: reviewMedias,
       }
-    })
+    }) as any
   }
 
   async update({
@@ -198,6 +200,6 @@ export class ReviewRepository {
         ...review,
         medias: reviewMedias,
       }
-    })
+    }) as any
   }
 }

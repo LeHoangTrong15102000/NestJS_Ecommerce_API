@@ -22,6 +22,15 @@ export const OrderSchema = z.object({
   shopId: z.number().nullable(),
   paymentId: z.number(),
 
+  // Enhanced Order Flow Fields
+  addressId: z.number().nullable().optional(),
+  shippingFee: z.number().default(0).optional(),
+  totalAmount: z.number().default(0),
+  notes: z.string().nullable().optional(),
+  estimatedDelivery: z.iso.datetime().nullable().optional(),
+  voucherId: z.number().nullable().optional(),
+  discountAmount: z.number().default(0).optional(),
+
   createdById: z.number().nullable(),
   updatedById: z.number().nullable(),
   deletedById: z.number().nullable(),

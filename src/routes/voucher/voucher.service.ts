@@ -128,7 +128,7 @@ export class VoucherService {
         userVoucher: userVoucher
           ? {
               usedCount: userVoucher.usedCount,
-              savedAt: userVoucher.savedAt,
+              savedAt: userVoucher.savedAt.toISOString(),
               canUse,
             }
           : null,
@@ -155,7 +155,7 @@ export class VoucherService {
       throw new HttpException(VOUCHER_ERRORS.VOUCHER_NOT_FOUND, 404)
     }
 
-    let userVoucherInfo: { usedCount: number; savedAt: Date; canUse: boolean } | null = null
+    let userVoucherInfo: { usedCount: number; savedAt: string; canUse: boolean } | null = null
     let isCollected = false
     let canApply = false
 
@@ -167,7 +167,7 @@ export class VoucherService {
 
         userVoucherInfo = {
           usedCount: userVoucher.usedCount,
-          savedAt: userVoucher.savedAt,
+          savedAt: userVoucher.savedAt.toISOString(),
           canUse: canApply,
         }
       }
@@ -253,7 +253,7 @@ export class VoucherService {
       canApply: result.canApply,
       discountAmount: result.discountAmount || 0,
       reason: result.reason,
-      voucher: result.voucher,
+      voucher: result.voucher as unknown as VoucherResponse | undefined,
     }
   }
 

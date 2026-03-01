@@ -16,8 +16,8 @@ export const AddressResponseSchema = z.object({
   fullAddress: z.string(),
   isDefault: z.boolean(),
   isActive: z.boolean(),
-  createdAt: z.date(),
-  updatedAt: z.date(),
+  createdAt: z.iso.datetime(),
+  updatedAt: z.iso.datetime(),
 })
 
 export type AddressResponse = z.infer<typeof AddressResponseSchema>

@@ -1,4 +1,5 @@
 import { Injectable, BadRequestException, ForbiddenException, NotFoundException } from '@nestjs/common'
+import { ConversationRole, UserStatus } from '@prisma/client'
 import { ConversationRepository } from './conversation.repo'
 import { MessageRepository } from './message.repo'
 import { SharedUserRepository } from 'src/shared/repositories/shared-user.repo'
@@ -197,7 +198,7 @@ export class ConversationService {
       throw new BadRequestException('Tên nhóm không được để trống')
     }
 
-    const updateData: any = {}
+    const updateData: Partial<{ name: string; description: string | null; avatar: string; ownerId: number }> = {}
     if (data.name !== undefined) updateData.name = data.name.trim()
     if (data.description !== undefined) updateData.description = data.description?.trim() || null
     if (data.avatar !== undefined) updateData.avatar = data.avatar
@@ -336,9 +337,9 @@ export class ConversationService {
 
     // Add members
     const addedMembers: Array<{
-      user: { id: number; name: string; avatar: string | null; email: string; status: any }
+      user: { id: number; name: string; avatar: string | null; email: string; status: UserStatus }
       id: string
-      role: any
+      role: ConversationRole
       joinedAt: Date
       isActive: boolean
       userId: number

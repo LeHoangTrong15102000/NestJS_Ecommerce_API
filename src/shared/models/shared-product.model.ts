@@ -33,7 +33,7 @@ export const VariantsSchema = z.array(VariantSchema).superRefine((variants, ctx)
 
 export const ProductSchema = z.object({
   id: z.number(),
-  publishedAt: z.coerce.date().nullable(),
+  publishedAt: z.iso.datetime().nullable(),
   name: z.string().trim().max(500),
   basePrice: z.number().min(0),
   virtualPrice: z.number().min(0),

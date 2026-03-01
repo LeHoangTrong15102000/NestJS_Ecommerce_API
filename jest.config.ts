@@ -44,10 +44,10 @@ const config: Config = {
   coverageReporters: ['text', 'lcov', 'html', 'json'],
   coverageThreshold: {
     global: {
-      branches: 8,
-      functions: 4,
-      lines: 30,
-      statements: 30,
+      branches: 60,
+      functions: 60,
+      lines: 70,
+      statements: 70,
     },
   },
 

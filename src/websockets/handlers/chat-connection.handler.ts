@@ -1,53 +1,42 @@
 import { Injectable, Logger } from '@nestjs/common'
 import { Socket } from 'socket.io'
-import { TokenService } from 'src/shared/services/token.service'
 import { SharedUserRepository } from 'src/shared/repositories/shared-user.repo'
 import { ChatRedisService } from '../services/chat-redis.service'
-
-export interface AuthenticatedSocket extends Socket {
-  userId: number
-  user: {
-    id: number
-    name: string
-    email: string
-    avatar?: string
-    status?: string
-  }
-}
+import { generateRoomUserId } from 'src/shared/helpers'
+import { AuthenticatedSocket, SocketUserInfo } from '../websocket.interfaces'
+import { emitInternalError } from '../websocket.helpers'
 
 @Injectable()
 export class ChatConnectionHandler {
   private readonly logger = new Logger(ChatConnectionHandler.name)
 
   constructor(
-    private readonly tokenService: TokenService,
     private readonly userRepo: SharedUserRepository,
     private readonly redisService: ChatRedisService,
   ) {}
 
   /**
    * Xử lý kết nối WebSocket
+   * NOTE: Authentication is already done by WebsocketAdapter middleware
+   * This handler only enriches socket with user data and tracks online status
    */
   async handleConnection(client: Socket): Promise<AuthenticatedSocket | null> {
     try {
-      // Extract token from headers or auth
-      const token =
-        client.handshake.auth.authorization?.split(' ')[1] || client.handshake.headers.authorization?.split(' ')[1]
+      // Get userId from socket.data (set by WebsocketAdapter auth middleware)
+      const userId = client.data?.userId as number | undefined
 
-      if (!token) {
-        throw new Error('No authentication token provided')
+      if (!userId) {
+        // This should not happen if adapter middleware is working correctly
+        throw new Error('No userId in socket data - authentication middleware may have failed')
       }
 
-      // Verify JWT token
-      const payload = await this.tokenService.verifyAccessToken(token)
-
-      // Get user info
-      const user = await this.userRepo.findUnique({ id: payload.userId })
+      // Get user info from database
+      const user = await this.userRepo.findUnique({ id: userId })
       if (!user || user.status !== 'ACTIVE') {
         throw new Error('User not found or inactive')
       }
 
-      // Attach user info to socket
+      // Attach user info to socket for use by other handlers
       const authSocket = client as AuthenticatedSocket
       authSocket.userId = user.id
       authSocket.user = {
@@ -62,8 +51,8 @@ export class ChatConnectionHandler {
       await this.redisService.addOnlineUser(user.id, client.id)
       await this.redisService.setSocketUser(client.id, authSocket.user)
 
-      // Join user to their personal room for notifications
-      await client.join(`user:${user.id}`)
+      // Note: User is already joined to their personal room by WebsocketAdapter
+      // Room name: generateRoomUserId(userId) = "userId-{id}"
 
       this.logger.log(`User ${user.id} (${user.name}) connected with socket ${client.id}`)
 
@@ -77,10 +66,7 @@ export class ChatConnectionHandler {
       return authSocket
     } catch (error) {
       this.logger.error(`Connection failed: ${error.message}`)
-      client.emit('connection_error', {
-        message: 'Authentication failed',
-        error: error.message,
-      })
+      emitInternalError(client, 'connection', error.message)
       client.disconnect(true)
       return null
     }
@@ -135,7 +121,7 @@ export class ChatConnectionHandler {
   /**
    * Lấy thông tin user từ socket ID
    */
-  async getSocketUser(socketId: string): Promise<Record<string, any> | null> {
+  async getSocketUser(socketId: string): Promise<SocketUserInfo | null> {
     return this.redisService.getSocketUser(socketId)
   }
 }

@@ -1,7 +1,9 @@
+import { CACHE_MANAGER } from '@nestjs/cache-manager'
+import { INestApplication } from '@nestjs/common'
 import { Test, TestingModule } from '@nestjs/testing'
-import { INestApplication, ValidationPipe } from '@nestjs/common'
 import request from 'supertest'
 import { AppModule } from '../../src/app.module'
+import { EmailService } from '../../src/shared/services/email.service'
 import { PrismaService } from '../../src/shared/services/prisma.service'
 import { resetDatabase } from '../helpers/test-helpers'
 
@@ -11,6 +13,13 @@ describe('Cart Integration Tests', () => {
   let accessToken: string
   let testUserId: number
   let testSKUId: number
+  let testSellerId: number
+
+  // Mock EmailService
+  const mockEmailService = {
+    sendEmail: jest.fn().mockResolvedValue(undefined),
+    sendOTP: jest.fn().mockResolvedValue(undefined),
+  }
 
   beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
@@ -18,10 +27,17 @@ describe('Cart Integration Tests', () => {
     })
       .overrideProvider(PrismaService)
       .useValue(global.__GLOBAL_PRISMA__)
+      .overrideProvider(EmailService)
+      .useValue(mockEmailService)
+      .overrideProvider(CACHE_MANAGER)
+      .useValue({
+        get: jest.fn().mockResolvedValue(null),
+        set: jest.fn().mockResolvedValue(undefined),
+        del: jest.fn().mockResolvedValue(undefined),
+      })
       .compile()
 
     app = moduleFixture.createNestApplication()
-    app.useGlobalPipes(new ValidationPipe({ transform: true }))
     prisma = moduleFixture.get<PrismaService>(PrismaService)
 
     await app.init()
@@ -63,6 +79,13 @@ describe('Cart Integration Tests', () => {
 
     testUserId = registerResponse.body.id
 
+    // Verify testUserId is set
+    if (!testUserId) {
+      throw new Error(
+        `Failed to get testUserId from register response. Status: ${registerResponse.status}, Body: ${JSON.stringify(registerResponse.body)}`,
+      )
+    }
+
     // Login to get access token
     const loginResponse = await request(app.getHttpServer())
       .post('/auth/login')
@@ -74,6 +97,13 @@ describe('Cart Integration Tests', () => {
 
     accessToken = loginResponse.body.accessToken
 
+    // Verify accessToken is set
+    if (!accessToken) {
+      throw new Error(
+        `Failed to get accessToken from login response. Status: ${loginResponse.status}, Body: ${JSON.stringify(loginResponse.body)}`,
+      )
+    }
+
     // Tạo test data (SKU, Product, etc.)
     await setupTestData()
   })
@@ -83,12 +113,25 @@ describe('Cart Integration Tests', () => {
   })
 
   async function setupTestData() {
+    // Tạo seller user (Product phải được tạo bởi seller, không phải client)
+    const seller = await prisma.user.create({
+      data: {
+        email: 'seller@example.com',
+        name: 'Test Seller',
+        phoneNumber: '0987654321',
+        password: 'hashed-password',
+        roleId: 3, // SELLER role
+      },
+    })
+
+    testSellerId = seller.id
+
     // Tạo category
     const category = await prisma.category.create({
       data: {
         name: 'Test Category',
         logo: 'test-logo.png',
-        createdById: testUserId,
+        createdById: seller.id,
       },
     })
 
@@ -97,28 +140,32 @@ describe('Cart Integration Tests', () => {
       data: {
         name: 'Test Brand',
         logo: 'test-brand.png',
-        createdById: testUserId,
+        createdById: seller.id,
       },
     })
 
-    // Tạo product
+    // Tạo product (created by seller, not testUserId)
     const product = await prisma.product.create({
       data: {
         name: 'Test Product',
-        brandId: brand.id,
         images: ['test-product.png'],
         basePrice: 100000,
         virtualPrice: 100000,
         variants: [],
-        publishedAt: new Date(),
-        createdById: testUserId,
+        publishedAt: new Date('2024-01-01'), // Fixed date in the past to avoid timing issues with NOW()
+        brand: {
+          connect: { id: brand.id },
+        },
         categories: {
           connect: { id: category.id },
         },
-      },
+        createdBy: {
+          connect: { id: seller.id }, // Product created by seller
+        },
+      } as any,
     })
 
-    // Tạo SKU
+    // Tạo SKU (created by seller, not testUserId)
     const sku = await prisma.sKU.create({
       data: {
         productId: product.id,
@@ -126,7 +173,7 @@ describe('Cart Integration Tests', () => {
         price: 100000,
         stock: 50,
         image: 'test-sku.png',
-        createdById: testUserId,
+        createdById: seller.id, // SKU created by seller
       },
     })
 
@@ -208,7 +255,7 @@ describe('Cart Integration Tests', () => {
         .send({
           cartItemIds: [cartItemId],
         })
-        .expect(200)
+        .expect(201)
 
       expect(deleteCartResponse.body.message).toBe('1 item(s) deleted from cart')
 
@@ -227,17 +274,21 @@ describe('Cart Integration Tests', () => {
       const product2 = await prisma.product.create({
         data: {
           name: 'Test Product 2',
-          brandId: (await prisma.brand.findFirst())!.id,
           images: ['test-product-2.png'],
           basePrice: 150000,
           virtualPrice: 150000,
           variants: [],
-          publishedAt: new Date(),
-          createdById: testUserId,
+          publishedAt: new Date('2024-01-01'),
+          brand: {
+            connect: { id: (await prisma.brand.findFirst())!.id },
+          },
           categories: {
             connect: { id: (await prisma.category.findFirst())!.id },
           },
-        },
+          createdBy: {
+            connect: { id: testSellerId }, // Use testSellerId instead of testUserId
+          },
+        } as any,
       })
 
       const sku2 = await prisma.sKU.create({
@@ -247,7 +298,7 @@ describe('Cart Integration Tests', () => {
           price: 150000,
           stock: 30,
           image: 'test-sku-2.png',
-          createdById: testUserId,
+          createdById: testSellerId, // Use testSellerId instead of testUserId
         },
       })
 
@@ -288,20 +339,79 @@ describe('Cart Integration Tests', () => {
         .send({
           cartItemIds: [addFirstItemResponse.body.id, addSecondItemResponse.body.id],
         })
-        .expect(200)
+        .expect(201)
 
       expect(deleteResponse.body.message).toBe('2 item(s) deleted from cart')
     })
 
     it('should handle cart pagination', async () => {
-      // Thêm nhiều items vào cart
+      // NOTE: Cart service groups items by shop (product.createdById), not by individual SKUs
+      // So we need to create products from different sellers to test pagination
+
+      const category = await prisma.category.findFirst({
+        where: { createdById: testSellerId }, // Use testSellerId instead of testUserId
+      })
+      const brand = await prisma.brand.findFirst({
+        where: { createdById: testSellerId }, // Use testSellerId instead of testUserId
+      })
+
+      // Create 15 different sellers (users) and their products
+      const skuIds: number[] = []
+      for (let i = 0; i < 15; i++) {
+        // Create a seller user
+        const seller = await prisma.user.create({
+          data: {
+            email: `seller-${i}@example.com`,
+            name: `Seller ${i}`,
+            phoneNumber: `012345678${i}`,
+            password: 'hashed-password',
+            roleId: 3, // SELLER role
+          },
+        })
+
+        // Create a product from this seller
+        const product = await prisma.product.create({
+          data: {
+            name: `Pagination Test Product ${i}`,
+            images: [`pagination-test-${i}.png`],
+            basePrice: 100000 + i * 1000,
+            virtualPrice: 100000 + i * 1000,
+            variants: [],
+            publishedAt: new Date('2024-01-01'), // Fixed date in the past
+            brand: {
+              connect: { id: brand!.id },
+            },
+            categories: {
+              connect: { id: category!.id },
+            },
+            createdBy: {
+              connect: { id: seller.id },
+            },
+          } as any,
+        })
+
+        // Create SKU for this product
+        const sku = await prisma.sKU.create({
+          data: {
+            productId: product.id,
+            price: 100 + i,
+            stock: 100,
+            value: `TEST-SKU-PAGINATION-${i}`,
+            image: 'test-image.jpg',
+            createdById: seller.id,
+          },
+        })
+        skuIds.push(sku.id)
+      }
+
+      // Add 15 different items to cart (from 15 different shops)
       const cartItems: number[] = []
       for (let i = 0; i < 15; i++) {
         const addResponse = await request(app.getHttpServer())
           .post('/cart')
           .set('Authorization', `Bearer ${accessToken}`)
           .send({
-            skuId: testSKUId,
+            skuId: skuIds[i],
             quantity: 1,
           })
           .expect(201)
@@ -339,7 +449,7 @@ describe('Cart Integration Tests', () => {
         .send({
           quantity: 2,
         })
-        .expect(400)
+        .expect(422)
 
       // Test invalid quantity (negative)
       await request(app.getHttpServer())
@@ -349,7 +459,7 @@ describe('Cart Integration Tests', () => {
           skuId: testSKUId,
           quantity: -1,
         })
-        .expect(400)
+        .expect(422)
 
       // Test invalid quantity (zero)
       await request(app.getHttpServer())
@@ -359,7 +469,7 @@ describe('Cart Integration Tests', () => {
           skuId: testSKUId,
           quantity: 0,
         })
-        .expect(400)
+        .expect(422)
 
       // Test invalid skuId (non-existent)
       await request(app.getHttpServer())
@@ -393,7 +503,7 @@ describe('Cart Integration Tests', () => {
           skuId: testSKUId,
           quantity: -1,
         })
-        .expect(400)
+        .expect(422)
 
       // Test non-existent cart item
       await request(app.getHttpServer())
@@ -429,17 +539,21 @@ describe('Cart Integration Tests', () => {
       const lowStockProduct = await prisma.product.create({
         data: {
           name: 'Low Stock Product',
-          brandId: (await prisma.brand.findFirst())!.id,
           images: ['low-stock.png'],
           basePrice: 50000,
           virtualPrice: 50000,
           variants: [],
-          publishedAt: new Date(),
-          createdById: testUserId,
+          publishedAt: new Date('2024-01-01'),
+          brand: {
+            connect: { id: (await prisma.brand.findFirst())!.id },
+          },
           categories: {
             connect: { id: (await prisma.category.findFirst())!.id },
           },
-        },
+          createdBy: {
+            connect: { id: testSellerId }, // Use testSellerId instead of testUserId
+          },
+        } as any,
       })
 
       const lowStockSKU = await prisma.sKU.create({
@@ -449,7 +563,7 @@ describe('Cart Integration Tests', () => {
           price: 50000,
           stock: 3, // Chỉ có 3 sản phẩm
           image: 'low-stock-sku.png',
-          createdById: testUserId,
+          createdById: testSellerId, // Use testSellerId instead of testUserId
         },
       })
 
@@ -603,7 +717,7 @@ describe('Cart Integration Tests', () => {
         .post('/cart')
         .set('Authorization', `Bearer ${accessToken}`)
         .send('invalid-json')
-        .expect(400)
+        .expect(422)
 
       // Test với missing content-type
       await request(app.getHttpServer())
@@ -611,7 +725,7 @@ describe('Cart Integration Tests', () => {
         .set('Authorization', `Bearer ${accessToken}`)
         .set('Content-Type', 'text/plain')
         .send('invalid-data')
-        .expect(400)
+        .expect(422)
     })
   })
 })

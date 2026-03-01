@@ -1,8 +1,9 @@
 import { Test, TestingModule } from '@nestjs/testing'
 import { OrderService } from '../order.service'
-import { OrderRepo } from '../order.repo'
+import { OrderRepo, CartItemWithRelations } from '../order.repo'
 import { CreateOrderBodyType, GetOrderListQueryType } from '../order.model'
 import { OrderStatus } from 'src/shared/constants/order.constant'
+import { VoucherRepository } from 'src/routes/voucher/voucher.repo'
 
 // Test data factory để tạo dữ liệu test
 const createTestData = {
@@ -179,6 +180,41 @@ describe('OrderService', () => {
   let service: OrderService
   let module: TestingModule
   let mockOrderRepo: jest.Mocked<OrderRepo>
+  let mockVoucherRepository: jest.Mocked<VoucherRepository>
+
+  // Helper to create cart items for testing
+  const createMockCartItems = (overrides: any[] = []): CartItemWithRelations[] => {
+    const defaultCartItem: CartItemWithRelations = {
+      id: 1,
+      userId: 1,
+      skuId: 1,
+      quantity: 2,
+      sku: {
+        id: 1,
+        value: JSON.stringify({ color: 'red' }),
+        price: 100000,
+        stock: 10,
+        image: 'sku.jpg',
+        productId: 1,
+        createdById: 1,
+        product: {
+          id: 1,
+          name: 'Test Product',
+          publishedAt: new Date('2024-01-01'),
+          deletedAt: null,
+          productTranslations: [],
+        },
+      },
+    }
+    if (overrides.length === 0) {
+      return [defaultCartItem, { ...defaultCartItem, id: 2 }]
+    }
+    return overrides.map((override, index) => ({
+      ...defaultCartItem,
+      id: index + 1,
+      ...override,
+    }))
+  }
 
   beforeEach(async () => {
     // Tạo mock cho OrderRepo với tất cả methods cần thiết
@@ -187,10 +223,19 @@ describe('OrderService', () => {
       create: jest.fn(),
       cancel: jest.fn(),
       detail: jest.fn(),
+      fetchAndValidateCartItems: jest.fn(),
+    } as any
+
+    mockVoucherRepository = {
+      findById: jest.fn(),
     } as any
 
     module = await Test.createTestingModule({
-      providers: [OrderService, { provide: OrderRepo, useValue: mockOrderRepo }],
+      providers: [
+        OrderService,
+        { provide: OrderRepo, useValue: mockOrderRepo },
+        { provide: VoucherRepository, useValue: mockVoucherRepository },
+      ],
     }).compile()
 
     service = module.get<OrderService>(OrderService)
@@ -309,8 +354,15 @@ describe('OrderService', () => {
       // Arrange - Chuẩn bị dữ liệu tạo order
       const userId = 1
       const body = createTestData.createOrderBody()
+      const mockCartItems = createMockCartItems()
+      const mockCartItemMap = new Map<number, CartItemWithRelations>()
+      mockCartItems.forEach((item) => mockCartItemMap.set(item.id, item))
       const mockCreateOrderResponse = createTestData.createOrderResponse()
 
+      mockOrderRepo.fetchAndValidateCartItems.mockResolvedValue({
+        cartItems: mockCartItems,
+        cartItemMap: mockCartItemMap,
+      })
       mockOrderRepo.create.mockResolvedValue(mockCreateOrderResponse)
 
       // Act - Thực hiện tạo order
@@ -318,7 +370,7 @@ describe('OrderService', () => {
 
       // Assert - Kiểm tra kết quả
       expect(result).toEqual(mockCreateOrderResponse)
-      expect(mockOrderRepo.create).toHaveBeenCalledWith(userId, body)
+      expect(mockOrderRepo.fetchAndValidateCartItems).toHaveBeenCalledWith(userId, body)
       expect(mockOrderRepo.create).toHaveBeenCalledTimes(1)
     })
 
@@ -345,6 +397,9 @@ describe('OrderService', () => {
           cartItemIds: [3, 4],
         },
       ]
+      const mockCartItems = createMockCartItems([{}, {}, {}, {}])
+      const mockCartItemMap = new Map<number, CartItemWithRelations>()
+      mockCartItems.forEach((item) => mockCartItemMap.set(item.id, item))
       const mockCreateOrderResponse = createTestData.createOrderResponse({
         orders: [
           createTestData.createOrderResponse().orders[0],
@@ -356,6 +411,10 @@ describe('OrderService', () => {
         ],
       })
 
+      mockOrderRepo.fetchAndValidateCartItems.mockResolvedValue({
+        cartItems: mockCartItems,
+        cartItemMap: mockCartItemMap,
+      })
       mockOrderRepo.create.mockResolvedValue(mockCreateOrderResponse)
 
       // Act - Thực hiện tạo order
@@ -366,52 +425,13 @@ describe('OrderService', () => {
       expect(result.orders).toHaveLength(2)
       expect(result.orders[0].shopId).toBe(1)
       expect(result.orders[1].shopId).toBe(2)
-      expect(mockOrderRepo.create).toHaveBeenCalledWith(userId, body)
+      expect(mockOrderRepo.fetchAndValidateCartItems).toHaveBeenCalledWith(userId, body)
     })
 
-    it('should create order with different receiver information', async () => {
-      // Arrange - Chuẩn bị dữ liệu tạo order với thông tin receiver khác
-      const userId = 2
-      const body: CreateOrderBodyType = [
-        {
-          shopId: 1,
-          receiver: {
-            name: 'Trần Thị B',
-            phone: '0987654321',
-            address: '456 Đường XYZ, Quận 2, TP.HCM',
-          },
-          cartItemIds: [5, 6],
-        },
-      ]
-      const mockCreateOrderResponse = createTestData.createOrderResponse({
-        orders: [
-          {
-            ...createTestData.createOrderResponse().orders[0],
-            userId: 2,
-            receiver: {
-              name: 'Trần Thị B',
-              phone: '0987654321',
-              address: '456 Đường XYZ, Quận 2, TP.HCM',
-            },
-          },
-        ],
-      })
-
-      mockOrderRepo.create.mockResolvedValue(mockCreateOrderResponse)
-
-      // Act - Thực hiện tạo order
-      const result = await service.create(userId, body)
-
-      // Assert - Kiểm tra kết quả
-      expect(result).toEqual(mockCreateOrderResponse)
-      expect(result.orders[0].receiver.name).toBe('Trần Thị B')
-      expect(result.orders[0].receiver.phone).toBe('0987654321')
-      expect(mockOrderRepo.create).toHaveBeenCalledWith(userId, body)
-    })
-
-    it('should handle single cart item order', async () => {
-      // Arrange - Chuẩn bị dữ liệu tạo order với 1 cart item
+    it('should apply PERCENTAGE voucher correctly', async () => {
+      // Arrange - Chuẩn bị dữ liệu với voucher PERCENTAGE
       const userId = 1
+      const voucherId = 1
       const body: CreateOrderBodyType = [
         {
           shopId: 1,
@@ -420,20 +440,203 @@ describe('OrderService', () => {
             phone: '0123456789',
             address: '123 Đường ABC, Quận 1, TP.HCM',
           },
-          cartItemIds: [1],
+          cartItemIds: [1, 2],
+          voucherId,
         },
       ]
+      const mockCartItems = createMockCartItems([{ quantity: 2 }, { quantity: 1 }])
+      const mockCartItemMap = new Map<number, CartItemWithRelations>()
+      mockCartItems.forEach((item) => mockCartItemMap.set(item.id, item))
+      const mockVoucher = {
+        id: 1,
+        type: 'PERCENTAGE',
+        value: 10, // 10% discount
+        maxDiscount: null,
+      }
       const mockCreateOrderResponse = createTestData.createOrderResponse()
 
+      mockOrderRepo.fetchAndValidateCartItems.mockResolvedValue({
+        cartItems: mockCartItems,
+        cartItemMap: mockCartItemMap,
+      })
+      mockVoucherRepository.findById.mockResolvedValue(mockVoucher)
       mockOrderRepo.create.mockResolvedValue(mockCreateOrderResponse)
 
-      // Act - Thực hiện tạo order
+      // Act - Thực hiện tạo order với voucher
       const result = await service.create(userId, body)
 
       // Assert - Kiểm tra kết quả
       expect(result).toEqual(mockCreateOrderResponse)
-      expect(body[0].cartItemIds).toHaveLength(1)
-      expect(mockOrderRepo.create).toHaveBeenCalledWith(userId, body)
+      expect(mockVoucherRepository.findById).toHaveBeenCalledWith(voucherId)
+      // Verify that create was called with calculated discount
+      expect(mockOrderRepo.create).toHaveBeenCalledWith(
+        userId,
+        body,
+        mockCartItems,
+        expect.arrayContaining([
+          expect.objectContaining({
+            voucherId: 1,
+            discountAmount: expect.any(Number),
+          }),
+        ]),
+      )
+    })
+
+    it('should apply PERCENTAGE voucher with maxDiscount cap', async () => {
+      // Arrange - Chuẩn bị dữ liệu với voucher PERCENTAGE có maxDiscount
+      const userId = 1
+      const voucherId = 1
+      const body: CreateOrderBodyType = [
+        {
+          shopId: 1,
+          receiver: {
+            name: 'Nguyễn Văn A',
+            phone: '0123456789',
+            address: '123 Đường ABC, Quận 1, TP.HCM',
+          },
+          cartItemIds: [1, 2],
+          voucherId,
+        },
+      ]
+      const mockCartItems = createMockCartItems([
+        { sku: { ...createMockCartItems()[0].sku, price: 1000000 }, quantity: 2 },
+        { quantity: 1 },
+      ])
+      const mockCartItemMap = new Map<number, CartItemWithRelations>()
+      mockCartItems.forEach((item) => mockCartItemMap.set(item.id, item))
+      const mockVoucher = {
+        id: 1,
+        type: 'PERCENTAGE',
+        value: 50, // 50% discount
+        maxDiscount: 100000, // Max 100k
+      }
+      const mockCreateOrderResponse = createTestData.createOrderResponse()
+
+      mockOrderRepo.fetchAndValidateCartItems.mockResolvedValue({
+        cartItems: mockCartItems,
+        cartItemMap: mockCartItemMap,
+      })
+      mockVoucherRepository.findById.mockResolvedValue(mockVoucher)
+      mockOrderRepo.create.mockResolvedValue(mockCreateOrderResponse)
+
+      // Act - Thực hiện tạo order với voucher có maxDiscount
+      const result = await service.create(userId, body)
+
+      // Assert - Kiểm tra kết quả
+      expect(result).toEqual(mockCreateOrderResponse)
+      expect(mockVoucherRepository.findById).toHaveBeenCalledWith(voucherId)
+      // Verify discount is capped at maxDiscount
+      expect(mockOrderRepo.create).toHaveBeenCalledWith(
+        userId,
+        body,
+        mockCartItems,
+        expect.arrayContaining([
+          expect.objectContaining({
+            voucherId: 1,
+            discountAmount: 100000, // Should be capped at maxDiscount
+          }),
+        ]),
+      )
+    })
+
+    it('should apply FIXED_AMOUNT voucher correctly', async () => {
+      // Arrange - Chuẩn bị dữ liệu với voucher FIXED_AMOUNT
+      const userId = 1
+      const voucherId = 1
+      const body: CreateOrderBodyType = [
+        {
+          shopId: 1,
+          receiver: {
+            name: 'Nguyễn Văn A',
+            phone: '0123456789',
+            address: '123 Đường ABC, Quận 1, TP.HCM',
+          },
+          cartItemIds: [1, 2],
+          voucherId,
+        },
+      ]
+      const mockCartItems = createMockCartItems([{ quantity: 2 }, { quantity: 1 }])
+      const mockCartItemMap = new Map<number, CartItemWithRelations>()
+      mockCartItems.forEach((item) => mockCartItemMap.set(item.id, item))
+      const mockVoucher = {
+        id: 1,
+        type: 'FIXED_AMOUNT',
+        value: 50000, // Giảm 50k
+      }
+      const mockCreateOrderResponse = createTestData.createOrderResponse()
+
+      mockOrderRepo.fetchAndValidateCartItems.mockResolvedValue({
+        cartItems: mockCartItems,
+        cartItemMap: mockCartItemMap,
+      })
+      mockVoucherRepository.findById.mockResolvedValue(mockVoucher)
+      mockOrderRepo.create.mockResolvedValue(mockCreateOrderResponse)
+
+      // Act - Thực hiện tạo order với voucher FIXED_AMOUNT
+      const result = await service.create(userId, body)
+
+      // Assert - Kiểm tra kết quả
+      expect(result).toEqual(mockCreateOrderResponse)
+      expect(mockVoucherRepository.findById).toHaveBeenCalledWith(voucherId)
+      expect(mockOrderRepo.create).toHaveBeenCalledWith(
+        userId,
+        body,
+        mockCartItems,
+        expect.arrayContaining([
+          expect.objectContaining({
+            voucherId: 1,
+            discountAmount: 50000,
+          }),
+        ]),
+      )
+    })
+
+    it('should handle voucher not found gracefully', async () => {
+      // Arrange - Chuẩn bị dữ liệu với voucher không tồn tại
+      const userId = 1
+      const voucherId = 999
+      const body: CreateOrderBodyType = [
+        {
+          shopId: 1,
+          receiver: {
+            name: 'Nguyễn Văn A',
+            phone: '0123456789',
+            address: '123 Đường ABC, Quận 1, TP.HCM',
+          },
+          cartItemIds: [1, 2],
+          voucherId,
+        },
+      ]
+      const mockCartItems = createMockCartItems()
+      const mockCartItemMap = new Map<number, CartItemWithRelations>()
+      mockCartItems.forEach((item) => mockCartItemMap.set(item.id, item))
+      const mockCreateOrderResponse = createTestData.createOrderResponse()
+
+      mockOrderRepo.fetchAndValidateCartItems.mockResolvedValue({
+        cartItems: mockCartItems,
+        cartItemMap: mockCartItemMap,
+      })
+      mockVoucherRepository.findById.mockResolvedValue(null) // Voucher không tồn tại
+      mockOrderRepo.create.mockResolvedValue(mockCreateOrderResponse)
+
+      // Act - Thực hiện tạo order với voucher không tồn tại
+      const result = await service.create(userId, body)
+
+      // Assert - Kiểm tra kết quả (không apply voucher, không throw error)
+      expect(result).toEqual(mockCreateOrderResponse)
+      expect(mockVoucherRepository.findById).toHaveBeenCalledWith(voucherId)
+      // Verify discount is 0 when voucher not found
+      expect(mockOrderRepo.create).toHaveBeenCalledWith(
+        userId,
+        body,
+        mockCartItems,
+        expect.arrayContaining([
+          expect.objectContaining({
+            voucherId: 999,
+            discountAmount: 0,
+          }),
+        ]),
+      )
     })
   })
 

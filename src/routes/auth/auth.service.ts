@@ -1,6 +1,7 @@
 import { HttpException, Injectable, UnauthorizedException } from '@nestjs/common'
 import { RolesService } from 'src/routes/auth/roles.service'
 import { generateOTP, isNotFoundPrismaError, isUniqueConstraintPrismaError } from 'src/shared/helpers'
+import { MESSAGES } from 'src/shared/constants/app.constant'
 import { HashingService } from 'src/shared/services/hashing.service'
 import { TokenService } from 'src/shared/services/token.service'
 import {
@@ -137,74 +138,81 @@ export class AuthService {
       throw FailedToSendOTPException
     }
     return {
-      message: 'Gửi mã OTP thành công',
+      message: MESSAGES.OTP_SENT,
     }
   }
 
-  // Xử lý logic Login cho người dùng
-  async login(body: LoginBodyType & { userAgent: string; ip: string }) {
-    // Do cái thằng user trong đây ko có trả về role nên là đây là trường hợp cá biệt không dùng chung cái thằng sharedUserRepository được
-    // Kiểm tra user có tồn tại hay không
-    const user = await this.authRepository.findUniqueUserIncludeRole({
-      email: body.email,
-    })
+  private async validateCredentials(email: string, password: string) {
+    const user = await this.authRepository.findUniqueUserIncludeRole({ email })
     if (!user) {
       throw EmailNotFoundException
     }
 
-    const isPasswordMatch = await this.hashingService.compare(body.password, user.password)
+    const isPasswordMatch = await this.hashingService.compare(password, user.password)
     if (!isPasswordMatch) {
       throw InvalidPasswordException
     }
 
+    return user
+  }
+
+  private async validate2FA(
+    user: { email: string; totpSecret: string | null },
+    body: { totpCode?: string; code?: string },
+  ) {
     // Kiểm tra nếu 2FA chưa bật nhưng người dùng vẫn gửi totpCode hoặc code
     if (!user.totpSecret) {
       if (body.totpCode || body.code) {
         throw TOTPNotEnabledException
       }
+      return
     }
 
-    // Nếu user đẫ bật 2FA thì kiểm tra mã 2FA TOTP code hoặc là OTP code(email)
-    // Thực hiện verify mã 2FA của người dùng
-    if (user.totpSecret) {
-      // Nếu không có mã TOTP code và code thì thông báo cho client biết
-      if (!body.totpCode && !body.code) {
-        throw InvalidTOTPAndCodeException
+    // Nếu user đã bật 2FA thì kiểm tra mã 2FA TOTP code hoặc là OTP code(email)
+    // Nếu không có mã TOTP code và code thì thông báo cho client biết
+    if (!body.totpCode && !body.code) {
+      throw InvalidTOTPAndCodeException
+    }
+
+    // Kiểm tra TOTP code có hợp lệ hay không
+    if (body.totpCode) {
+      const isValid = this.twoFactorService.verifyTOTP({
+        email: user.email,
+        secret: user.totpSecret,
+        token: body.totpCode,
+      })
+      if (!isValid) {
+        throw InvalidTOTPException
       }
-      // Kiểm tra TOTP code có hợp lệ hay không
-      if (body.totpCode) {
-        const isValid = this.twoFactorService.verifyTOTP({
+    } else if (body.code) {
+      // Kiểm tra OTP code có hợp lệ hay không
+      await this.validateVerificationCode({
+        email: user.email,
+        code: body.code,
+        type: TypeOfVerificationCode.LOGIN,
+      })
+      await this.authRepository.deleteVerificationCode({
+        email_type: {
           email: user.email,
-          secret: user.totpSecret,
-          token: body.totpCode,
-        })
-        if (!isValid) {
-          throw InvalidTOTPException
-        }
-      } else if (body.code) {
-        // Kiểm tra OTP code có hợp lệ hay không
-        await this.validateVerificationCode({
-          email: user.email,
-          code: body.code,
           type: TypeOfVerificationCode.LOGIN,
-        })
-        await this.authRepository.deleteVerificationCode({
-          email_type: {
-            email: user.email,
-            type: TypeOfVerificationCode.LOGIN,
-          },
-        })
-      }
+        },
+      })
     }
+  }
 
-    // 3. Tạo một cái record device mới
+  // Xử lý logic Login cho người dùng
+  async login(body: LoginBodyType & { userAgent: string; ip: string }) {
+    const user = await this.validateCredentials(body.email, body.password)
+    await this.validate2FA(user, body)
+
+    // Tạo một cái record device mới
     const device = await this.authRepository.createDevice({
       userId: user.id,
       userAgent: body.userAgent,
       ip: body.ip,
     })
 
-    // 4. Sau đó mới tạo tokens trả về cho người dùng
+    // Tạo tokens trả về cho người dùng
     const tokens = await this.generateTokens({
       userId: user.id,
       deviceId: device.id,
@@ -250,69 +258,22 @@ export class AuthService {
     }
   }
 
-  // Xử lý Refresh Token không bao giờ hết hạn
-  // async refreshToken({ refreshToken, userAgent, ip }: RefreshTokenBodyType & { userAgent: string; ip: string }) {
-  //   try {
-  //     // 1. Kiểm tra xem RefreshToken có hợp lệ hay không(Chỉ cần không tồn tại thì nó sẽ quăng ra lỗi ở đây luôn), nết mà RT hết hạn(expiresIn) thì nó sẽ quăng ra lỗi luôn
-  //     const { userId } = await this.tokenService.verifyRefreshToken(refreshToken)
-  //     // 2. Kiểm trả refreshToken có tồn tại trong database không, chỉ nên verifyToken một lần
-  //     // const decodedRefreshToken = await this.tokenService.verifyRefreshToken(refreshToken)
-  //     const refreshTokenInDb = await this.authRepository.findUniqueRefreshTokenIncludeUserRole({
-  //       token: refreshToken,
-  //     })
-  //     // Trường hợp đã refresh token rồi, hãy thông báo cho user biết
-  //     // refresh token của họ đã bị đánh cắp
-  //     if (!refreshTokenInDb) {
-  //       throw new UnauthorizedException('Refresh token has been stealed or revoked')
-  //     }
-
-  //     // 3. Cần phải cập nhật device cho người dùng nữa
-  //     // Việc cập nhật Device ở trong RT là do:
-  //     /**
-  //      * userAgent và ip: Cập nhật lại thông tin thiết bị (ví dụ: trình duyệt, địa chỉ IP) để đảm bảo rằng server luôn có dữ liệu mới nhất về thiết bị đang sử dụng RT. Điều này hữu ích trong việc theo dõi hoặc phát hiện các hành vi bất thường (ví dụ: IP thay đổi bất ngờ có thể là dấu hiệu của tấn công).
-  //      * lastActive: Cập nhật thời gian hoạt động cuối cùng của thiết bị để phản ánh rằng thiết bị này vẫn đang "sống" và được sử dụng. Điều này giúp quản lý các thiết bị đang hoạt động một cách chính xác, đặc biệt khi bạn muốn hiển thị danh sách thiết bị đăng nhập cho người dùng.
-  //      * isActive=true: Xác nhận lại rằng thiết bị này vẫn đang trong trạng thái đăng nhập hợp lệ. Nếu trước đó thiết bị bị đánh dấu isActive=false (ví dụ: do bị đăng xuất từ xa), bước này có thể không được thực hiện, tùy thuộc vào logic của hệ thống.
-  //      */
-
-  //     // Tại sao cần phải cập nhật Device
-  //     /**
-  //      * Theo dõi trạng thái thiết bị: Nếu không cập nhật lastActive, bạn sẽ không biết liệu thiết bị đó có còn đang thực sự hoạt động hay không. Điều này quan trọng khi bạn triển khai chức năng như "Xem danh sách thiết bị đang đăng nhập" hoặc "Đăng xuất thiết bị từ xa".
-  //      * Tăng cường bảo mật: Việc cập nhật userAgent và ip giúp phát hiện các thay đổi bất thường. Ví dụ, nếu RT được gửi từ một IP hoàn toàn khác so với lần đăng nhập trước, hệ thống có thể nghi ngờ và yêu cầu xác thực bổ sung.
-  //      * Hỗ trợ quản lý nhiều thiết bị: Khi người dùng đăng nhập trên nhiều thiết bị, việc cập nhật thông tin Device mỗi khi refresh token giúp hệ thống luôn có dữ liệu mới nhất để hiển thị hoặc xử lý (ví dụ: "Thiết bị này hoạt động lần cuối lúc 15:30").
-  //      */
-  //     const {
-  //       deviceId,
-  //       user: {
-  //         roleId,
-  //         role: { name: roleName },
-  //       },
-  //     } = refreshTokenInDb
-  //     const $updateDevice = this.authRepository.updateDevice(deviceId, {
-  //       userAgent,
-  //       ip,
-  //     })
-
-  //     // 4. Xoá refreshToken cũ
-  //     const $deleteRefreshToken = this.authRepository.deleteRefreshToken({
-  //       token: refreshToken,
-  //     })
-  //     const $tokens = this.generateTokens({ userId, deviceId, roleId, roleName })
-
-  //     // 5. Tạo mới accessToken và refreshToken
-  //     //
-  //     const [, , tokens] = await Promise.all([$updateDevice, $deleteRefreshToken, $tokens])
-
-  //     return tokens
-  //   } catch (error) {
-  //     // if (isNotFoundPrismaError(error)) {
-  //     //   throw new UnauthorizedException('Refresh token has been revoked')
-  //     // }
-  //     if (error instanceof HttpException) {
-  //       throw error
-  //     }
-  //     throw new UnauthorizedException()
-  //   }
-  // }
+  private handleRefreshTokenError(error: unknown): never {
+    // Trường hợp đã refresh token rồi, hãy thông báo cho user biết
+    // refresh token của họ đã bị đánh cắp
+    if (error instanceof JsonWebTokenError) {
+      if (error.name === 'TokenExpiredError') {
+        throw new UnauthorizedException('Refresh token has expired')
+      }
+      throw new UnauthorizedException('Invalid refresh token')
+    }
+    // Nếu mà chúng ta throw những cái mã lỗi là instanceof HttpExcetion ở try thì nó sẽ nhảy vào cái dòng if ở đây và quăng ra lỗi -> Là những cái exception mà chúng ta chủ động throw thì nó đều là instanceof HttpException cả -> thì nó sẽ nhảy vào trong đây
+    if (error instanceof HttpException) {
+      throw error
+    }
+    // Còn không thì có cho nó throw ra UnauthorizedException như bên dưới này là được
+    throw UnauthorizedException
+  }
 
   // Xử lý RefreshToken có hết hạn
 
@@ -362,48 +323,11 @@ export class AuthService {
         refreshTokenExpiresIn: remainingTimeInSeconds,
       })
 
-      // const newAccessToken = this.tokenService.signAccessToken({ userId, deviceId, roleId, roleName })
-      // const newRefreshToken = this.tokenService.signRefreshToken({ userId }, remainingTimeInSeconds)
-      // // Có thể xử lý Transaction để đảm bảo toàn vẹn dữ liệu
-      // await this.prismaService.$transaction(async (prisma) => {
-      //   await this.authRepository.updateDeviceWithTransaction(
-      //     deviceId,
-      //     {
-      //       userAgent,
-      //       ip,
-      //     },
-      //     prisma,
-      //   )
-      //   await this.authRepository.deleteRefreshTokenWithTransaction(refreshToken, prisma)
-      //   await this.authRepository.createRefreshTokenWithTransaction(
-      //     {
-      //       token: newRefreshToken,
-      //       userId,
-      //       deviceId,
-      //       expiresAt: new Date(decodedRefreshToken.exp * 1000),
-      //     },
-      //     prisma,
-      //   )
-      // })
-
       const [, , tokens] = await Promise.all([$updateDevice, $deleteRefreshToken, $tokens])
 
       return tokens
     } catch (error) {
-      // Trường hợp đã refresh token rồi, hãy thông báo cho user biết
-      // refresh token của họ đã bị đánh cắp
-      if (error instanceof JsonWebTokenError) {
-        if (error.name === 'TokenExpiredError') {
-          throw new UnauthorizedException('Refresh token has expired')
-        }
-        throw new UnauthorizedException('Invalid refresh token')
-      }
-      // Nếu mà chúng ta throw những cái mã lỗi là instanceof HttpExcetion ở try thì nó sẽ nhảy vào cái dòng if ở đây và quăng ra lỗi -> Là những cái exception mà chúng ta chủ động throw thì nó đều là instanceof HttpException cả -> thì nó sẽ nhảy vào trong đây
-      if (error instanceof HttpException) {
-        throw error
-      }
-      // Còn không thì có cho nó throw ra UnauthorizedException như bên dưới này là được
-      throw UnauthorizedException
+      this.handleRefreshTokenError(error)
     }
   }
 
@@ -419,7 +343,7 @@ export class AuthService {
       })
 
       return {
-        message: 'Đăng xuất thành công',
+        message: MESSAGES.LOGOUT_SUCCESS,
       }
     } catch (error) {
       if (error instanceof JsonWebTokenError) {
@@ -468,7 +392,7 @@ export class AuthService {
     ])
 
     return {
-      message: 'Đổi mật khẩu thành công.',
+      message: MESSAGES.CHANGE_PASSWORD_SUCCESS,
     }
   }
 
@@ -530,19 +454,22 @@ export class AuthService {
         throw InvalidTOTPException
       }
     } else if (code) {
-      await this.authRepository.findUniqueVerificationCode({
+      const verificationCode = await this.authRepository.findUniqueVerificationCode({
         email_type: {
           email: user.email,
           type: TypeOfVerificationCode.DISABLE_2FA,
         },
       })
+      if (!verificationCode) {
+        throw InvalidOTPException
+      }
     }
 
     // 3. Nếu đã kiểm tra hợp lệ rồi thì chúng ta sẽ tiến hành xóa secret ở bên trong database thành null
     await this.sharedUserRepository.updateUser({ id: userId }, { totpSecret: null, updatedById: userId })
 
     return {
-      message: 'Tắt 2FA thành công',
+      message: MESSAGES.DISABLE_2FA_SUCCESS,
     }
   }
 }

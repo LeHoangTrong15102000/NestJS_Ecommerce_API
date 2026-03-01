@@ -26,8 +26,8 @@ export const CreateVoucherBodySchema = z
     maxDiscount: z.number().positive().optional(),
     usageLimit: z.number().int().positive().optional(),
     userUsageLimit: z.number().int().positive().optional().default(1),
-    startDate: z.coerce.date(),
-    endDate: z.coerce.date(),
+    startDate: z.iso.datetime(),
+    endDate: z.iso.datetime(),
     isActive: z.boolean().optional().default(true),
     applicableProducts: z.array(z.number().int().positive()).optional().default([]),
     excludedProducts: z.array(z.number().int().positive()).optional().default([]),
@@ -93,8 +93,8 @@ export const ListVouchersQuerySchema = ListRequestSchema.extend({
   isActive: z.coerce.boolean().optional(),
   sellerId: z.coerce.number().optional(),
   search: z.string().optional(),
-  startDate: z.coerce.date().optional(),
-  endDate: z.coerce.date().optional(),
+  startDate: z.iso.datetime().optional(),
+  endDate: z.iso.datetime().optional(),
 })
 
 export const ListVouchersResponseSchema = ListResponseSchema.extend({

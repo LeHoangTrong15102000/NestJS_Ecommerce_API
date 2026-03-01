@@ -1,10 +1,13 @@
-import { BadRequestException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common'
+import { BadRequestException, ForbiddenException, Injectable, Logger, NotFoundException } from '@nestjs/common'
 import { SharedUserRepository } from 'src/shared/repositories/shared-user.repo'
 import { ConversationRepository } from './conversation.repo'
 import { MessageRepository } from './message.repo'
+import { MESSAGE_LIMITS } from 'src/shared/constants/app.constant'
 
 @Injectable()
 export class MessageService {
+  private readonly logger = new Logger(MessageService.name)
+
   constructor(
     private readonly messageRepo: MessageRepository,
     private readonly conversationRepo: ConversationRepository,
@@ -31,20 +34,6 @@ export class MessageService {
 
     const result = await this.messageRepo.findConversationMessages(conversationId, options)
 
-    console.log('[getConversationMessages] Result from repo:', {
-      dataLength: result.data?.length,
-      firstMessage: result.data?.[0]
-        ? {
-            id: result.data[0].id,
-            hasReadReceipts: !!result.data[0].readReceipts,
-            readReceiptsType: typeof result.data[0].readReceipts,
-            readReceiptsIsArray: Array.isArray(result.data[0].readReceipts),
-            readReceiptsLength: result.data[0].readReceipts?.length,
-            allKeys: Object.keys(result.data[0]),
-          }
-        : null,
-    })
-
     // Enrich messages with computed fields
     const enrichedMessages = result.data.map((message) => {
       const isReadByCurrentUser = message.readReceipts.some((receipt) => receipt.userId === userId)
@@ -68,7 +57,7 @@ export class MessageService {
     data: {
       conversationId: string
       content?: string
-      type?: 'TEXT' | 'IMAGE' | 'VIDEO' | 'AUDIO' | 'FILE' | 'STICKER' | 'LOCATION' | 'CONTACT'
+      type?: 'TEXT' | 'IMAGE' | 'VIDEO' | 'AUDIO' | 'FILE' | 'STICKER' | 'SYSTEM' | 'LOCATION' | 'CONTACT'
       replyToId?: string
       attachments?: Array<{
         type: 'IMAGE' | 'VIDEO' | 'AUDIO' | 'DOCUMENT'
@@ -98,13 +87,13 @@ export class MessageService {
     }
 
     // Validate content length
-    if (hasContent && data.content!.trim().length > 10000) {
+    if (hasContent && data.content!.trim().length > MESSAGE_LIMITS.MAX_CONTENT_LENGTH) {
       throw new BadRequestException('Nội dung tin nhắn không được vượt quá 10,000 ký tự')
     }
 
     // Validate attachments
     if (hasAttachments) {
-      if (data.attachments!.length > 10) {
+      if (data.attachments!.length > MESSAGE_LIMITS.MAX_ATTACHMENTS) {
         throw new BadRequestException('Không thể đính kèm quá 10 file')
       }
 
@@ -114,7 +103,7 @@ export class MessageService {
         }
 
         // Validate file size (100MB limit)
-        if (attachment.fileSize && attachment.fileSize > 100 * 1024 * 1024) {
+        if (attachment.fileSize && attachment.fileSize > MESSAGE_LIMITS.MAX_FILE_SIZE) {
           throw new BadRequestException('Kích thước file không được vượt quá 100MB')
         }
       }
@@ -185,7 +174,7 @@ export class MessageService {
     }
 
     // Cannot edit messages older than 24 hours
-    const dayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000)
+    const dayAgo = new Date(Date.now() - MESSAGE_LIMITS.EDIT_WINDOW_MS)
     if (message.createdAt < dayAgo) {
       throw new BadRequestException('Không thể chỉnh sửa tin nhắn quá 24 giờ')
     }
@@ -195,7 +184,7 @@ export class MessageService {
       throw new BadRequestException('Nội dung tin nhắn không được để trống')
     }
 
-    if (content.trim().length > 10000) {
+    if (content.trim().length > MESSAGE_LIMITS.MAX_CONTENT_LENGTH) {
       throw new BadRequestException('Nội dung tin nhắn không được vượt quá 10,000 ký tự')
     }
 
@@ -252,7 +241,7 @@ export class MessageService {
 
     // For admin deletion, check time limit (24 hours)
     if (forEveryone && message.fromUserId !== userId) {
-      const dayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000)
+      const dayAgo = new Date(Date.now() - MESSAGE_LIMITS.EDIT_WINDOW_MS)
       if (message.createdAt < dayAgo) {
         throw new BadRequestException('Không thể xóa tin nhắn quá 24 giờ cho tất cả mọi người')
       }
@@ -378,13 +367,8 @@ export class MessageService {
       conversationId?: string
     },
   ) {
-    // Get user's conversations
-    const userConversations = await this.conversationRepo.findUserConversations(userId, {
-      page: 1,
-      limit: 1000, // Get all user conversations
-    })
-
-    let conversationIds = userConversations.data.map((c) => c.id)
+    // Get user's conversation IDs (lightweight query)
+    let conversationIds = await this.conversationRepo.findUserConversationIds(userId)
 
     // Filter by specific conversation if provided
     if (options.conversationId) {

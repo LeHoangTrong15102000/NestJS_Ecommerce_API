@@ -1,15 +1,37 @@
-import { Injectable } from '@nestjs/common'
+import { Inject, Injectable } from '@nestjs/common'
+import { CACHE_MANAGER } from '@nestjs/cache-manager'
+import { Cache } from 'cache-manager'
 import { ProductRepo } from 'src/routes/product/product.repo'
-import { CreateProductBodyType, GetProductsQueryType, UpdateProductBodyType } from 'src/routes/product/product.model'
+import {
+  CreateProductBodyType,
+  GetProductsQueryType,
+  GetProductsResType,
+  UpdateProductBodyType,
+} from 'src/routes/product/product.model'
 import { NotFoundRecordException } from 'src/shared/error'
 import { isNotFoundPrismaError } from 'src/shared/helpers'
 import { I18nContext } from 'nestjs-i18n'
+import { CACHE_TTL } from 'src/shared/constants/app.constant'
 
 @Injectable()
 export class ProductService {
-  constructor(private productRepo: ProductRepo) {}
+  constructor(
+    private productRepo: ProductRepo,
+    @Inject(CACHE_MANAGER) private readonly cacheManager: Cache,
+  ) {}
 
-  async list(props: { query: GetProductsQueryType }) {
+  private generateListCacheKey(params: GetProductsQueryType): string {
+    return `products:list:${JSON.stringify(params)}`
+  }
+
+  async list(props: { query: GetProductsQueryType }): Promise<GetProductsResType> {
+    const cacheKey = this.generateListCacheKey(props.query)
+
+    const cached = await this.cacheManager.get<GetProductsResType>(cacheKey)
+    if (cached) {
+      return cached
+    }
+
     const data = await this.productRepo.list({
       page: props.query.page,
       limit: props.query.limit,
@@ -24,6 +46,9 @@ export class ProductService {
       orderBy: props.query.orderBy,
       sortBy: props.query.sortBy,
     })
+
+    await this.cacheManager.set(cacheKey, data, CACHE_TTL.MEDIUM)
+
     return data
   }
 

@@ -9,6 +9,7 @@ generator json {
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
 }
 
 model Language {
@@ -98,6 +99,8 @@ model User {
   deletedUserTranslations     UserTranslation[]     @relation("UserTranslationDeletedBy")
   updatedUserTranslations     UserTranslation[]     @relation("UserTranslationUpdatedBy")
   userTranslations            UserTranslation[]     @relation("User")
+  wishlistItems               WishlistItem[]        @relation("UserWishlist")
+  wishlistCollections         WishlistCollection[]  @relation("UserWishlistCollections")
   Order                       Order[]
   Websocket                   Websocket[]
 
@@ -253,8 +256,13 @@ model Product {
   createdBy           User                 @relation("ProductCreatedBy", fields: [createdById], references: [id], onDelete: Cascade, onUpdate: NoAction)
   ProductSKUSnapshot  ProductSKUSnapshot[]
   aiKnowledge         AIKnowledge[]        @relation("AIKnowledgeProduct")
+  wishlistItems       WishlistItem[]       @relation("ProductWishlist")
 
   @@index([deletedAt])
+  @@index([brandId, deletedAt])
+  @@index([publishedAt, deletedAt])
+  @@index([basePrice])
+  @@index([createdById, deletedAt])
 }
 
 model ProductTranslation {
@@ -338,14 +346,16 @@ model SKU {
   cartItems           CartItem[]
   productSKUSnapshots ProductSKUSnapshot[]
 
-  deletedBy   User?   @relation("SKUDeletedBy", fields: [deletedById], references: [id], onUpdate: NoAction)
-  product     Product @relation(fields: [productId], references: [id], onDelete: Cascade, onUpdate: NoAction)
-  updatedBy   User?   @relation("SKUUpdatedBy", fields: [updatedById], references: [id], onUpdate: NoAction)
-  createdById Int
-  createdBy   User    @relation("SKUCreatedBy", fields: [createdById], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  deletedBy     User?          @relation("SKUDeletedBy", fields: [deletedById], references: [id], onUpdate: NoAction)
+  product       Product        @relation(fields: [productId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  updatedBy     User?          @relation("SKUUpdatedBy", fields: [updatedById], references: [id], onUpdate: NoAction)
+  createdById   Int
+  createdBy     User           @relation("SKUCreatedBy", fields: [createdById], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  wishlistItems WishlistItem[] @relation("SKUWishlist")
 
   @@index([deletedAt])
   @@index([productId])
+  @@index([stock, deletedAt])
 }
 
 model Brand {
@@ -400,6 +410,7 @@ model CartItem {
 
   @@unique([userId, skuId])
   @@index([userId])
+  @@index([skuId])
 }
 
 model ProductSKUSnapshot {
@@ -462,6 +473,9 @@ model Order {
   @@index([status, deletedAt])
   @@index([addressId])
   @@index([voucherId])
+  @@index([userId, deletedAt])
+  @@index([userId, createdAt])
+  @@index([paymentId])
 }
 
 model Websocket {
@@ -477,6 +491,9 @@ model Payment {
   status    PaymentStatus
   createdAt DateTime      @default(now())
   updatedAt DateTime      @updatedAt
+
+  @@index([status])
+  @@index([createdAt])
 }
 
 model Review {
@@ -509,6 +526,8 @@ model Review {
   @@index([productId])
   @@index([isVerifiedPurchase])
   @@index([sellerId])
+  @@index([productId, createdAt])
+  @@index([rating])
 }
 
 model ReviewMedia {
@@ -956,4 +975,89 @@ enum AIKnowledgeType {
   GUIDE // Hướng dẫn sử dụng
   PROMOTION // Khuyến mãi
   CATEGORY // Thông tin danh mục
+}
+
+// ============================================
+// WISHLIST FEATURE MODELS
+// ============================================
+
+// Bảng WishlistItem - Lưu sản phẩm yêu thích của user
+model WishlistItem {
+  id        Int     @id @default(autoincrement())
+  userId    Int
+  productId Int
+  skuId     Int? // Optional: user có thể thích variant cụ thể
+  note      String? @db.VarChar(500) // Ghi chú cá nhân (vd: "Mua cho sinh nhật mẹ")
+  priority  Int     @default(0) // 0=normal, 1=high, 2=urgent
+
+  // Tracking
+  addedAt   DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Notification preferences
+  notifyOnPriceDrops  Boolean @default(true)
+  notifyOnBackInStock Boolean @default(true)
+  notifyOnPromotion   Boolean @default(true)
+
+  // Relations
+  user                    User                     @relation("UserWishlist", fields: [userId], references: [id], onDelete: Cascade)
+  product                 Product                  @relation("ProductWishlist", fields: [productId], references: [id], onDelete: Cascade)
+  sku                     SKU?                     @relation("SKUWishlist", fields: [skuId], references: [id], onDelete: SetNull)
+  priceAlerts             WishlistPriceAlert[]
+  wishlistCollectionItems WishlistCollectionItem[]
+
+  @@unique([userId, productId, skuId])
+  @@index([userId, addedAt])
+  @@index([productId])
+  @@index([userId, priority])
+}
+
+// Bảng WishlistCollection - Tổ chức wishlist thành collections
+model WishlistCollection {
+  id          Int     @id @default(autoincrement())
+  userId      Int
+  name        String  @db.VarChar(200) // "Quà sinh nhật", "Đồ điện tử muốn mua"
+  description String? @db.VarChar(1000)
+  isPublic    Boolean @default(false) // Cho phép share
+  shareCode   String? @unique @db.VarChar(50) // Code để share
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  user  User                     @relation("UserWishlistCollections", fields: [userId], references: [id], onDelete: Cascade)
+  items WishlistCollectionItem[]
+
+  @@index([userId])
+  @@index([shareCode])
+}
+
+// Bảng trung gian: WishlistItem thuộc Collection nào
+model WishlistCollectionItem {
+  id             Int      @id @default(autoincrement())
+  collectionId   Int
+  wishlistItemId Int
+  addedAt        DateTime @default(now())
+
+  collection   WishlistCollection @relation(fields: [collectionId], references: [id], onDelete: Cascade)
+  wishlistItem WishlistItem       @relation(fields: [wishlistItemId], references: [id], onDelete: Cascade)
+
+  @@unique([collectionId, wishlistItemId])
+  @@index([collectionId])
+  @@index([wishlistItemId])
+}
+
+// Bảng theo dõi price history để gửi alerts
+model WishlistPriceAlert {
+  id             Int       @id @default(autoincrement())
+  wishlistItemId Int       @unique // Make unique for upsert
+  originalPrice  Float // Giá khi add vào wishlist
+  targetPrice    Float? // Giá mong muốn (user set)
+  currentPrice   Float // Giá hiện tại
+  lastCheckedAt  DateTime  @default(now())
+  alertSentAt    DateTime?
+
+  wishlistItem WishlistItem @relation(fields: [wishlistItemId], references: [id], onDelete: Cascade)
+
+  @@index([lastCheckedAt])
 }

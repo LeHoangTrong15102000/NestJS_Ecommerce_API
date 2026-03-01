@@ -9,8 +9,10 @@ import {
   ListMyVouchersQuery,
   ApplyVoucherBody,
 } from './voucher.dto'
+import { SerializeAll } from 'src/shared/decorators/serialize.decorator'
 
 @Injectable()
+@SerializeAll()
 export class VoucherRepository {
   constructor(private readonly prismaService: PrismaService) {}
 
@@ -251,7 +253,7 @@ export class VoucherRepository {
       )
     } else if (status === 'available') {
       filteredData = userVouchers.filter(
-        (uv) => uv.voucher.userUsageLimit === null || uv.usedCount < uv.voucher.userUsageLimit!,
+        (uv) => uv.voucher.userUsageLimit === null || uv.usedCount < uv.voucher.userUsageLimit,
       )
     }
 

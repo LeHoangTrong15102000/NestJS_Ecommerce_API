@@ -9,8 +9,9 @@ const CustomZodValidationPipe: typeof ZodValidationPipe = createZodValidationPip
     return new UnprocessableEntityException(
       error.issues.map((issue) => {
         return {
-          ...issue,
+          message: issue.message,
           path: issue.path.join('.'),
+          code: issue.code,
         }
       }),
     )

@@ -8,6 +8,7 @@ import {
   UpdateBrandTranslationBodyType,
 } from 'src/routes/brand/brand-translation/brand-translation.model'
 import { SerializeAll } from 'src/shared/decorators/serialize.decorator'
+import { MESSAGES } from 'src/shared/constants/app.constant'
 
 @Injectable()
 export class BrandTranslationService {
@@ -61,7 +62,7 @@ export class BrandTranslationService {
         deletedById,
       })
       return {
-        message: 'Delete successfully',
+        message: MESSAGES.DELETE_SUCCESS,
       }
     } catch (error) {
       if (isNotFoundPrismaError(error)) {

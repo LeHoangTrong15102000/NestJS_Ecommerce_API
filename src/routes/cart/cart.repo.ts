@@ -91,72 +91,6 @@ export class CartRepo {
     limit: number
     page: number
   }): Promise<GetCartResType> {
-    const cartItems = await this.prismaService.cartItem.findMany({
-      where: {
-        userId,
-        sku: {
-          product: {
-            deletedAt: null,
-            publishedAt: {
-              lte: new Date(),
-              not: null,
-            },
-          },
-        },
-      },
-      include: {
-        sku: {
-          include: {
-            product: {
-              include: {
-                productTranslations: {
-                  where: languageId === ALL_LANGUAGE_CODE ? { deletedAt: null } : { languageId, deletedAt: null },
-                },
-                createdBy: true,
-              },
-            },
-          },
-        },
-      },
-      orderBy: {
-        updatedAt: 'desc',
-      },
-    })
-    const groupMap = new Map<number, CartItemDetailType>()
-    for (const cartItem of cartItems) {
-      const shopId = cartItem.sku.product.createdById
-      if (shopId) {
-        if (!groupMap.has(shopId)) {
-          groupMap.set(shopId, { shop: cartItem.sku.product.createdBy, cartItems: [] })
-        }
-        groupMap.get(shopId)?.cartItems.push(cartItem)
-      }
-    }
-    const sortedGroups = Array.from(groupMap.values())
-    const skip = (page - 1) * limit
-    const take = limit
-    const totalGroups = sortedGroups.length
-    const pagedGroups = sortedGroups.slice(skip, skip + take)
-    return {
-      data: pagedGroups,
-      totalItems: totalGroups,
-      limit,
-      page,
-      totalPages: Math.ceil(totalGroups / limit),
-    }
-  }
-
-  async list2({
-    userId,
-    languageId,
-    page,
-    limit,
-  }: {
-    userId: number
-    languageId: string
-    limit: number
-    page: number
-  }): Promise<GetCartResType> {
     const skip = (page - 1) * limit
     const take = limit
     // Đếm tổng số nhóm sản phẩm
@@ -274,7 +208,7 @@ export class CartRepo {
         skuId: body.skuId,
         quantity: body.quantity,
       },
-    })
+    }) as unknown as CartItemType
   }
 
   async update({
@@ -309,7 +243,7 @@ export class CartRepo {
           throw NotFoundCartItemException
         }
         throw error
-      })
+      }) as unknown as CartItemType
   }
 
   delete(userId: number, body: DeleteCartBodyType): Promise<{ count: number }> {

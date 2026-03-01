@@ -1,9 +1,14 @@
-// Mock helpers functions
-jest.mock('src/shared/helpers', () => ({
-  generateOTP: jest.fn().mockReturnValue('123456'),
-  isUniqueConstraintPrismaError: jest.fn(),
-  isNotFoundPrismaError: jest.fn(),
-}))
+// Mock helpers functions - keep real implementations, only mock specific functions
+jest.mock('src/shared/helpers', () => {
+  const actual = jest.requireActual('src/shared/helpers')
+  return {
+    ...actual,
+    generateOTP: jest.fn().mockReturnValue('123456'),
+    isUniqueConstraintPrismaError: jest.fn(),
+    isNotFoundPrismaError: jest.fn(),
+    isForeignKeyConstraintPrismaError: jest.fn(),
+  }
+})
 
 // Tăng memory limit cho test environment
 process.env.NODE_OPTIONS = '--max-old-space-size=4096'

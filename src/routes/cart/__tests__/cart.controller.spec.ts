@@ -49,8 +49,8 @@ const createTestData = {
               quantity: 2,
               skuId: 1,
               userId: 1,
-              createdAt: new Date(),
-              updatedAt: new Date(),
+              createdAt: new Date().toISOString(),
+              updatedAt: new Date().toISOString(),
               sku: {
                 id: 1,
                 value: 'Size: M, Color: Red',
@@ -67,7 +67,7 @@ const createTestData = {
                       options: ['M', 'L', 'XL'],
                     },
                   ],
-                  publishedAt: new Date(),
+                  publishedAt: new Date().toISOString(),
                   productTranslations: [
                     {
                       id: 1,
@@ -94,8 +94,8 @@ const createTestData = {
     quantity: 2,
     skuId: 1,
     userId: 1,
-    createdAt: new Date(),
-    updatedAt: new Date(),
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
     ...overrides,
   }),
 

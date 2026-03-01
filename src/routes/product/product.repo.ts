@@ -112,10 +112,14 @@ export class ProductRepo {
           productTranslations: {
             where: languageId === ALL_LANGUAGE_CODE ? { deletedAt: null } : { languageId, deletedAt: null },
           },
-          orders: {
-            where: {
-              deletedAt: null,
-              status: 'DELIVERED',
+          _count: {
+            select: {
+              orders: {
+                where: {
+                  deletedAt: null,
+                  status: 'DELIVERED',
+                },
+              },
             },
           },
         },

@@ -1353,8 +1353,8 @@ describe('MessageRepository', () => {
       // Act
       const result = await repository.getReadReceiptStats(messageId)
 
-      // Assert - totalMembers = 0 (0 - 1 author = -1, but clamped to 0)
-      expect(result.totalMembers).toBe(-1) // Bug: should be 0, but implementation returns -1
+      // Assert - totalMembers = 0 (0 - 1 author = -1, clamped to 0 via Math.max)
+      expect(result.totalMembers).toBe(0)
       expect(result.readPercentage).toBe(0)
     })
 

@@ -9,6 +9,7 @@ import {
 import { PermissionRepo } from 'src/routes/permission/permission.repo'
 import { NotFoundRecordException } from 'src/shared/error'
 import { isNotFoundPrismaError, isUniqueConstraintPrismaError } from 'src/shared/helpers'
+import { MESSAGES } from 'src/shared/constants/app.constant'
 
 @Injectable()
 export class PermissionService {
@@ -76,7 +77,7 @@ export class PermissionService {
       await this.deleteCachedRole(roles)
 
       return {
-        message: 'Delete successfully',
+        message: MESSAGES.DELETE_SUCCESS,
       }
     } catch (error) {
       if (isNotFoundPrismaError(error)) {

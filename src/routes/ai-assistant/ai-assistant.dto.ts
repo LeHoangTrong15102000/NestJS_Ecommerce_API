@@ -157,4 +157,3 @@ export const ConversationIdParamSchema = z.object({
 })
 
 export class ConversationIdParamDto extends createZodDto(ConversationIdParamSchema) {}
-

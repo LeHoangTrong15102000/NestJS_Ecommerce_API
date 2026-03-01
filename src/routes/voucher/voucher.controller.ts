@@ -1,46 +1,45 @@
-import { Controller, Get, Post, Put, Delete, Body, Param, Query, UseGuards } from '@nestjs/common'
-import { VoucherService } from './voucher.service'
-import { ActiveUser } from '../../shared/decorators/active-user.decorator'
-import { Auth } from '../../shared/decorators/auth.decorator'
+import { Body, Controller, Delete, Get, Param, Post, Put, Query } from '@nestjs/common'
 import { AuthType } from '../../shared/constants/auth.constant'
+import { ActiveUser } from '../../shared/decorators/active-user.decorator'
+import { Auth, IsPublic } from '../../shared/decorators/auth.decorator'
+import { Roles } from '../../shared/decorators/roles.decorator'
 import ZodValidationPipe from '../../shared/pipes/custom-zod-validation.pipe'
 import {
-  CreateVoucherBodySchema,
-  CreateVoucherBody,
-  CreateVoucherResponse,
-  UpdateVoucherParamsSchema,
-  UpdateVoucherParams,
-  UpdateVoucherBodySchema,
-  UpdateVoucherBody,
-  UpdateVoucherResponse,
-  ListVouchersQuerySchema,
-  ListVouchersQuery,
-  ListVouchersResponse,
-  ListAvailableVouchersQuerySchema,
-  ListAvailableVouchersQuery,
-  ListAvailableVouchersResponse,
-  GetVoucherDetailParamsSchema,
-  GetVoucherDetailParams,
-  GetVoucherDetailResponse,
-  GetVoucherByCodeParamsSchema,
-  GetVoucherByCodeParams,
-  GetVoucherByCodeResponse,
-  CollectVoucherParamsSchema,
-  CollectVoucherParams,
-  CollectVoucherResponse,
-  ListMyVouchersQuerySchema,
-  ListMyVouchersQuery,
-  ListMyVouchersResponse,
-  ApplyVoucherBodySchema,
   ApplyVoucherBody,
+  ApplyVoucherBodySchema,
   ApplyVoucherResponse,
-  DeleteVoucherParamsSchema,
+  CollectVoucherParams,
+  CollectVoucherParamsSchema,
+  CollectVoucherResponse,
+  CreateVoucherBody,
+  CreateVoucherBodySchema,
+  CreateVoucherResponse,
   DeleteVoucherParams,
+  DeleteVoucherParamsSchema,
   DeleteVoucherResponse,
+  GetVoucherByCodeParams,
+  GetVoucherByCodeParamsSchema,
+  GetVoucherByCodeResponse,
+  GetVoucherDetailParams,
+  GetVoucherDetailParamsSchema,
+  GetVoucherDetailResponse,
   GetVoucherStatsResponse,
+  ListAvailableVouchersQuery,
+  ListAvailableVouchersQuerySchema,
+  ListAvailableVouchersResponse,
+  ListMyVouchersQuery,
+  ListMyVouchersQuerySchema,
+  ListMyVouchersResponse,
+  ListVouchersQuery,
+  ListVouchersQuerySchema,
+  ListVouchersResponse,
+  UpdateVoucherBody,
+  UpdateVoucherBodySchema,
+  UpdateVoucherParams,
+  UpdateVoucherParamsSchema,
+  UpdateVoucherResponse,
 } from './voucher.dto'
-import { ActiveRolePermissions } from '../../shared/decorators/active-role-permissions.decorator'
-import { Roles } from '../../shared/decorators/roles.decorator'
+import { VoucherService } from './voucher.service'
 
 @Controller('vouchers')
 export class VoucherController {
@@ -49,6 +48,7 @@ export class VoucherController {
   // ===== PUBLIC ENDPOINTS =====
 
   // Lấy danh sách voucher available (không cần đăng nhập)
+  @IsPublic()
   @Get('available')
   async getAvailableVouchers(
     @Query(new ZodValidationPipe(ListAvailableVouchersQuerySchema)) query: ListAvailableVouchersQuery,
@@ -62,6 +62,7 @@ export class VoucherController {
   }
 
   // Lấy voucher theo code (không cần đăng nhập)
+  @IsPublic()
   @Get('code/:code')
   async getVoucherByCode(
     @Param(new ZodValidationPipe(GetVoucherByCodeParamsSchema)) params: GetVoucherByCodeParams,
@@ -129,7 +130,7 @@ export class VoucherController {
     @Body(new ZodValidationPipe(CreateVoucherBodySchema)) body: CreateVoucherBody,
   ): Promise<CreateVoucherResponse> {
     // Nếu là seller thì sellerId = userId, admin có thể tạo platform voucher
-    const sellerId = roleId === 2 ? userId : undefined // Assuming roleId 2 is SELLER
+    const sellerId = roleId === 3 ? userId : undefined // roleId 3 is SELLER
     const data = await this.voucherService.createVoucher(body, userId, sellerId)
     return { data }
   }
@@ -144,7 +145,7 @@ export class VoucherController {
     @Query(new ZodValidationPipe(ListVouchersQuerySchema)) query: ListVouchersQuery,
   ): Promise<ListVouchersResponse> {
     // Nếu là seller thì chỉ lấy voucher của mình
-    const sellerId = roleId === 2 ? userId : query.sellerId
+    const sellerId = roleId === 3 ? userId : query.sellerId
     const result = await this.voucherService.getVouchers(query, sellerId)
     return {
       data: result.data,
@@ -160,12 +161,13 @@ export class VoucherController {
     @ActiveUser('userId') userId: number,
     @ActiveUser('roleId') roleId: number,
   ): Promise<GetVoucherStatsResponse> {
-    const sellerId = roleId === 2 ? userId : undefined
+    const sellerId = roleId === 3 ? userId : undefined
     const data = await this.voucherService.getVoucherStats(sellerId)
     return { data }
   }
 
   // Lấy chi tiết voucher
+  @IsPublic()
   @Get(':id')
   async getVoucherDetail(
     @Param(new ZodValidationPipe(GetVoucherDetailParamsSchema)) params: GetVoucherDetailParams,
@@ -185,7 +187,7 @@ export class VoucherController {
     @Param(new ZodValidationPipe(UpdateVoucherParamsSchema)) params: UpdateVoucherParams,
     @Body(new ZodValidationPipe(UpdateVoucherBodySchema)) body: UpdateVoucherBody,
   ): Promise<UpdateVoucherResponse> {
-    const sellerId = roleId === 2 ? userId : undefined
+    const sellerId = roleId === 3 ? userId : undefined
     const data = await this.voucherService.updateVoucher(params.id, body, userId, sellerId)
     return { data }
   }
@@ -199,7 +201,7 @@ export class VoucherController {
     @ActiveUser('roleId') roleId: number,
     @Param(new ZodValidationPipe(DeleteVoucherParamsSchema)) params: DeleteVoucherParams,
   ): Promise<DeleteVoucherResponse> {
-    const sellerId = roleId === 2 ? userId : undefined
+    const sellerId = roleId === 3 ? userId : undefined
     return this.voucherService.deleteVoucher(params.id, userId, sellerId)
   }
 }

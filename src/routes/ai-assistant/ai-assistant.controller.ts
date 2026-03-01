@@ -1,30 +1,16 @@
-import {
-  Controller,
-  Get,
-  Post,
-  Delete,
-  Patch,
-  Body,
-  Param,
-  Query,
-  Req,
-  Res,
-  UseGuards,
-  HttpStatus,
-  Logger,
-} from '@nestjs/common'
-import { Response } from 'express'
+import { Body, Controller, Delete, Get, HttpStatus, Logger, Param, Patch, Post, Query, Req, Res } from '@nestjs/common'
+import { Request, Response } from 'express'
 import { ActiveUser } from 'src/shared/decorators/active-user.decorator'
-import { AIAssistantService } from './ai-assistant.service'
 import {
+  ConversationIdParamDto,
   CreateAIConversationDto,
-  SendAIMessageDto,
   GetConversationsQueryDto,
   SearchMessagesQueryDto,
-  TestStreamingQueryDto,
-  ConversationIdParamDto,
+  SendAIMessageDto,
   StreamingEventData,
+  TestStreamingQueryDto,
 } from './ai-assistant.dto'
+import { AIAssistantService } from './ai-assistant.service'
 
 @Controller('ai-assistant')
 export class AIAssistantController {
@@ -268,7 +254,41 @@ export class AIAssistantController {
    * GET /ai-assistant/test-stream?message=hello
    */
   @Get('test-stream')
-  async testAIStreaming(@Query() query: TestStreamingQueryDto, @Res() res: Response) {
+  async testAIStreaming(@Query() query: TestStreamingQueryDto, @Req() req: Request, @Res() res: Response) {
+    const SSE_TIMEOUT_MS = 120_000 // 120 seconds
+
+    // AbortController for cancelling the AI stream
+    const abortController = new AbortController()
+    let isResponseClosed = false
+    let timeoutTimer: ReturnType<typeof setTimeout> | null = null
+
+    // Detect client disconnect
+    req.on('close', () => {
+      if (!isResponseClosed) {
+        isResponseClosed = true
+        abortController.abort()
+        if (timeoutTimer) {
+          clearTimeout(timeoutTimer)
+          timeoutTimer = null
+        }
+        this.logger.debug('SSE client disconnected (test-stream)')
+      }
+    })
+
+    // Set timeout to prevent hanging connections
+    timeoutTimer = setTimeout(() => {
+      if (!isResponseClosed) {
+        isResponseClosed = true
+        abortController.abort()
+        this.logger.debug('SSE stream timed out (test-stream)')
+        try {
+          res.end()
+        } catch {
+          // ignore
+        }
+      }
+    }, SSE_TIMEOUT_MS)
+
     try {
       // Setup Server-Sent Events headers
       res.writeHead(HttpStatus.OK, {
@@ -286,58 +306,91 @@ export class AIAssistantController {
         userMessage: query.message,
         timestamp: new Date().toISOString(),
       }
-      res.write(`data: ${JSON.stringify(startEvent)}\n\n`)
+      if (!isResponseClosed) {
+        res.write(`data: ${JSON.stringify(startEvent)}\n\n`)
+      }
 
       let fullResponse = ''
 
-      // Handle streaming callbacks
+      // Handle streaming callbacks with write-guard
       const callbacks = {
         onChunk: (chunk: string) => {
+          if (isResponseClosed) return
           fullResponse += chunk
           const chunkEvent: StreamingEventData = {
             type: 'chunk',
             content: chunk,
             fullContent: fullResponse,
           }
-          res.write(`data: ${JSON.stringify(chunkEvent)}\n\n`)
+          try {
+            res.write(`data: ${JSON.stringify(chunkEvent)}\n\n`)
+          } catch {
+            // Client already disconnected
+          }
         },
         onComplete: () => {
+          if (isResponseClosed) return
+          isResponseClosed = true
+          if (timeoutTimer) {
+            clearTimeout(timeoutTimer)
+            timeoutTimer = null
+          }
           const completeEvent: StreamingEventData = {
             type: 'complete',
             message: 'AI streaming hoàn tất',
             fullResponse,
             timestamp: new Date().toISOString(),
           }
-          res.write(`data: ${JSON.stringify(completeEvent)}\n\n`)
-          res.end()
+          try {
+            res.write(`data: ${JSON.stringify(completeEvent)}\n\n`)
+            res.end()
+          } catch {
+            // Client already disconnected
+          }
         },
         onError: (error: string) => {
+          if (isResponseClosed) return
+          isResponseClosed = true
+          if (timeoutTimer) {
+            clearTimeout(timeoutTimer)
+            timeoutTimer = null
+          }
           const errorEvent: StreamingEventData = {
             type: 'error',
             message: error,
             fallback: 'Xin lỗi, có lỗi xảy ra. Vui lòng thử lại sau.',
           }
-          res.write(`data: ${JSON.stringify(errorEvent)}\n\n`)
-          res.end()
+          try {
+            res.write(`data: ${JSON.stringify(errorEvent)}\n\n`)
+            res.end()
+          } catch {
+            // Client already disconnected
+          }
         },
       }
 
-      // Start streaming
-      await this.aiAssistantService.generateStreamingResponse([], query.message, callbacks)
+      // Start streaming with abort signal
+      await this.aiAssistantService.generateStreamingResponse([], query.message, callbacks, abortController.signal)
     } catch (error) {
       this.logger.error('Error in AI streaming:', error)
 
-      const errorEvent: StreamingEventData = {
-        type: 'error',
-        message: error.message || 'Internal server error',
-        fallback: 'Xin lỗi, có lỗi xảy ra. Vui lòng thử lại sau.',
-      }
-
-      try {
-        res.write(`data: ${JSON.stringify(errorEvent)}\n\n`)
-        res.end()
-      } catch (resError) {
-        this.logger.error('Error writing to response:', resError)
+      if (!isResponseClosed) {
+        isResponseClosed = true
+        if (timeoutTimer) {
+          clearTimeout(timeoutTimer)
+          timeoutTimer = null
+        }
+        const errorEvent: StreamingEventData = {
+          type: 'error',
+          message: error.message || 'Internal server error',
+          fallback: 'Xin lỗi, có lỗi xảy ra. Vui lòng thử lại sau.',
+        }
+        try {
+          res.write(`data: ${JSON.stringify(errorEvent)}\n\n`)
+          res.end()
+        } catch {
+          // Client already disconnected
+        }
       }
     }
   }
@@ -351,8 +404,11 @@ export class AIAssistantController {
     @ActiveUser('userId') userId: number,
     @Param() params: ConversationIdParamDto,
     @Query() query: TestStreamingQueryDto,
+    @Req() req: Request,
     @Res() res: Response,
   ) {
+    const SSE_TIMEOUT_MS = 120_000 // 120 seconds
+
     try {
       // Verify conversation ownership
       const conversation = await this.aiAssistantService.getConversationDetails(params.id, userId)
@@ -364,6 +420,38 @@ export class AIAssistantController {
         })
         return
       }
+
+      // AbortController for cancelling the AI stream
+      const abortController = new AbortController()
+      let isResponseClosed = false
+      let timeoutTimer: ReturnType<typeof setTimeout> | null = null
+
+      // Detect client disconnect
+      req.on('close', () => {
+        if (!isResponseClosed) {
+          isResponseClosed = true
+          abortController.abort()
+          if (timeoutTimer) {
+            clearTimeout(timeoutTimer)
+            timeoutTimer = null
+          }
+          this.logger.debug('SSE client disconnected (conversation stream)')
+        }
+      })
+
+      // Set timeout to prevent hanging connections
+      timeoutTimer = setTimeout(() => {
+        if (!isResponseClosed) {
+          isResponseClosed = true
+          abortController.abort()
+          this.logger.debug('SSE stream timed out (conversation stream)')
+          try {
+            res.end()
+          } catch {
+            // ignore
+          }
+        }
+      }, SSE_TIMEOUT_MS)
 
       // Setup Server-Sent Events headers
       res.writeHead(HttpStatus.OK, {
@@ -381,44 +469,76 @@ export class AIAssistantController {
         userMessage: query.message,
         timestamp: new Date().toISOString(),
       }
-      res.write(`data: ${JSON.stringify(startEvent)}\n\n`)
+      if (!isResponseClosed) {
+        res.write(`data: ${JSON.stringify(startEvent)}\n\n`)
+      }
 
       let fullResponse = ''
 
-      // Handle streaming callbacks
+      // Handle streaming callbacks with write-guard
       const callbacks = {
         onChunk: (chunk: string) => {
+          if (isResponseClosed) return
           fullResponse += chunk
           const chunkEvent: StreamingEventData = {
             type: 'chunk',
             content: chunk,
             fullContent: fullResponse,
           }
-          res.write(`data: ${JSON.stringify(chunkEvent)}\n\n`)
+          try {
+            res.write(`data: ${JSON.stringify(chunkEvent)}\n\n`)
+          } catch {
+            // Client already disconnected
+          }
         },
         onComplete: () => {
+          if (isResponseClosed) return
+          isResponseClosed = true
+          if (timeoutTimer) {
+            clearTimeout(timeoutTimer)
+            timeoutTimer = null
+          }
           const completeEvent: StreamingEventData = {
             type: 'complete',
             message: 'Streaming hoàn tất',
             fullResponse,
             timestamp: new Date().toISOString(),
           }
-          res.write(`data: ${JSON.stringify(completeEvent)}\n\n`)
-          res.end()
+          try {
+            res.write(`data: ${JSON.stringify(completeEvent)}\n\n`)
+            res.end()
+          } catch {
+            // Client already disconnected
+          }
         },
         onError: (error: string) => {
+          if (isResponseClosed) return
+          isResponseClosed = true
+          if (timeoutTimer) {
+            clearTimeout(timeoutTimer)
+            timeoutTimer = null
+          }
           const errorEvent: StreamingEventData = {
             type: 'error',
             message: error,
             fallback: 'Xin lỗi, có lỗi xảy ra. Vui lòng thử lại sau.',
           }
-          res.write(`data: ${JSON.stringify(errorEvent)}\n\n`)
-          res.end()
+          try {
+            res.write(`data: ${JSON.stringify(errorEvent)}\n\n`)
+            res.end()
+          } catch {
+            // Client already disconnected
+          }
         },
       }
 
-      // Start streaming with conversation context
-      await this.aiAssistantService.generateStreamingResponse(conversation.messages || [], query.message, callbacks)
+      // Start streaming with conversation context and abort signal
+      await this.aiAssistantService.generateStreamingResponse(
+        conversation.messages || [],
+        query.message,
+        callbacks,
+        abortController.signal,
+      )
     } catch (error) {
       this.logger.error('Error in conversation streaming:', error)
 
@@ -431,10 +551,9 @@ export class AIAssistantController {
       try {
         res.write(`data: ${JSON.stringify(errorEvent)}\n\n`)
         res.end()
-      } catch (resError) {
-        this.logger.error('Error writing to response:', resError)
+      } catch {
+        // Client already disconnected
       }
     }
   }
 }
-

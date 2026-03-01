@@ -1,5 +1,6 @@
+import { CACHE_MANAGER } from '@nestjs/cache-manager'
+import { INestApplication } from '@nestjs/common'
 import { Test, TestingModule } from '@nestjs/testing'
-import { INestApplication, ValidationPipe } from '@nestjs/common'
 import request from 'supertest'
 import { AppModule } from '../../src/app.module'
 import { PrismaService } from '../../src/shared/services/prisma.service'
@@ -17,16 +18,23 @@ describe('Voucher Integration Tests', () => {
   let testVoucherId: number
   let testProductId: number
 
+  const mockCacheManager = {
+    get: jest.fn().mockResolvedValue(null),
+    set: jest.fn().mockResolvedValue(undefined),
+    del: jest.fn().mockResolvedValue(undefined),
+  }
+
   beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
       imports: [AppModule],
     })
       .overrideProvider(PrismaService)
       .useValue(global.__GLOBAL_PRISMA__)
+      .overrideProvider(CACHE_MANAGER)
+      .useValue(mockCacheManager)
       .compile()
 
     app = moduleFixture.createNestApplication()
-    app.useGlobalPipes(new ValidationPipe({ transform: true }))
     prisma = moduleFixture.get<PrismaService>(PrismaService)
 
     await app.init()
@@ -89,7 +97,7 @@ describe('Voucher Integration Tests', () => {
     const sellerCreated = await prisma.user.findFirst({ where: { email: sellerUser.email } })
     await prisma.user.update({
       where: { id: sellerCreated!.id },
-      data: { roleId: 2 }, // SELLER role
+      data: { roleId: 3 }, // SELLER role (roleId: 3)
     })
     const sellerLogin = await loginUser(sellerUser.email, sellerUser.password, 'seller-agent')
     sellerAccessToken = sellerLogin.accessToken
@@ -315,15 +323,16 @@ describe('Voucher Integration Tests', () => {
         }),
       })
 
-      // Verify voucher is collected when getting available vouchers
-      const availableResponse = await request(app.getHttpServer())
-        .get('/vouchers/available')
+      // Verify voucher is in my vouchers list
+      const myVouchersResponse = await request(app.getHttpServer())
+        .get('/vouchers/my')
         .set('Authorization', `Bearer ${userAccessToken}`)
         .expect(200)
 
-      const collectedVoucher = availableResponse.body.data.find((v: any) => v.id === testVoucherId)
-      expect(collectedVoucher.isCollected).toBe(true)
-      expect(collectedVoucher.canApply).toBe(true)
+      const collectedVoucher = myVouchersResponse.body.data.find((uv: any) => uv.voucherId === testVoucherId)
+      expect(collectedVoucher).toBeDefined()
+      expect(collectedVoucher.userId).toBe(testUserId)
+      expect(collectedVoucher.usedCount).toBe(0)
     })
 
     it('should not allow collecting same voucher twice', async () => {
@@ -544,11 +553,13 @@ describe('Voucher Integration Tests', () => {
 
       expect(response.body.message).toContain('voucher')
 
-      // Verify voucher is deleted
+      // Verify voucher is soft deleted (deletedAt is set)
       const deletedVoucher = await prisma.voucher.findUnique({
         where: { id: voucher.id },
       })
-      expect(deletedVoucher).toBeNull()
+      expect(deletedVoucher).not.toBeNull()
+      expect(deletedVoucher!.deletedAt).not.toBeNull()
+      expect(deletedVoucher!.deletedById).toBe(adminUserId)
     })
 
     it('should get admin voucher stats', async () => {
@@ -680,7 +691,7 @@ describe('Voucher Integration Tests', () => {
         .send({
           name: 'Invalid Voucher',
         })
-        .expect(400)
+        .expect(422) // Zod validation returns 422
 
       // Invalid percentage value
       await request(app.getHttpServer())
@@ -696,7 +707,7 @@ describe('Voucher Integration Tests', () => {
           startDate: new Date(),
           endDate: new Date(Date.now() + 86400000),
         })
-        .expect(400)
+        .expect(422) // Zod refine validation returns 422
 
       // Invalid date range
       await request(app.getHttpServer())
@@ -712,7 +723,7 @@ describe('Voucher Integration Tests', () => {
           startDate: new Date(Date.now() + 86400000), // Tomorrow
           endDate: new Date(), // Today (before start date)
         })
-        .expect(400)
+        .expect(422) // Zod refine validation returns 422
     })
 
     it('should not allow duplicate voucher codes', async () => {

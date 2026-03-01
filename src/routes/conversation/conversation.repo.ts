@@ -1,11 +1,14 @@
-import { Injectable } from '@nestjs/common'
+import { Injectable, Logger } from '@nestjs/common'
 import { Prisma } from '@prisma/client'
 import { SerializeAll } from 'src/shared/decorators/serialize.decorator'
 import { PrismaService } from 'src/shared/services/prisma.service'
+import { TYPING_INDICATOR } from 'src/shared/constants/app.constant'
 
 @Injectable()
 @SerializeAll()
 export class ConversationRepository {
+  private readonly logger = new Logger(ConversationRepository.name)
+
   constructor(private readonly prisma: PrismaService) {}
 
   // ===== CONVERSATION CRUD =====
@@ -120,66 +123,12 @@ export class ConversationRepository {
     const { page, limit, type, search, isArchived } = options
     const skip = (page - 1) * limit
 
-    const where: Prisma.ConversationWhereInput = {
-      members: {
-        some: {
-          userId,
-          isActive: true,
-        },
-      },
-      isArchived: isArchived ?? false,
-    }
-
-    if (type) {
-      where.type = type
-    }
-
-    if (search) {
-      where.OR = [
-        { name: { contains: search, mode: 'insensitive' } },
-        {
-          members: {
-            some: {
-              user: {
-                OR: [
-                  { name: { contains: search, mode: 'insensitive' } },
-                  { email: { contains: search, mode: 'insensitive' } },
-                ],
-              },
-            },
-          },
-        },
-      ]
-    }
+    const where = this.buildConversationFilters(userId, { type, search, isArchived })
 
     const [conversations, total, stats] = await Promise.all([
       this.prisma.conversation.findMany({
         where,
-        include: {
-          owner: {
-            select: {
-              id: true,
-              name: true,
-              email: true,
-              avatar: true,
-              status: true,
-            },
-          },
-          members: {
-            include: {
-              user: {
-                select: {
-                  id: true,
-                  name: true,
-                  email: true,
-                  avatar: true,
-                  status: true,
-                },
-              },
-            },
-            orderBy: [{ role: 'asc' as const }, { joinedAt: 'asc' as const }],
-          },
-        },
+        include: this.buildConversationIncludes(),
         orderBy: [{ lastMessageAt: 'desc' }, { updatedAt: 'desc' }],
         skip,
         take: limit,
@@ -220,7 +169,7 @@ export class ConversationRepository {
     id: string,
     data: Partial<{
       name: string
-      description: string
+      description: string | null
       avatar: string
       lastMessage: string
       lastMessageAt: Date
@@ -398,6 +347,19 @@ export class ConversationRepository {
     return member?.isActive ?? false
   }
 
+  async findUserConversationIds(userId: number): Promise<string[]> {
+    const members = await this.prisma.conversationMember.findMany({
+      where: {
+        userId,
+        isActive: true,
+      },
+      select: {
+        conversationId: true,
+      },
+    })
+    return members.map((m) => m.conversationId)
+  }
+
   async getUserRole(conversationId: string, userId: number): Promise<'ADMIN' | 'MODERATOR' | 'MEMBER' | null> {
     const member = await this.prisma.conversationMember.findUnique({
       where: {
@@ -512,7 +474,7 @@ export class ConversationRepository {
   // ===== TYPING INDICATORS =====
 
   setTypingIndicator(conversationId: string, userId: number) {
-    const expiresAt = new Date(Date.now() + 10000) // 10 seconds
+    const expiresAt = new Date(Date.now() + TYPING_INDICATOR.TIMEOUT_MS) // 10 seconds
 
     return this.prisma.typingIndicator.upsert({
       where: {
@@ -543,7 +505,9 @@ export class ConversationRepository {
           },
         },
       })
-      .catch(() => {}) // Ignore errors if not exists
+      .catch((error) => {
+        this.logger.warn(`Failed to remove typing indicator for conversation ${conversationId}, user ${userId}: ${error instanceof Error ? error.message : error}`)
+      })
   }
 
   getTypingIndicators(conversationId: string) {
@@ -588,6 +552,75 @@ export class ConversationRepository {
       },
       members: {
         // Removed where: { isActive: true } filter to avoid conflict with findById filter
+        include: {
+          user: {
+            select: {
+              id: true,
+              name: true,
+              email: true,
+              avatar: true,
+              status: true,
+            },
+          },
+        },
+        orderBy: [{ role: 'asc' as const }, { joinedAt: 'asc' as const }],
+      },
+    }
+  }
+
+  private buildConversationFilters(
+    userId: number,
+    options: { type?: 'DIRECT' | 'GROUP'; search?: string; isArchived?: boolean },
+  ): Prisma.ConversationWhereInput {
+    const { type, search, isArchived } = options
+
+    const where: Prisma.ConversationWhereInput = {
+      members: {
+        some: {
+          userId,
+          isActive: true,
+        },
+      },
+      isArchived: isArchived ?? false,
+    }
+
+    if (type) {
+      where.type = type
+    }
+
+    if (search) {
+      where.OR = [
+        { name: { contains: search, mode: 'insensitive' } },
+        {
+          members: {
+            some: {
+              user: {
+                OR: [
+                  { name: { contains: search, mode: 'insensitive' } },
+                  { email: { contains: search, mode: 'insensitive' } },
+                ],
+              },
+            },
+          },
+        },
+      ]
+    }
+
+    return where
+  }
+
+  private buildConversationIncludes() {
+    return {
+      owner: {
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          avatar: true,
+          status: true,
+        },
+      },
+      members: {
         include: {
           user: {
             select: {

@@ -5,6 +5,7 @@ import { NotFoundRecordException } from 'src/shared/error'
 import { isNotFoundPrismaError } from 'src/shared/helpers'
 import { PaginationQueryType } from 'src/shared/models/request.model'
 import { I18nContext } from 'nestjs-i18n'
+import { MESSAGES } from 'src/shared/constants/app.constant'
 // import { I18nTranslations } from 'src/generated/i18n.generated'
 
 @Injectable()
@@ -59,7 +60,7 @@ export class BrandService {
         deletedById,
       })
       return {
-        message: 'Delete successfully',
+        message: MESSAGES.DELETE_SUCCESS,
       }
     } catch (error) {
       if (isNotFoundPrismaError(error)) {

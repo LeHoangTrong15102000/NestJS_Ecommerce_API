@@ -1,100 +1,100 @@
 import { Injectable, Logger } from '@nestjs/common'
 import { Server } from 'socket.io'
-import { SharedChatService } from 'src/shared/services/chat.service'
+import { MessageService } from 'src/routes/conversation/message.service'
+import { ConversationService } from 'src/routes/conversation/conversation.service'
 import { ChatRedisService } from '../services/chat-redis.service'
-import { AuthenticatedSocket } from './chat-connection.handler'
+import { AuthenticatedSocket } from '../websocket.interfaces'
+import { emitValidationError, emitInternalError } from '../websocket.helpers'
+import {
+  SendMessageDataSchema,
+  EditMessageDataSchema,
+  DeleteMessageDataSchema,
+  validateWebSocketData,
+  SendMessageDataType,
+  EditMessageDataType,
+  DeleteMessageDataType,
+} from '../websocket.schemas'
 
-// ===== MESSAGE EVENT INTERFACES =====
-
-export interface SendMessageData {
-  conversationId: string
-  content?: string
-  type?: 'TEXT' | 'IMAGE' | 'VIDEO' | 'AUDIO' | 'FILE' | 'STICKER' | 'LOCATION' | 'CONTACT'
-  replyToId?: string
-  attachments?: Array<{
-    type: 'IMAGE' | 'VIDEO' | 'AUDIO' | 'DOCUMENT'
-    fileName: string
-    fileUrl: string
-    fileSize?: number
-    mimeType?: string
-    thumbnail?: string
-    width?: number
-    height?: number
-    duration?: number
-  }>
-  tempId?: string // For client-side message deduplication
-}
-
-export interface EditMessageData {
-  messageId: string
-  content: string
-}
-
-export interface DeleteMessageData {
-  messageId: string
-  forEveryone?: boolean
-}
+// Re-export types for backward compatibility
+export type SendMessageData = SendMessageDataType
+export type EditMessageData = EditMessageDataType
+export type DeleteMessageData = DeleteMessageDataType
 
 @Injectable()
 export class ChatMessageHandler {
   private readonly logger = new Logger(ChatMessageHandler.name)
 
   constructor(
-    private readonly chatService: SharedChatService,
+    private readonly messageService: MessageService,
+    private readonly conversationService: ConversationService,
     private readonly redisService: ChatRedisService,
   ) {}
 
   /**
    * Xử lý gửi tin nhắn
    */
-  async handleSendMessage(server: Server, client: AuthenticatedSocket, data: SendMessageData): Promise<void> {
+  async handleSendMessage(server: Server, client: AuthenticatedSocket, data: unknown): Promise<void> {
+    // Validate input data
+    const validation = validateWebSocketData(SendMessageDataSchema, data)
+    if (!validation.success) {
+      emitValidationError(client, 'send_message', validation.error!)
+      return
+    }
+
+    const validData = validation.data!
+
     try {
       // Send message through service
-      const message = await this.chatService.sendMessage(client.userId, {
-        conversationId: data.conversationId,
-        content: data.content,
-        type: data.type,
-        replyToId: data.replyToId,
-        attachments: data.attachments,
+      const message = await this.messageService.sendMessage(client.userId, {
+        conversationId: validData.conversationId,
+        content: validData.content,
+        type: validData.type,
+        replyToId: validData.replyToId,
+        attachments: validData.attachments,
       })
 
       // Remove user from typing
-      await this.redisService.removeUserTyping(data.conversationId, client.userId)
+      await this.redisService.removeUserTyping(validData.conversationId, client.userId)
 
       // Emit to conversation members
-      server.to(`conversation:${data.conversationId}`).emit('new_message', {
+      server.to(`conversation:${validData.conversationId}`).emit('new_message', {
         message,
-        tempId: data.tempId,
+        tempId: validData.tempId,
         timestamp: new Date(),
       })
 
       // Send delivery confirmation to sender
       client.emit('message_sent', {
         message,
-        tempId: data.tempId,
+        tempId: validData.tempId,
         timestamp: new Date(),
       })
 
       // Send offline notifications
-      await this.sendOfflineNotifications(server, data.conversationId, message, client.userId)
+      await this.sendOfflineNotifications(server, validData.conversationId, message, client.userId)
 
-      this.logger.debug(`Message sent by user ${client.userId} in conversation ${data.conversationId}`)
+      this.logger.debug(`Message sent by user ${client.userId} in conversation ${validData.conversationId}`)
     } catch (error) {
       this.logger.error(`Send message error: ${error.message}`)
-      client.emit('message_error', {
-        error: error.message,
-        tempId: data.tempId,
-        timestamp: new Date(),
-      })
+      emitInternalError(client, 'send_message', error.message)
     }
   }
 
   /**
    * Xử lý chỉnh sửa tin nhắn
    */
-  async handleEditMessage(server: Server, client: AuthenticatedSocket, data: EditMessageData): Promise<void> {
+  async handleEditMessage(server: Server, client: AuthenticatedSocket, data: unknown): Promise<void> {
+    // Validate input data
+    const validation = validateWebSocketData(EditMessageDataSchema, data)
+    if (!validation.success) {
+      emitValidationError(client, 'edit_message', validation.error!)
+      return
+    }
+
+    const validData = validation.data!
+
     try {
-      const message = await this.chatService.editMessage(data.messageId, client.userId, data.content)
+      const message = await this.messageService.editMessage(validData.messageId, client.userId, validData.content)
 
       // Emit to conversation members
       server.to(`conversation:${message.conversationId}`).emit('message_edited', {
@@ -108,24 +108,30 @@ export class ChatMessageHandler {
       })
     } catch (error) {
       this.logger.error(`Edit message error: ${error.message}`)
-      client.emit('error', {
-        event: 'edit_message',
-        message: error.message,
-      })
+      emitInternalError(client, 'edit_message', error.message)
     }
   }
 
   /**
    * Xử lý xóa tin nhắn
    */
-  async handleDeleteMessage(server: Server, client: AuthenticatedSocket, data: DeleteMessageData): Promise<void> {
+  async handleDeleteMessage(server: Server, client: AuthenticatedSocket, data: unknown): Promise<void> {
+    // Validate input data
+    const validation = validateWebSocketData(DeleteMessageDataSchema, data)
+    if (!validation.success) {
+      emitValidationError(client, 'delete_message', validation.error!)
+      return
+    }
+
+    const validData = validation.data!
+
     try {
-      const message = await this.chatService.deleteMessage(data.messageId, client.userId, data.forEveryone || false)
+      const message = await this.messageService.deleteMessage(validData.messageId, client.userId, validData.forEveryone)
 
       // Emit to conversation members
       server.to(`conversation:${message.conversationId}`).emit('message_deleted', {
         message,
-        forEveryone: data.forEveryone || false,
+        forEveryone: validData.forEveryone,
         timestamp: new Date(),
       })
 
@@ -135,10 +141,7 @@ export class ChatMessageHandler {
       })
     } catch (error) {
       this.logger.error(`Delete message error: ${error.message}`)
-      client.emit('error', {
-        event: 'delete_message',
-        message: error.message,
-      })
+      emitInternalError(client, 'delete_message', error.message)
     }
   }
 
@@ -148,45 +151,34 @@ export class ChatMessageHandler {
   private async sendOfflineNotifications(
     server: Server,
     conversationId: string,
-    message: Record<string, any>, // Cải thiện type safety
+    message: { id: string; content?: string; fromUser?: { name: string }; [key: string]: unknown },
     senderId: number,
   ): Promise<void> {
     try {
-      // Get conversation members từ service hoặc cache
-      const conversation = await this.chatService.getConversationById(conversationId, senderId)
+      const conversation = await this.conversationService.getConversationById(conversationId, senderId)
       if (!conversation) return
 
-      // Find offline members - định nghĩa type rõ ràng
-      const offlineMembers: Array<{ userId: number; name: string }> = []
-      for (const member of conversation.members) {
-        if (member.userId !== senderId && member.isActive && !member.isMuted) {
-          const isOnline = await this.redisService.isUserOnline(member.userId)
-          if (!isOnline) {
-            offlineMembers.push({
-              userId: member.userId,
-              name: member.user.name,
-            })
-          }
-        }
-      }
+      const eligibleMembers = conversation.members.filter(
+        (member) => member.userId !== senderId && member.isActive && !member.isMuted,
+      )
 
-      // Log for now - integrate with your notification service
+      if (eligibleMembers.length === 0) return
+
+      const onlineStatusMap = await this.redisService.areUsersOnline(eligibleMembers.map((m) => m.userId))
+
+      const offlineMembers: Array<{ userId: number; name: string }> = eligibleMembers
+        .filter((member) => !onlineStatusMap.get(member.userId))
+        .map((member) => ({
+          userId: member.userId,
+          name: member.user.name,
+        }))
+
       if (offlineMembers.length > 0) {
         this.logger.log(
           `Would send push notification to ${offlineMembers.length} offline users for message: ${message.id}`,
         )
 
         // TODO: Integrate with push notification service
-        // await this.notificationService.sendPushNotification({
-        //   userIds: offlineMembers.map(m => m.userId),
-        //   title: `New message from ${message.fromUser.name}`,
-        //   body: message.content || 'Sent an attachment',
-        //   data: {
-        //     conversationId,
-        //     messageId: message.id,
-        //     type: 'new_message',
-        //   },
-        // })
       }
     } catch (error) {
       this.logger.error(`Send offline notifications error: ${error.message}`)

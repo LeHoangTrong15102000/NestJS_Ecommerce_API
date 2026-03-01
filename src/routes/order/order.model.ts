@@ -1,4 +1,3 @@
-import { OrderStatus } from 'src/shared/constants/order.constant'
 import { PaginationQuerySchema } from 'src/shared/models/request.model'
 import { OrderSchema, OrderStatusSchema } from 'src/shared/models/shared-order.model'
 import { z } from 'zod'
@@ -61,6 +60,7 @@ export const CreateOrderBodySchema = z
         address: z.string(),
       }),
       cartItemIds: z.array(z.number()).min(1),
+      voucherId: z.number().optional(), // Optional voucher ID
     }),
   )
   .min(1)
@@ -88,3 +88,10 @@ export type CreateOrderBodyType = z.infer<typeof CreateOrderBodySchema>
 export type CreateOrderResType = z.infer<typeof CreateOrderResSchema>
 export type CancelOrderResType = z.infer<typeof CancelOrderResSchema>
 export type OrderType = z.infer<typeof OrderSchema>
+
+export type OrderCalculationType = {
+  item: CreateOrderBodyType[number]
+  totalAmount: number
+  discountAmount: number
+  voucherId: number | null
+}

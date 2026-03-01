@@ -52,8 +52,8 @@ const createTestData = {
               quantity: 2,
               skuId: 1,
               userId: 1,
-              createdAt: new Date(),
-              updatedAt: new Date(),
+              createdAt: new Date().toISOString(),
+              updatedAt: new Date().toISOString(),
               sku: {
                 id: 1,
                 value: 'Size: M, Color: Red',
@@ -70,7 +70,7 @@ const createTestData = {
                       options: ['M', 'L', 'XL'],
                     },
                   ],
-                  publishedAt: new Date(),
+                  publishedAt: new Date().toISOString(),
                   productTranslations: [
                     {
                       id: 1,
@@ -97,8 +97,8 @@ const createTestData = {
     quantity: 2,
     skuId: 1,
     userId: 1,
-    createdAt: new Date(),
-    updatedAt: new Date(),
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
     ...overrides,
   }),
 
@@ -119,7 +119,7 @@ describe('CartService', () => {
 
     // Tạo mock cho CartRepo với tất cả methods cần thiết
     mockCartRepo = {
-      list2: jest.fn(),
+      list: jest.fn(),
       create: jest.fn(),
       update: jest.fn(),
       delete: jest.fn(),
@@ -154,20 +154,20 @@ describe('CartService', () => {
       })
       const mockCartResponse = createTestData.cartResponse()
 
-      mockCartRepo.list2.mockResolvedValue(mockCartResponse)
+      mockCartRepo.list.mockResolvedValue(mockCartResponse)
 
       // Act - Thực hiện lấy cart
       const result = await service.getCart(userId, query)
 
       // Assert - Kiểm tra kết quả
       expect(result).toEqual(mockCartResponse)
-      expect(mockCartRepo.list2).toHaveBeenCalledWith({
+      expect(mockCartRepo.list).toHaveBeenCalledWith({
         userId,
         languageId: 'vi',
         page: query.page,
         limit: query.limit,
       })
-      expect(mockCartRepo.list2).toHaveBeenCalledTimes(1)
+      expect(mockCartRepo.list).toHaveBeenCalledTimes(1)
     })
 
     it('should handle different language context', async () => {
@@ -178,14 +178,14 @@ describe('CartService', () => {
 
       // Mock I18nContext để trả về ngôn ngữ khác
       ;(I18nContext.current as jest.Mock).mockReturnValue({ lang: 'en' })
-      mockCartRepo.list2.mockResolvedValue(mockCartResponse)
+      mockCartRepo.list.mockResolvedValue(mockCartResponse)
 
       // Act - Thực hiện lấy cart
       const result = await service.getCart(userId, query)
 
       // Assert - Kiểm tra kết quả
       expect(result).toEqual(mockCartResponse)
-      expect(mockCartRepo.list2).toHaveBeenCalledWith({
+      expect(mockCartRepo.list).toHaveBeenCalledWith({
         userId,
         languageId: 'en',
         page: query.page,
@@ -203,7 +203,7 @@ describe('CartService', () => {
         totalPages: 0,
       })
 
-      mockCartRepo.list2.mockResolvedValue(emptyCartResponse)
+      mockCartRepo.list.mockResolvedValue(emptyCartResponse)
 
       // Act - Thực hiện lấy cart
       const result = await service.getCart(userId, query)
@@ -430,14 +430,14 @@ describe('CartService', () => {
       const query = createTestData.paginationQuery()
       const mockCartResponse = createTestData.cartResponse()
 
-      mockCartRepo.list2.mockResolvedValue(mockCartResponse)
+      mockCartRepo.list.mockResolvedValue(mockCartResponse)
 
       // Act - Thực hiện lấy cart
       const result = await service.getCart(userId, query)
 
       // Assert - Kiểm tra kết quả
       expect(result).toEqual(mockCartResponse)
-      expect(mockCartRepo.list2).toHaveBeenCalledWith({
+      expect(mockCartRepo.list).toHaveBeenCalledWith({
         userId,
         languageId: undefined, // null?.lang returns undefined
         page: query.page,
@@ -451,11 +451,11 @@ describe('CartService', () => {
       const query = createTestData.paginationQuery()
       const repositoryError = new Error('Database connection failed')
 
-      mockCartRepo.list2.mockRejectedValue(repositoryError)
+      mockCartRepo.list.mockRejectedValue(repositoryError)
 
       // Act & Assert - Thực hiện test và kiểm tra lỗi
       await expect(service.getCart(userId, query)).rejects.toThrow('Database connection failed')
-      expect(mockCartRepo.list2).toHaveBeenCalledWith({
+      expect(mockCartRepo.list).toHaveBeenCalledWith({
         userId,
         languageId: 'vi', // Default lang từ mock
         page: query.page,

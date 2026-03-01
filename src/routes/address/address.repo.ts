@@ -2,8 +2,10 @@ import { Injectable } from '@nestjs/common'
 import { PrismaService } from '../../shared/services/prisma.service'
 import { Prisma } from '@prisma/client'
 import { ListAddressesQuery, CreateAddressBody, UpdateAddressBody } from './address.dto'
+import { SerializeAll } from 'src/shared/decorators/serialize.decorator'
 
 @Injectable()
+@SerializeAll()
 export class AddressRepository {
   constructor(private readonly prismaService: PrismaService) {}
 

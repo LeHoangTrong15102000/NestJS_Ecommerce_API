@@ -7,6 +7,7 @@ import { ProhibitedActionOnBaseRoleException, RoleAlreadyExistsException } from 
 import { RoleName } from 'src/shared/constants/role.constant'
 import { CACHE_MANAGER } from '@nestjs/cache-manager'
 import { Cache } from 'cache-manager'
+import { MESSAGES } from 'src/shared/constants/app.constant'
 
 @Injectable()
 export class RoleService {
@@ -100,7 +101,7 @@ export class RoleService {
       })
       await this.cacheManager.del(`roles:${id}`) // Xoá cache của role đã xoá
       return {
-        message: 'Delete successfully',
+        message: MESSAGES.DELETE_SUCCESS,
       }
     } catch (error) {
       if (isNotFoundPrismaError(error)) {

@@ -1,20 +1,20 @@
 import { Test, TestingModule } from '@nestjs/testing'
 import { VoucherController } from '../voucher.controller'
-import { VoucherService } from '../voucher.service'
 import {
+  ApplyVoucherBody,
+  CollectVoucherParams,
   CreateVoucherBody,
+  DeleteVoucherParams,
+  GetVoucherByCodeParams,
+  GetVoucherDetailParams,
+  ListAvailableVouchersQuery,
+  ListMyVouchersQuery,
+  ListVouchersQuery,
   UpdateVoucherBody,
   UpdateVoucherParams,
-  ListVouchersQuery,
-  ListAvailableVouchersQuery,
-  GetVoucherDetailParams,
-  GetVoucherByCodeParams,
-  CollectVoucherParams,
-  ListMyVouchersQuery,
-  ApplyVoucherBody,
-  DeleteVoucherParams,
 } from '../voucher.dto'
 import { VoucherType } from '../voucher.model'
+import { VoucherService } from '../voucher.service'
 
 // Test data factory để tạo dữ liệu test
 const createTestData = {
@@ -28,8 +28,8 @@ const createTestData = {
     maxDiscount: 50000,
     usageLimit: 100,
     userUsageLimit: 1,
-    startDate: new Date(Date.now() + 86400000),
-    endDate: new Date(Date.now() + 7 * 86400000),
+    startDate: new Date(Date.now() + 86400000).toISOString(),
+    endDate: new Date(Date.now() + 7 * 86400000).toISOString(),
     isActive: true,
     applicableProducts: [1, 2, 3],
     excludedProducts: [4, 5],
@@ -105,14 +105,14 @@ const createTestData = {
     usageLimit: 100,
     usedCount: 0,
     userUsageLimit: 1,
-    startDate: new Date(Date.now() + 86400000),
-    endDate: new Date(Date.now() + 7 * 86400000),
+    startDate: new Date(Date.now() + 86400000).toISOString(),
+    endDate: new Date(Date.now() + 7 * 86400000).toISOString(),
     isActive: true,
     sellerId: null,
     applicableProducts: [1, 2, 3],
     excludedProducts: [4, 5],
-    createdAt: new Date(),
-    updatedAt: new Date(),
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
     ...overrides,
   }),
 
@@ -149,7 +149,7 @@ const createTestData = {
     ...createTestData.voucherResponse(),
     userVoucher: {
       usedCount: 0,
-      savedAt: new Date(),
+      savedAt: new Date().toISOString(),
       canUse: true,
     },
     isCollected: true,
@@ -163,7 +163,7 @@ const createTestData = {
     voucherId: 1,
     usedCount: 0,
     usedAt: null,
-    savedAt: new Date(),
+    savedAt: new Date().toISOString(),
     voucher: createTestData.voucherResponse(),
     ...overrides,
   }),
@@ -275,7 +275,7 @@ describe('VoucherController', () => {
               ...createTestData.voucherResponse(),
               userVoucher: {
                 usedCount: 0,
-                savedAt: new Date(),
+                savedAt: new Date().toISOString(),
                 canUse: true,
               },
               isCollected: true,
@@ -579,7 +579,7 @@ describe('VoucherController', () => {
       it('should create voucher successfully as seller', async () => {
         // Arrange - Chuẩn bị dữ liệu test cho seller
         const userId = 1
-        const roleId = 2 // Seller role
+        const roleId = 3 // Seller role (roleId 3 is SELLER)
         const body = createTestData.createVoucherBody()
         const mockResponse = createTestData.voucherResponse({ sellerId: userId })
 
@@ -646,7 +646,7 @@ describe('VoucherController', () => {
       it('should return vouchers successfully as seller', async () => {
         // Arrange - Chuẩn bị dữ liệu test cho seller
         const userId = 1
-        const roleId = 2 // Seller role
+        const roleId = 3 // Seller role (roleId 3 is SELLER)
         const query = createTestData.listVouchersQuery()
         const mockResponse = createTestData.voucherListResponse()
 
@@ -684,7 +684,7 @@ describe('VoucherController', () => {
       it('should return voucher stats successfully as seller', async () => {
         // Arrange - Chuẩn bị dữ liệu test cho seller
         const userId = 1
-        const roleId = 2 // Seller role
+        const roleId = 3 // Seller role (roleId 3 is SELLER)
         const mockResponse = createTestData.voucherStatsResponse()
 
         mockVoucherService.getVoucherStats.mockResolvedValue(mockResponse)
@@ -720,7 +720,7 @@ describe('VoucherController', () => {
       it('should update voucher successfully as seller', async () => {
         // Arrange - Chuẩn bị dữ liệu test cho seller
         const userId = 1
-        const roleId = 2 // Seller role
+        const roleId = 3 // Seller role (roleId 3 is SELLER)
         const params = createTestData.updateVoucherParams()
         const body = createTestData.updateVoucherBody()
         const mockResponse = createTestData.voucherResponse({ ...body, sellerId: userId })
@@ -757,7 +757,7 @@ describe('VoucherController', () => {
       it('should delete voucher successfully as seller', async () => {
         // Arrange - Chuẩn bị dữ liệu test cho seller
         const userId = 1
-        const roleId = 2 // Seller role
+        const roleId = 3 // Seller role (roleId 3 is SELLER)
         const params = createTestData.deleteVoucherParams()
         const mockResponse = { message: 'Xóa voucher thành công' }
 
@@ -882,10 +882,10 @@ describe('VoucherController', () => {
       const adminResult = await controller.createVoucher(adminUserId, adminRoleId, body)
       expect(mockVoucherService.createVoucher).toHaveBeenCalledWith(body, adminUserId, undefined)
 
-      // Reset and test seller role (roleId = 2)
+      // Reset and test seller role (roleId = 3)
       mockVoucherService.createVoucher.mockReset()
       const sellerUserId = 2
-      const sellerRoleId = 2
+      const sellerRoleId = 3 // Seller role (roleId 3 is SELLER)
       const sellerResponse = createTestData.voucherResponse({ sellerId: sellerUserId })
 
       mockVoucherService.createVoucher.mockResolvedValue(sellerResponse)
@@ -908,8 +908,8 @@ describe('VoucherController', () => {
 
       mockVoucherService.getVoucherStats.mockReset()
 
-      // Test seller role
-      await controller.getVoucherStats(2, 2) // Seller
+      // Test seller role (roleId 3 is SELLER)
+      await controller.getVoucherStats(2, 3) // Seller
       expect(mockVoucherService.getVoucherStats).toHaveBeenCalledWith(2)
     })
   })

@@ -11,7 +11,7 @@ export const CreateGroupConversationBodySchema = z.object({
   name: z.string().min(1).max(500).describe('Tên nhóm'),
   description: z.string().max(1000).optional().describe('Mô tả nhóm'),
   memberIds: z.array(z.number().int().positive()).min(1).max(100).describe('Danh sách ID thành viên'),
-  avatar: z.string().url().optional().describe('Avatar nhóm'),
+  avatar: z.url().optional().describe('Avatar nhóm'),
 })
 
 export const SendMessageBodySchema = z.object({
@@ -27,10 +27,10 @@ export const SendMessageBodySchema = z.object({
       z.object({
         type: z.enum(['IMAGE', 'VIDEO', 'AUDIO', 'DOCUMENT']),
         fileName: z.string().min(1).max(500),
-        fileUrl: z.string().url(),
+        fileUrl: z.url(),
         fileSize: z.number().int().positive().optional(),
         mimeType: z.string().optional(),
-        thumbnail: z.string().url().optional(),
+        thumbnail: z.url().optional(),
         width: z.number().int().positive().optional(),
         height: z.number().int().positive().optional(),
         duration: z.number().int().positive().optional(),
@@ -54,7 +54,7 @@ export const RemoveMemberBodySchema = z.object({
 export const UpdateConversationBodySchema = z.object({
   name: z.string().min(1).max(500).optional(),
   description: z.string().max(1000).optional(),
-  avatar: z.string().url().optional(),
+  avatar: z.url().optional(),
 })
 
 export const MarkAsReadBodySchema = z.object({

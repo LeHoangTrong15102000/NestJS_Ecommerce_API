@@ -27,7 +27,7 @@ const createTestData = {
     data: [
       {
         id: 1,
-        publishedAt: new Date(),
+        publishedAt: new Date().toISOString(),
         name: 'Test Product',
         basePrice: 100000,
         virtualPrice: 120000,
@@ -71,7 +71,7 @@ const createTestData = {
 
   productDetail: (overrides = {}) => ({
     id: 1,
-    publishedAt: new Date(),
+    publishedAt: new Date().toISOString(),
     name: 'Test Product',
     basePrice: 100000,
     virtualPrice: 120000,
