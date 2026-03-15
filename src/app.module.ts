@@ -34,6 +34,7 @@ import { RoleModule } from 'src/routes/role/role.module'
 import { UserModule } from 'src/routes/user/user.module'
 import { VoucherModule } from 'src/routes/voucher/voucher.module'
 import { WishlistModule } from 'src/routes/wishlist/wishlist.module'
+import { HealthModule } from 'src/health/health.module'
 import envConfig from 'src/shared/config'
 import { CatchEverythingFilter } from 'src/shared/filters/catch-everything.filter'
 import { HttpExceptionFilter } from 'src/shared/filters/http-exception.filter'
@@ -168,6 +169,7 @@ import { LoggerModule } from 'nestjs-pino'
     }),
     WebsocketModule,
     SharedModule,
+    HealthModule,
     AuthModule,
     LanguageModule,
     RoleModule,

@@ -1,3 +1,7 @@
+# FOR DEVELOPMENT ONLY - Use docker-compose.prod.yml for production
+# This configuration includes hardcoded secrets and relaxed security settings
+# suitable only for local development environments.
+
 services:
   # Database
   postgres:
@@ -38,7 +42,9 @@ services:
 
   # NestJS API
   api:
-    build: .
+    build:
+      context: .
+      target: build
     container_name: ecom-api
     ports:
       - '3000:3000'

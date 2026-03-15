@@ -109,6 +109,9 @@ async function bootstrap() {
   // })
   await app.listen(process.env.PORT ?? 3000)
 
+  // Enable graceful shutdown hooks
+  app.enableShutdownHooks()
+
   // Graceful shutdown
   const signals: NodeJS.Signals[] = ['SIGTERM', 'SIGINT']
   for (const signal of signals) {

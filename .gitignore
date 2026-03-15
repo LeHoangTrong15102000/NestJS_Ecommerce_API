@@ -37,8 +37,11 @@ lerna-debug.log*
 
 # dotenv environment variable files
 .env
+.env.development
 .env.development.local
+.env.test
 .env.test.local
+.env.production
 .env.production.local
 .env.local
 
@@ -62,3 +65,5 @@ report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
 /node_modules
 
 /openspec
+.claude
+specs
