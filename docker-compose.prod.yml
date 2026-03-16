@@ -81,6 +81,7 @@ services:
 
   # NestJS API Application
   api:
+    image: ${API_IMAGE:-ghcr.io/lehoangtrong15102000/nestjs_ecommerce_api:latest}
     build:
       context: .
       dockerfile: Dockerfile
