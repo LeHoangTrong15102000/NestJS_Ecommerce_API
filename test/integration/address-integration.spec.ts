@@ -252,7 +252,14 @@ describe('Address Integration Tests', () => {
       await prisma.address.createMany({
         data: [
           { ...validAddress, fullAddress: fullAddr, userId: clientUserId, isDefault: true, isActive: true },
-          { ...validAddress, fullAddress: fullAddr, name: 'Address 2', userId: clientUserId, isDefault: false, isActive: true },
+          {
+            ...validAddress,
+            fullAddress: fullAddr,
+            name: 'Address 2',
+            userId: clientUserId,
+            isDefault: false,
+            isActive: true,
+          },
         ],
       })
 
@@ -299,4 +306,3 @@ describe('Address Integration Tests', () => {
     })
   })
 })
-

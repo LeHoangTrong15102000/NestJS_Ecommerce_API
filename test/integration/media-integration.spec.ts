@@ -136,7 +136,10 @@ describe('Media Integration Tests', () => {
     })
 
     it('should return 422 when filename is missing', async () => {
-      await request(app.getHttpServer()).post('/media/images/upload/presigned-url').send({ filesize: 500000 }).expect(422)
+      await request(app.getHttpServer())
+        .post('/media/images/upload/presigned-url')
+        .send({ filesize: 500000 })
+        .expect(422)
     })
 
     it('should return 422 when filesize exceeds 1MB', async () => {
@@ -147,4 +150,3 @@ describe('Media Integration Tests', () => {
     })
   })
 })
-

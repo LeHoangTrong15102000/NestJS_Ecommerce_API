@@ -25,7 +25,7 @@ import {
 
 /**
  * DEMO: Auth Helpers Integration Tests
- * 
+ *
  * Mục đích: Test các helper functions để đảm bảo chúng hoạt động đúng
  * trước khi sử dụng trong các integration tests thực tế
  */
@@ -160,4 +160,3 @@ describe('Auth Helpers Demo', () => {
     })
   })
 })
-

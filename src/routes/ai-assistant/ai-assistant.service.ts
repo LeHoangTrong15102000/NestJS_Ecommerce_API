@@ -306,11 +306,7 @@ export class AIAssistantService {
       const apiError = error as { status?: number; message?: string }
 
       // Kiểm tra loại lỗi cụ thể
-      if (
-        apiError.status === 429 ||
-        apiError.message?.includes('quota') ||
-        apiError.message?.includes('rate limit')
-      ) {
+      if (apiError.status === 429 || apiError.message?.includes('quota') || apiError.message?.includes('rate limit')) {
         this.logger.log('💳 Lỗi quota/rate limit Anthropic - sử dụng fallback response')
         return this.getFallbackResponse(userMessage, 'quota')
       }

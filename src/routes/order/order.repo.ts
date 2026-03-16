@@ -124,7 +124,15 @@ export class OrderRepo {
       const orders$ = Promise.all(
         ordersWithCalculations.map(({ item, totalAmount, discountAmount, voucherId }) =>
           tx.order.create({
-            data: this.buildOrderCreateData(item, cartItemMap, userId, payment.id, totalAmount, discountAmount, voucherId),
+            data: this.buildOrderCreateData(
+              item,
+              cartItemMap,
+              userId,
+              payment.id,
+              totalAmount,
+              discountAmount,
+              voucherId,
+            ),
           }),
         ),
       )

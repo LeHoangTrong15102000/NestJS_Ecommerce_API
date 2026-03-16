@@ -506,7 +506,9 @@ export class ConversationRepository {
         },
       })
       .catch((error) => {
-        this.logger.warn(`Failed to remove typing indicator for conversation ${conversationId}, user ${userId}: ${error instanceof Error ? error.message : error}`)
+        this.logger.warn(
+          `Failed to remove typing indicator for conversation ${conversationId}, user ${userId}: ${error instanceof Error ? error.message : error}`,
+        )
       })
   }
 

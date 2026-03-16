@@ -197,10 +197,7 @@ describe('PaymentController', () => {
       it('should be protected by PaymentAPIKey authentication', () => {
         // Verify @Auth([AuthType.PaymentAPIKey]) decorator metadata is set on the receiver method
         const reflector = new Reflector()
-        const metadata = reflector.get<AuthTypeDecoratorPayload>(
-          AUTH_TYPE_KEY,
-          PaymentController.prototype.receiver,
-        )
+        const metadata = reflector.get<AuthTypeDecoratorPayload>(AUTH_TYPE_KEY, PaymentController.prototype.receiver)
 
         expect(metadata).toBeDefined()
         expect(metadata.authTypes).toEqual([AuthType.PaymentAPIKey])

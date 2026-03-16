@@ -210,4 +210,3 @@ describe('Pagination Helper', () => {
     })
   })
 })
-

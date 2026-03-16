@@ -247,4 +247,3 @@ describe('Wishlist Flow E2E', () => {
     })
   })
 })
-

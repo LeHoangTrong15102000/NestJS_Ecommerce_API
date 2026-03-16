@@ -91,10 +91,7 @@ describe('Product Catalog Flow E2E', () => {
     it('should list brands publicly', async () => {
       await prisma.brand.create({ data: { name: 'Apple', logo: 'apple.png', createdById: sellerId } })
 
-      const res = await request(app.getHttpServer())
-        .get('/brands')
-        .query({ page: 1, limit: 10 })
-        .expect(200)
+      const res = await request(app.getHttpServer()).get('/brands').query({ page: 1, limit: 10 }).expect(200)
 
       expect(res.body).toHaveProperty('data')
       expect(res.body.data.length).toBeGreaterThanOrEqual(1)
@@ -175,10 +172,7 @@ describe('Product Catalog Flow E2E', () => {
         },
       })
 
-      const res = await request(app.getHttpServer())
-        .get('/products')
-        .query({ page: 1, limit: 10 })
-        .expect(200)
+      const res = await request(app.getHttpServer()).get('/products').query({ page: 1, limit: 10 }).expect(200)
 
       expect(res.body).toHaveProperty('data')
       expect(res.body).toHaveProperty('totalItems')
@@ -314,4 +308,3 @@ describe('Product Catalog Flow E2E', () => {
     })
   })
 })
-

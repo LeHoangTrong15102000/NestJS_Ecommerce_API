@@ -401,7 +401,18 @@ export const resetDatabase = async () => {
   const clientPermIds = await prisma.permission.findMany({
     where: {
       module: {
-        in: ['CART', 'ORDER', 'PROFILE', 'VOUCHER', 'REVIEW', 'WISHLIST', 'AI_ASSISTANT', 'CONVERSATION', 'AUTH', 'ADDRESS'],
+        in: [
+          'CART',
+          'ORDER',
+          'PROFILE',
+          'VOUCHER',
+          'REVIEW',
+          'WISHLIST',
+          'AI_ASSISTANT',
+          'CONVERSATION',
+          'AUTH',
+          'ADDRESS',
+        ],
       },
     },
     select: { id: true },

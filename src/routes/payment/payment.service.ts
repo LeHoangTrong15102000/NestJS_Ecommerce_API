@@ -22,7 +22,10 @@ export class PaymentService {
         message: MESSAGES.PAYMENT_RECEIVED,
       }
     } catch (error) {
-      this.logger.error(`Failed to process payment webhook: ${error instanceof Error ? error.message : error}`, error instanceof Error ? error.stack : undefined)
+      this.logger.error(
+        `Failed to process payment webhook: ${error instanceof Error ? error.message : error}`,
+        error instanceof Error ? error.stack : undefined,
+      )
       throw error
     }
   }
