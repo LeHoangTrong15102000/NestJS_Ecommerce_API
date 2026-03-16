@@ -29,9 +29,10 @@ docs/
 test/
 coverage/
 .nyc_output
-*.spec.ts
-*.test.ts
+**/*.spec.ts
+**/*.test.ts
 jest.config.js
+jest.config.ts
 jest-*.json
 
 # IDE
@@ -68,4 +69,5 @@ scripts/
 .eslintrc.js
 eslint.config.mjs
 tsconfig*.json
-!tsconfig.json 
+!tsconfig.json
+!tsconfig.build.json
