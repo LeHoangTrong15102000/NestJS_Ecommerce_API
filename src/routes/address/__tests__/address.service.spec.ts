@@ -51,8 +51,8 @@ const createTestData = {
     fullAddress: '123 Lê Lợi, Phường Bến Nghé, Quận 1, TP. Hồ Chí Minh',
     isDefault: false,
     isActive: true,
-    createdAt: new Date('2024-01-01'),
-    updatedAt: new Date('2024-01-01'),
+    createdAt: '2024-01-01T00:00:00.000Z' as any,
+    updatedAt: '2024-01-01T00:00:00.000Z' as any,
     ...overrides,
   }),
 
@@ -71,8 +71,8 @@ const createTestData = {
     fullAddress: '123 Lê Lợi, Phường Bến Nghé, Quận 1, TP. Hồ Chí Minh',
     isDefault: false,
     isActive: true,
-    createdAt: new Date('2024-01-01'),
-    updatedAt: new Date('2024-01-01'),
+    createdAt: '2024-01-01T00:00:00.000Z' as any,
+    updatedAt: '2024-01-01T00:00:00.000Z' as any,
     ...overrides,
   }),
 

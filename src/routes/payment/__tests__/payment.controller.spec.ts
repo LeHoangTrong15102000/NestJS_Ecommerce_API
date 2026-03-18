@@ -72,7 +72,7 @@ describe('PaymentController', () => {
       it('should process webhook payment successfully', async () => {
         // Arrange
         const webhookDTO = createWebhookDTO()
-        const expectedResponse = { message: 'Payment received successfully' }
+        const expectedResponse = { message: 'Payment received successfully' } as const
         mockPaymentService.receiver.mockResolvedValue(expectedResponse)
 
         // Act
@@ -320,6 +320,22 @@ describe('PaymentController', () => {
         // Assert
         expect(result).toBeDefined()
       })
+    })
+  })
+
+  // ===== RESPONSE STRUCTURE SNAPSHOTS =====
+
+  describe('Response Structure Snapshots', () => {
+    it('should match webhook receiver success response structure', async () => {
+      const webhookDTO = createWebhookDTO()
+      mockPaymentService.receiver.mockResolvedValue({ message: 'Payment received successfully' })
+      const result = await controller.receiver(webhookDTO)
+      expect(result).toMatchSnapshot()
+    })
+
+    it('should match webhook DTO input structure', () => {
+      const webhookDTO = createWebhookDTO()
+      expect(webhookDTO).toMatchSnapshot()
     })
   })
 })

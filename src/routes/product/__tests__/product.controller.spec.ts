@@ -658,4 +658,148 @@ describe('ProductController', () => {
       }
     })
   })
+
+  // ===== RESPONSE STRUCTURE SNAPSHOTS =====
+
+  describe('Response Structure Snapshots', () => {
+    const fixedDate = '2024-01-01T00:00:00.000Z'
+
+    it('should match product list response structure', async () => {
+      const mockResponse = createTestData.productListResponse({
+        data: [
+          {
+            id: 1,
+            publishedAt: fixedDate,
+            name: 'Test Product',
+            basePrice: 100000,
+            virtualPrice: 120000,
+            brandId: 1,
+            images: ['test-image.jpg'],
+            variants: [{ value: 'Size', options: ['M', 'L', 'XL'] }],
+            createdById: null,
+            updatedById: null,
+            deletedById: null,
+            deletedAt: null,
+            createdAt: fixedDate,
+            updatedAt: fixedDate,
+            productTranslations: [
+              {
+                id: 1,
+                name: 'Test Product',
+                description: 'Test Description',
+                languageId: 'vi',
+                productId: 1,
+                createdById: null,
+                updatedById: null,
+                deletedById: null,
+                deletedAt: null,
+                createdAt: fixedDate,
+                updatedAt: fixedDate,
+              },
+            ],
+          },
+        ],
+      })
+      mockProductService.list.mockResolvedValue(mockResponse)
+      const result = await controller.list(createTestData.getProductsQuery())
+      expect(result).toMatchSnapshot()
+    })
+
+    it('should match product detail response structure', async () => {
+      const mockResponse = createTestData.productDetailResponse({
+        publishedAt: fixedDate,
+        createdAt: fixedDate,
+        updatedAt: fixedDate,
+        productTranslations: [
+          {
+            id: 1,
+            name: 'Test Product',
+            description: 'Test Description',
+            languageId: 'vi',
+            productId: 1,
+            createdById: null,
+            updatedById: null,
+            deletedById: null,
+            deletedAt: null,
+            createdAt: fixedDate,
+            updatedAt: fixedDate,
+          },
+        ],
+        skus: [
+          {
+            id: 1,
+            value: 'Size: M',
+            price: 100000,
+            stock: 50,
+            image: 'test-sku-image.jpg',
+            productId: 1,
+            createdById: 1,
+            updatedById: null,
+            deletedById: null,
+            deletedAt: null,
+            createdAt: fixedDate,
+            updatedAt: fixedDate,
+          },
+        ],
+        categories: [
+          {
+            id: 1,
+            name: 'Electronics',
+            logo: 'electronics-logo.jpg',
+            parentCategoryId: null,
+            createdById: null,
+            updatedById: null,
+            deletedById: null,
+            deletedAt: null,
+            createdAt: fixedDate,
+            updatedAt: fixedDate,
+            categoryTranslations: [
+              {
+                id: 1,
+                categoryId: 1,
+                languageId: 'vi',
+                name: 'Điện tử',
+                description: 'Sản phẩm điện tử',
+                createdById: null,
+                updatedById: null,
+                deletedById: null,
+                deletedAt: null,
+                createdAt: fixedDate,
+                updatedAt: fixedDate,
+              },
+            ],
+          },
+        ],
+        brand: {
+          id: 1,
+          name: 'Apple',
+          logo: 'apple-logo.jpg',
+          createdById: null,
+          updatedById: null,
+          deletedById: null,
+          deletedAt: null,
+          createdAt: fixedDate,
+          updatedAt: fixedDate,
+          brandTranslations: [
+            {
+              id: 1,
+              brandId: 1,
+              languageId: 'vi',
+              name: 'Apple',
+              description: 'Apple brand',
+              createdById: null,
+              updatedById: null,
+              deletedById: null,
+              deletedAt: null,
+              createdAt: fixedDate,
+              updatedAt: fixedDate,
+            },
+          ],
+        },
+      })
+      mockProductService.getDetail.mockResolvedValue(mockResponse)
+      const result = await controller.findById(createTestData.getProductParams())
+      expect(result).toMatchSnapshot()
+    })
+  })
 })

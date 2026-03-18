@@ -645,4 +645,69 @@ describe('WishlistService', () => {
       await expect(service.setTargetPrice(userId, itemId, targetPrice)).rejects.toThrow(NotFoundException)
     })
   })
+
+  // ============================================
+  // ADDITIONAL EDGE CASES
+  // ============================================
+
+  describe('Edge Cases', () => {
+    it('should handle duplicate product add (repo handles uniqueness)', async () => {
+      const userId = 10
+      const data = { productId: 100, skuId: 10 }
+      mockWishlistRepo.addItem.mockRejectedValue(new Error('Unique constraint failed'))
+
+      await expect(service.addItem(userId, data as any)).rejects.toThrow()
+    })
+
+    it('should handle removing non-existent item', async () => {
+      const userId = 10
+      const itemId = 99999
+      mockWishlistRepo.removeItem.mockRejectedValue(new Error('Record not found'))
+
+      await expect(service.removeItem(userId, itemId)).rejects.toThrow(NotFoundException)
+    })
+
+    it('should handle concurrent addItem and removeItem', async () => {
+      const userId = 10
+      mockWishlistRepo.addItem.mockResolvedValue({} as any)
+      mockWishlistRepo.removeItem.mockResolvedValue({} as any)
+      mockCacheManager.del.mockResolvedValue(true)
+
+      await Promise.all([service.addItem(userId, { productId: 1 } as any), service.removeItem(userId, 1)])
+
+      expect(mockWishlistRepo.addItem).toHaveBeenCalledTimes(1)
+      expect(mockWishlistRepo.removeItem).toHaveBeenCalledTimes(1)
+    })
+
+    it('should handle empty pagination result for getItems', async () => {
+      const userId = 10
+      const query = { page: 100, limit: 10 }
+      mockWishlistRepo.getItems.mockResolvedValue({ data: [], totalItems: 0, page: 100, limit: 10, totalPages: 0 })
+
+      const result = await service.getItems(userId, query as any)
+
+      expect(result.data).toEqual([])
+      expect(result.totalItems).toBe(0)
+    })
+
+    it('should handle moveToCart when no SKU selected', async () => {
+      const userId = 10
+      const itemId = 1
+      const error = new Error('No SKU')
+      ;(error as any).code = 'NO_SKU'
+      mockWishlistRepo.moveToCart.mockRejectedValue(error)
+
+      await expect(service.moveToCart(userId, itemId)).rejects.toThrow()
+    })
+
+    it('should handle cache invalidation failure gracefully in addItem', async () => {
+      const userId = 10
+      const data = { productId: 100, skuId: 10 }
+      mockWishlistRepo.addItem.mockResolvedValue({} as any)
+      mockCacheManager.del.mockRejectedValue(new Error('Redis connection failed'))
+
+      // addItem calls invalidateWishlistCache which may throw
+      await expect(service.addItem(userId, data as any)).rejects.toThrow('Redis connection failed')
+    })
+  })
 })

@@ -729,4 +729,29 @@ describe('UserController', () => {
       await expect(controller.getListUser(query)).rejects.toThrow('Database connection failed')
     })
   })
+
+  // ===== RESPONSE STRUCTURE SNAPSHOTS =====
+
+  describe('Response Structure Snapshots', () => {
+    it('should match users list response structure', async () => {
+      const mockResponse = createTestData.usersListResponse()
+      mockUserService.getListUser.mockResolvedValue(mockResponse)
+      const result = await controller.getListUser(createTestData.getUsersQuery())
+      expect(result).toMatchSnapshot()
+    })
+
+    it('should match user detail with role response structure', async () => {
+      const mockResponse = createTestData.userWithRoleResponse()
+      mockUserService.findById.mockResolvedValue(mockResponse)
+      const result = await controller.findById(createTestData.getUserParams())
+      expect(result).toMatchSnapshot()
+    })
+
+    it('should match create user response structure', async () => {
+      const mockResponse = createTestData.userResponse()
+      mockUserService.createUser.mockResolvedValue(mockResponse)
+      const result = await controller.createUser(createTestData.createUserBody(), 1, 'Admin')
+      expect(result).toMatchSnapshot()
+    })
+  })
 })

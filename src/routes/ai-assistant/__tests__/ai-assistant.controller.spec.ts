@@ -104,4 +104,29 @@ describe('AIAssistantController', () => {
       expect(endCallCount).toBeLessThanOrEqual(1)
     })
   })
+
+  // ===== RESPONSE STRUCTURE SNAPSHOTS =====
+
+  describe('Response Structure Snapshots', () => {
+    it('should match SSE streaming writeHead structure', async () => {
+      const mockReq = new EventEmitter() as any
+      const capturedHeaders: any = {}
+      const mockRes = {
+        writeHead: jest.fn((status: number, headers: any) => {
+          capturedHeaders.status = status
+          capturedHeaders.headers = headers
+        }),
+        write: jest.fn(() => true),
+        end: jest.fn(),
+      } as any
+
+      mockAIService.generateStreamingResponse.mockImplementation(async (_messages, _message, callbacks) => {
+        callbacks.onComplete()
+      })
+
+      await controller.testAIStreaming({ message: 'test' } as any, mockReq, mockRes)
+
+      expect({ status: capturedHeaders.status, headers: capturedHeaders.headers }).toMatchSnapshot()
+    })
+  })
 })

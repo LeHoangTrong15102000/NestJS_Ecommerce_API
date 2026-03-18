@@ -14,8 +14,10 @@ import {
   EmailAlreadyExistsException,
   EmailNotFoundException,
   FailedToSendOTPException,
+  InvalidOTPException,
   InvalidTOTPAndCodeException,
   InvalidTOTPException,
+  OTPExpiredException,
   RefreshTokenAlreadyUsedException,
   TOTPAlreadyEnabledException,
   TOTPNotEnabledException,
@@ -1043,6 +1045,286 @@ describe('AuthService', () => {
 
       // Act & Assert - Thực hiện test và kiểm tra lỗi
       await expect(service.disableTwoFactorAuth(disableData)).rejects.toThrow(InvalidTOTPException)
+    })
+
+    it('should throw InvalidOTPException when OTP code not found for disable 2FA', async () => {
+      const disableData = { userId, code: '123456' }
+      const mockUser = createTestData.user({ id: userId, totpSecret: 'secret123' })
+
+      mockSharedUserRepo.findUnique.mockResolvedValue(mockUser)
+      mockAuthRepo.findUniqueVerificationCode.mockResolvedValue(null)
+
+      await expect(service.disableTwoFactorAuth(disableData)).rejects.toThrow(InvalidOTPException)
+    })
+  })
+
+  describe('Edge Cases', () => {
+    describe('refreshToken - remainingTime expired', () => {
+      const validRefreshTokenData = {
+        refreshToken: 'valid-refresh-token',
+        userAgent: 'test-agent',
+        ip: '127.0.0.1',
+      }
+
+      it('should throw UnauthorizedException when remaining time is zero', async () => {
+        const mockUser = {
+          ...createTestData.user(),
+          role: createTestData.role({ id: 1, name: 'CLIENT' }),
+        }
+        const mockRefreshTokenInDb = {
+          token: validRefreshTokenData.refreshToken,
+          userId: mockUser.id,
+          deviceId: 1,
+          expiresAt: new Date(Date.now() + 3600000),
+          user: mockUser,
+        }
+        const decodedToken = {
+          userId: mockUser.id,
+          exp: Math.floor(Date.now() / 1000) - 1, // expired 1 second ago
+        }
+
+        mockTokenService.verifyRefreshToken.mockResolvedValue(decodedToken as any)
+        mockAuthRepo.findUniqueRefreshTokenIncludeUserRole.mockResolvedValue(mockRefreshTokenInDb as any)
+        mockAuthRepo.deleteRefreshToken.mockResolvedValue({} as any)
+
+        await expect(service.refreshToken(validRefreshTokenData)).rejects.toThrow(UnauthorizedException)
+        await expect(service.refreshToken(validRefreshTokenData)).rejects.toThrow('Refresh token has expired')
+        expect(mockAuthRepo.deleteRefreshToken).toHaveBeenCalledWith({
+          token: validRefreshTokenData.refreshToken,
+        })
+      })
+    })
+
+    describe('forgotPassword - invalid OTP', () => {
+      const validForgotPasswordData = {
+        email: 'test@example.com',
+        code: '123456',
+        newPassword: 'newPassword123',
+        confirmNewPassword: 'newPassword123',
+      }
+
+      it('should throw InvalidOTPException when OTP code not found', async () => {
+        const mockUser = createTestData.user({ email: validForgotPasswordData.email })
+        mockSharedUserRepo.findUnique.mockResolvedValue(mockUser)
+        mockAuthRepo.findUniqueVerificationCode.mockResolvedValue(null)
+
+        await expect(service.forgotPassword(validForgotPasswordData)).rejects.toThrow(InvalidOTPException)
+      })
+
+      it('should throw OTPExpiredException when OTP is expired', async () => {
+        const mockUser = createTestData.user({ email: validForgotPasswordData.email })
+        const expiredVerificationCode = createTestData.verificationCode({
+          email: validForgotPasswordData.email,
+          code: validForgotPasswordData.code,
+          type: TypeOfVerificationCode.FORGOT_PASSWORD,
+          expiresAt: new Date(Date.now() - 60000).toISOString(), // expired 1 minute ago
+        })
+
+        mockSharedUserRepo.findUnique.mockResolvedValue(mockUser)
+        mockAuthRepo.findUniqueVerificationCode.mockResolvedValue(expiredVerificationCode)
+
+        await expect(service.forgotPassword(validForgotPasswordData)).rejects.toThrow(OTPExpiredException)
+      })
+    })
+
+    describe('login - 2FA with OTP code and expired OTP', () => {
+      it('should throw OTPExpiredException when OTP code is expired during 2FA login', async () => {
+        const loginData = {
+          email: 'test@example.com',
+          password: 'password123',
+          code: '123456',
+          userAgent: 'test-agent',
+          ip: '127.0.0.1',
+        }
+        const mockUser = {
+          ...createTestData.user({ totpSecret: 'secret123' }),
+          role: createTestData.role(),
+        }
+        const expiredVerificationCode = createTestData.verificationCode({
+          expiresAt: new Date(Date.now() - 60000).toISOString(),
+        })
+
+        mockAuthRepo.findUniqueUserIncludeRole.mockResolvedValue(mockUser as any)
+        mockHashingService.compare.mockResolvedValue(true)
+        mockAuthRepo.findUniqueVerificationCode.mockResolvedValue(expiredVerificationCode)
+
+        await expect(service.login(loginData)).rejects.toThrow(OTPExpiredException)
+      })
+
+      it('should throw InvalidOTPException when OTP code not found during 2FA login', async () => {
+        const loginData = {
+          email: 'test@example.com',
+          password: 'password123',
+          code: '123456',
+          userAgent: 'test-agent',
+          ip: '127.0.0.1',
+        }
+        const mockUser = {
+          ...createTestData.user({ totpSecret: 'secret123' }),
+          role: createTestData.role(),
+        }
+
+        mockAuthRepo.findUniqueUserIncludeRole.mockResolvedValue(mockUser as any)
+        mockHashingService.compare.mockResolvedValue(true)
+        mockAuthRepo.findUniqueVerificationCode.mockResolvedValue(null)
+
+        await expect(service.login(loginData)).rejects.toThrow(InvalidOTPException)
+      })
+    })
+
+    describe('sendOTP - edge cases', () => {
+      it('should throw EmailAlreadyExistsException when registering with existing email', async () => {
+        const body = { email: 'existing@example.com', type: TypeOfVerificationCode.REGISTER as any }
+        mockSharedUserRepo.findUnique.mockResolvedValue(createTestData.user({ email: body.email }))
+
+        await expect(service.sendOTP(body)).rejects.toThrow(EmailAlreadyExistsException)
+      })
+
+      it('should throw EmailNotFoundException when forgot password for non-existent email', async () => {
+        const body = { email: 'nonexistent@example.com', type: TypeOfVerificationCode.FORGOT_PASSWORD as any }
+        mockSharedUserRepo.findUnique.mockResolvedValue(null)
+
+        await expect(service.sendOTP(body)).rejects.toThrow(EmailNotFoundException)
+      })
+    })
+
+    describe('register - concurrent/duplicate registration', () => {
+      it('should throw EmailAlreadyExistsException when concurrent register creates duplicate', async () => {
+        const body = {
+          email: 'test@example.com',
+          name: 'Test',
+          phoneNumber: '0123456789',
+          password: 'password123',
+          confirmPassword: 'password123',
+          code: '123456',
+        }
+        const mockVerificationCode = createTestData.verificationCode()
+        mockAuthRepo.findUniqueVerificationCode.mockResolvedValue(mockVerificationCode)
+        mockSharedRoleRepo.getClientRoleId.mockResolvedValue(2)
+        mockHashingService.hash.mockResolvedValue('hashedPassword')
+        const prismaError = new Error('Unique constraint failed')
+        mockAuthRepo.createUser.mockRejectedValue(prismaError)
+        mockAuthRepo.deleteVerificationCode.mockResolvedValue({} as any)
+        mockIsUniqueConstraintPrismaError.mockReturnValue(true)
+
+        await expect(service.register(body)).rejects.toThrow(EmailAlreadyExistsException)
+      })
+
+      it('should rethrow non-unique-constraint errors during register', async () => {
+        const body = {
+          email: 'test@example.com',
+          name: 'Test',
+          phoneNumber: '0123456789',
+          password: 'password123',
+          confirmPassword: 'password123',
+          code: '123456',
+        }
+        const mockVerificationCode = createTestData.verificationCode()
+        mockAuthRepo.findUniqueVerificationCode.mockResolvedValue(mockVerificationCode)
+        mockSharedRoleRepo.getClientRoleId.mockResolvedValue(2)
+        mockHashingService.hash.mockResolvedValue('hashedPassword')
+        const dbError = new Error('Database connection lost')
+        mockAuthRepo.createUser.mockRejectedValue(dbError)
+        mockAuthRepo.deleteVerificationCode.mockResolvedValue({} as any)
+        mockIsUniqueConstraintPrismaError.mockReturnValue(false)
+
+        await expect(service.register(body)).rejects.toThrow('Database connection lost')
+      })
+    })
+
+    describe('login - edge cases with validate2FA', () => {
+      it('should throw TOTPNotEnabledException when user sends totpCode but 2FA not enabled', async () => {
+        const loginData = {
+          email: 'test@example.com',
+          password: 'password123',
+          totpCode: '123456',
+          userAgent: 'test-agent',
+          ip: '127.0.0.1',
+        }
+        const mockUser = {
+          ...createTestData.user({ totpSecret: null }),
+          role: createTestData.role(),
+        }
+        mockAuthRepo.findUniqueUserIncludeRole.mockResolvedValue(mockUser as any)
+        mockHashingService.compare.mockResolvedValue(true)
+
+        await expect(service.login(loginData)).rejects.toThrow(TOTPNotEnabledException)
+      })
+
+      it('should throw TOTPNotEnabledException when user sends OTP code but 2FA not enabled', async () => {
+        const loginData = {
+          email: 'test@example.com',
+          password: 'password123',
+          code: '123456',
+          userAgent: 'test-agent',
+          ip: '127.0.0.1',
+        }
+        const mockUser = {
+          ...createTestData.user({ totpSecret: null }),
+          role: createTestData.role(),
+        }
+        mockAuthRepo.findUniqueUserIncludeRole.mockResolvedValue(mockUser as any)
+        mockHashingService.compare.mockResolvedValue(true)
+
+        await expect(service.login(loginData)).rejects.toThrow(TOTPNotEnabledException)
+      })
+    })
+
+    describe('logout - edge cases', () => {
+      it('should throw UnauthorizedException when refresh token not found in DB (revoked)', async () => {
+        const refreshToken = 'revoked-token'
+        mockTokenService.verifyRefreshToken.mockResolvedValue({ userId: 1 } as any)
+        const prismaNotFoundError = new Error('Record not found')
+        mockAuthRepo.deleteRefreshToken.mockRejectedValue(prismaNotFoundError)
+        mockIsNotFoundPrismaError.mockReturnValue(true)
+
+        await expect(service.logout(refreshToken)).rejects.toThrow(UnauthorizedException)
+        await expect(service.logout(refreshToken)).rejects.toThrow('Refresh token has been used or revoked')
+      })
+    })
+
+    describe('enableTwoFactorAuth - edge cases', () => {
+      it('should throw EmailNotFoundException when user not found for enable 2FA', async () => {
+        mockSharedUserRepo.findUnique.mockResolvedValue(null)
+
+        await expect(service.enableTwoFactorAuth(999)).rejects.toThrow(EmailNotFoundException)
+      })
+
+      it('should throw TOTPAlreadyEnabledException when 2FA already enabled', async () => {
+        const mockUser = createTestData.user({ totpSecret: 'existing-secret' })
+        mockSharedUserRepo.findUnique.mockResolvedValue(mockUser)
+
+        await expect(service.enableTwoFactorAuth(1)).rejects.toThrow(TOTPAlreadyEnabledException)
+      })
+    })
+
+    describe('disableTwoFactorAuth - edge cases', () => {
+      it('should throw EmailNotFoundException when user not found for disable 2FA', async () => {
+        mockSharedUserRepo.findUnique.mockResolvedValue(null)
+
+        await expect(service.disableTwoFactorAuth({ userId: 999, totpCode: '123456' })).rejects.toThrow(
+          EmailNotFoundException,
+        )
+      })
+
+      it('should throw TOTPNotEnabledException when 2FA not enabled for disable', async () => {
+        const mockUser = createTestData.user({ totpSecret: null })
+        mockSharedUserRepo.findUnique.mockResolvedValue(mockUser)
+
+        await expect(service.disableTwoFactorAuth({ userId: 1, totpCode: '123456' })).rejects.toThrow(
+          TOTPNotEnabledException,
+        )
+      })
+
+      it('should throw InvalidTOTPException when TOTP code is wrong during disable', async () => {
+        const mockUser = createTestData.user({ totpSecret: 'secret123' })
+        mockSharedUserRepo.findUnique.mockResolvedValue(mockUser)
+        mockTwoFactorService.verifyTOTP.mockReturnValue(false)
+
+        await expect(service.disableTwoFactorAuth({ userId: 1, totpCode: 'wrong' })).rejects.toThrow(
+          InvalidTOTPException,
+        )
+      })
     })
   })
 })

@@ -1,23 +1,28 @@
 import { PrismaClient } from '@prisma/client'
+import { server } from './msw/server'
 
 // Global test database setup
 declare global {
   var __GLOBAL_PRISMA__: PrismaClient | undefined
 }
 
-/**
- * Setup test database before all tests
- */
+// MSW lifecycle — intercept external HTTP requests
 beforeAll(async () => {
+  server.listen({ onUnhandledRequest: 'bypass' })
   // Initialize global Prisma client using existing DATABASE_URL
   global.__GLOBAL_PRISMA__ = new PrismaClient()
   await global.__GLOBAL_PRISMA__.$connect()
+})
+
+afterEach(() => {
+  server.resetHandlers()
 })
 
 /**
  * Cleanup after all tests
  */
 afterAll(async () => {
+  server.close()
   if (global.__GLOBAL_PRISMA__) {
     await global.__GLOBAL_PRISMA__.$disconnect()
   }

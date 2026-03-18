@@ -502,4 +502,28 @@ describe('MediaController', () => {
       expect(result.data[2].url).toContain('.webp')
     })
   })
+
+  // ===== RESPONSE STRUCTURE SNAPSHOTS =====
+
+  describe('Response Structure Snapshots', () => {
+    it('should match upload file response structure', async () => {
+      const mockFile = createMockFile()
+      const uploadResult = {
+        data: [{ url: 'https://s3.amazonaws.com/bucket/images/test-123.jpg' }],
+      }
+      mockMediaService.uploadFile.mockResolvedValue(uploadResult)
+      const result = await controller.uploadFile([mockFile])
+      expect(result).toMatchSnapshot()
+    })
+
+    it('should match presigned URL response structure', async () => {
+      const presignedResult = {
+        presignedUrl: 'https://s3.amazonaws.com/bucket/images/test.jpg?X-Amz-Signature=abc123',
+        url: 'https://s3.amazonaws.com/bucket/images/test.jpg',
+      }
+      mockMediaService.getPresignedUrl.mockResolvedValue(presignedResult)
+      const result = await controller.createPresignedUrl({ filename: 'test.jpg', mimetype: 'image/jpeg' } as any)
+      expect(result).toMatchSnapshot()
+    })
+  })
 })

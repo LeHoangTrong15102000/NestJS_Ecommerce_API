@@ -104,12 +104,13 @@ describe('WishlistPriceCheckCronjob', () => {
       expect(mockWishlistProducer.addPriceCheckJob).toHaveBeenCalledTimes(1)
     })
 
-    it('should handle concurrent executions', async () => {
+    it('should prevent concurrent executions via isRunning flag', async () => {
       mockWishlistProducer.addPriceCheckJob.mockResolvedValue({} as any)
 
       await Promise.all([cronjob.handlePriceCheck(), cronjob.handlePriceCheck(), cronjob.handlePriceCheck()])
 
-      expect(mockWishlistProducer.addPriceCheckJob).toHaveBeenCalledTimes(3)
+      // isRunning flag prevents concurrent execution — only 1st call runs
+      expect(mockWishlistProducer.addPriceCheckJob).toHaveBeenCalledTimes(1)
     })
 
     it('should log both start and success messages in order', async () => {
@@ -209,7 +210,7 @@ describe('WishlistPriceCheckCronjob', () => {
       expect(endTime - startTime).toBeLessThan(1000)
     })
 
-    it('should handle rapid successive calls', async () => {
+    it('should handle rapid successive calls with isRunning guard', async () => {
       mockWishlistProducer.addPriceCheckJob.mockResolvedValue({} as any)
 
       const promises = Array(10)
@@ -217,7 +218,8 @@ describe('WishlistPriceCheckCronjob', () => {
         .map(() => cronjob.handlePriceCheck())
 
       await expect(Promise.all(promises)).resolves.not.toThrow()
-      expect(mockWishlistProducer.addPriceCheckJob).toHaveBeenCalledTimes(10)
+      // isRunning flag prevents concurrent execution — only 1st call runs
+      expect(mockWishlistProducer.addPriceCheckJob).toHaveBeenCalledTimes(1)
     })
 
     it('should not block on producer errors', async () => {

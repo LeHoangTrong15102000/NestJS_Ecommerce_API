@@ -913,4 +913,57 @@ describe('VoucherController', () => {
       expect(mockVoucherService.getVoucherStats).toHaveBeenCalledWith(2)
     })
   })
+
+  // ===== RESPONSE STRUCTURE SNAPSHOTS =====
+
+  describe('Response Structure Snapshots', () => {
+    const fixedDate = '2024-01-01T00:00:00.000Z'
+
+    it('should match voucher list response structure', async () => {
+      const mockResponse = createTestData.voucherListResponse({
+        data: [
+          createTestData.voucherResponse({
+            startDate: fixedDate,
+            endDate: fixedDate,
+            createdAt: fixedDate,
+            updatedAt: fixedDate,
+          }),
+        ],
+      })
+      mockVoucherService.getVouchers.mockResolvedValue(mockResponse)
+      const result = await controller.getVouchers(1, 1, createTestData.listVouchersQuery())
+      expect(result).toMatchSnapshot()
+    })
+
+    it('should match voucher detail response structure', async () => {
+      const mockResponse = createTestData.voucherWithUserInfoResponse({
+        startDate: fixedDate,
+        endDate: fixedDate,
+        createdAt: fixedDate,
+        updatedAt: fixedDate,
+        userVoucher: {
+          usedCount: 0,
+          savedAt: fixedDate,
+          canUse: true,
+        },
+      })
+      mockVoucherService.getVoucherDetail.mockResolvedValue(mockResponse)
+      const result = await controller.getVoucherDetail(createTestData.getVoucherDetailParams(), 1)
+      expect(result).toMatchSnapshot()
+    })
+
+    it('should match voucher application result structure', async () => {
+      const mockResponse = createTestData.voucherApplicationResult()
+      mockVoucherService.applyVoucher.mockResolvedValue(mockResponse)
+      const result = await controller.applyVoucher(1, createTestData.applyVoucherBody())
+      expect(result).toMatchSnapshot()
+    })
+
+    it('should match voucher stats response structure', async () => {
+      const mockResponse = createTestData.voucherStatsResponse()
+      mockVoucherService.getUserVoucherStats.mockResolvedValue(mockResponse)
+      const result = await controller.getMyVoucherStats(1)
+      expect(result).toMatchSnapshot()
+    })
+  })
 })

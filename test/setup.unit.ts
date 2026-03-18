@@ -1,3 +1,10 @@
+import { server } from './msw/server'
+
+// MSW lifecycle — intercept external HTTP requests
+beforeAll(() => server.listen({ onUnhandledRequest: 'bypass' }))
+afterEach(() => server.resetHandlers())
+afterAll(() => server.close())
+
 // Mock helpers functions - keep real implementations, only mock specific functions
 jest.mock('src/shared/helpers', () => {
   const actual = jest.requireActual('src/shared/helpers')

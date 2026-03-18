@@ -356,7 +356,7 @@ describe('BrandController', () => {
       const userId = 1
       const params: GetBrandParamsDTO = { brandId: 1 }
       const mockResponse = { message: 'Delete successfully' }
-      mockBrandService.delete.mockResolvedValue(mockResponse)
+      mockBrandService.delete.mockResolvedValue(mockResponse as any)
 
       // Act
       const result = await controller.delete(params, userId)
@@ -389,7 +389,7 @@ describe('BrandController', () => {
       const userId = 5
       const params: GetBrandParamsDTO = { brandId: 10 }
       const mockResponse = { message: 'Delete successfully' }
-      mockBrandService.delete.mockResolvedValue(mockResponse)
+      mockBrandService.delete.mockResolvedValue(mockResponse as any)
 
       // Act
       await controller.delete(params, userId)
@@ -455,6 +455,48 @@ describe('BrandController', () => {
       // Assert
       expect(result.data).toEqual([])
       expect(result.page).toBe(1000)
+    })
+  })
+
+  // ===== RESPONSE STRUCTURE SNAPSHOTS =====
+
+  describe('Response Structure Snapshots', () => {
+    const fixedDate = '2024-01-01T00:00:00.000Z'
+
+    it('should match brand list response structure', async () => {
+      const mockResponse = {
+        data: [
+          createMockBrand({ id: 1, name: 'Nike', createdAt: fixedDate, updatedAt: fixedDate }),
+          createMockBrand({ id: 2, name: 'Adidas', createdAt: fixedDate, updatedAt: fixedDate }),
+        ],
+        totalItems: 2,
+        page: 1,
+        limit: 10,
+        totalPages: 1,
+      }
+      mockBrandService.list.mockResolvedValue(mockResponse)
+      const result = await controller.list({ page: 1, limit: 10 })
+      expect(result).toMatchSnapshot()
+    })
+
+    it('should match brand detail response structure', async () => {
+      const mockBrand = createMockBrand({ createdAt: fixedDate, updatedAt: fixedDate })
+      mockBrandService.findById.mockResolvedValue(mockBrand)
+      const result = await controller.findById({ brandId: 1 })
+      expect(result).toMatchSnapshot()
+    })
+
+    it('should match brand create response structure', async () => {
+      const mockBrand = createMockBrand({ id: 10, name: 'New Brand', createdAt: fixedDate, updatedAt: fixedDate })
+      mockBrandService.create.mockResolvedValue(mockBrand)
+      const result = await controller.create({ name: 'New Brand', logo: 'https://example.com/logo.png' }, 1)
+      expect(result).toMatchSnapshot()
+    })
+
+    it('should match brand delete response structure', async () => {
+      mockBrandService.delete.mockResolvedValue({ message: 'Delete successfully' })
+      const result = await controller.delete({ brandId: 1 }, 1)
+      expect(result).toMatchSnapshot()
     })
   })
 })

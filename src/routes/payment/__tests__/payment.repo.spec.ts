@@ -396,5 +396,109 @@ describe('PaymentRepo', () => {
         )
       })
     })
+
+    describe('Edge Cases', () => {
+      it('should throw BadRequestException when payment has no orders', async () => {
+        const webhookPayload = createWebhookPayload()
+        const mockPayment = createMockPayment({ orders: [] })
+
+        mockPrismaService.paymentTransaction.findUnique.mockResolvedValue(null)
+        mockPrismaService.payment.findUnique.mockResolvedValue(mockPayment)
+        mockPrismaService.paymentTransaction.create.mockResolvedValue({} as any)
+
+        await expect(repo.receiver(webhookPayload)).rejects.toThrow(BadRequestException)
+        await expect(repo.receiver(webhookPayload)).rejects.toThrow('No orders found for payment 100')
+      })
+
+      it('should extract payment ID from content when code is null', async () => {
+        const webhookPayload = createWebhookPayload({
+          code: null,
+          content: `Thanh toan ${PREFIX_PAYMENT_CODE}100`,
+        })
+        const mockPayment = createMockPayment()
+
+        mockPrismaService.paymentTransaction.findUnique.mockResolvedValue(null)
+        mockPrismaService.payment.findUnique.mockResolvedValue(mockPayment)
+        mockPrismaService.paymentTransaction.create.mockResolvedValue({} as any)
+        mockPrismaService.payment.update.mockResolvedValue({} as any)
+        mockPrismaService.order.updateMany.mockResolvedValue({ count: 1 } as any)
+
+        const result = await repo.receiver(webhookPayload)
+
+        expect(result).toBe(10)
+      })
+
+      it('should set amountOut for transferType "out"', async () => {
+        const webhookPayload = createWebhookPayload({
+          transferType: 'out',
+          transferAmount: 500000,
+        })
+        const mockPayment = createMockPayment()
+
+        mockPrismaService.paymentTransaction.findUnique.mockResolvedValue(null)
+        mockPrismaService.payment.findUnique.mockResolvedValue(mockPayment)
+        mockPrismaService.paymentTransaction.create.mockResolvedValue({} as any)
+        mockPrismaService.payment.update.mockResolvedValue({} as any)
+        mockPrismaService.order.updateMany.mockResolvedValue({ count: 1 } as any)
+
+        await repo.receiver(webhookPayload)
+
+        expect(mockPrismaService.paymentTransaction.create).toHaveBeenCalledWith(
+          expect.objectContaining({
+            data: expect.objectContaining({
+              amountIn: 0,
+              amountOut: 500000,
+            }),
+          }),
+        )
+      })
+
+      it('should handle Prisma Decimal totalAmount in orders', async () => {
+        const webhookPayload = createWebhookPayload({ transferAmount: 750000 })
+        const mockPayment = createMockPayment({
+          orders: [
+            {
+              id: 1,
+              userId: 10,
+              status: OrderStatus.PENDING_PAYMENT,
+              totalAmount: { toString: () => '500000' },
+              items: [],
+            },
+            {
+              id: 2,
+              userId: 10,
+              status: OrderStatus.PENDING_PAYMENT,
+              totalAmount: { toString: () => '250000' },
+              items: [],
+            },
+          ],
+        })
+
+        mockPrismaService.paymentTransaction.findUnique.mockResolvedValue(null)
+        mockPrismaService.payment.findUnique.mockResolvedValue(mockPayment)
+        mockPrismaService.paymentTransaction.create.mockResolvedValue({} as any)
+        mockPrismaService.payment.update.mockResolvedValue({} as any)
+        mockPrismaService.order.updateMany.mockResolvedValue({ count: 2 } as any)
+
+        const result = await repo.receiver(webhookPayload)
+
+        expect(result).toBe(10)
+      })
+
+      it('should remove scheduled cancellation job on successful payment', async () => {
+        const webhookPayload = createWebhookPayload()
+        const mockPayment = createMockPayment()
+
+        mockPrismaService.paymentTransaction.findUnique.mockResolvedValue(null)
+        mockPrismaService.payment.findUnique.mockResolvedValue(mockPayment)
+        mockPrismaService.paymentTransaction.create.mockResolvedValue({} as any)
+        mockPrismaService.payment.update.mockResolvedValue({} as any)
+        mockPrismaService.order.updateMany.mockResolvedValue({ count: 1 } as any)
+
+        await repo.receiver(webhookPayload)
+
+        expect(mockPaymentProducer.removeJob).toHaveBeenCalledWith(100)
+      })
+    })
   })
 })

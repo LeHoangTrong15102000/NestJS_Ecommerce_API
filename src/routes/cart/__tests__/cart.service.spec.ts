@@ -462,5 +462,58 @@ describe('CartService', () => {
         limit: query.limit,
       })
     })
+
+    it('should propagate non-existent SKU error from repo on addToCart', async () => {
+      const userId = 1
+      const body = createTestData.addToCartBody({ skuId: 99999 })
+      mockCartRepo.create.mockRejectedValue(new Error('SKU not found'))
+
+      await expect(service.addToCart(userId, body)).rejects.toThrow('SKU not found')
+    })
+
+    it('should propagate error when updating cart item for wrong user', async () => {
+      const userId = 1
+      const cartItemId = 100
+      const body = createTestData.updateCartItemBody()
+      mockCartRepo.update.mockRejectedValue(new Error('Cart item not found'))
+
+      await expect(service.updateCartItem({ userId, cartItemId, body })).rejects.toThrow('Cart item not found')
+    })
+
+    it('should handle zero quantity in update body', async () => {
+      const userId = 1
+      const cartItemId = 1
+      const body = createTestData.updateCartItemBody({ quantity: 0 })
+      mockCartRepo.update.mockResolvedValue({} as any)
+
+      await service.updateCartItem({ userId, cartItemId, body })
+
+      expect(mockCartRepo.update).toHaveBeenCalledWith({
+        userId,
+        body,
+        cartItemId,
+      })
+    })
+
+    it('should handle concurrent addToCart calls', async () => {
+      const userId = 1
+      const body1 = createTestData.addToCartBody({ skuId: 1 })
+      const body2 = createTestData.addToCartBody({ skuId: 2 })
+      mockCartRepo.create.mockResolvedValue({} as any)
+
+      await Promise.all([service.addToCart(userId, body1), service.addToCart(userId, body2)])
+
+      expect(mockCartRepo.create).toHaveBeenCalledTimes(2)
+    })
+
+    it('should handle delete with non-existent cart item IDs', async () => {
+      const userId = 1
+      const body = createTestData.deleteCartBody({ cartItemIds: [999, 998] })
+      mockCartRepo.delete.mockResolvedValue({ count: 0 })
+
+      const result = await service.deleteCart(userId, body)
+
+      expect(result).toEqual({ message: '0 item(s) deleted from cart' })
+    })
   })
 })

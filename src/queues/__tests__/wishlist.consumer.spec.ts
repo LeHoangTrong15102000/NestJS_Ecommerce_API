@@ -236,8 +236,9 @@ describe('WishlistConsumer', () => {
 
       const result = await consumer.process(job)
 
-      expect(mockWishlistProducer.addSendPriceAlertJob).toHaveBeenCalledTimes(2) // Once for drop, once for target
-      expect(result.alertsSent).toBe(2)
+      // shouldAlert is a single check: drop >= 5% OR target met — sends 1 alert per item
+      expect(mockWishlistProducer.addSendPriceAlertJob).toHaveBeenCalledTimes(1)
+      expect(result.alertsSent).toBe(1)
     })
 
     it('should use product basePrice when sku price is not available', async () => {
@@ -279,11 +280,11 @@ describe('WishlistConsumer', () => {
       expect(result).toEqual({ success: true, itemsChecked: 1, alertsSent: 0 })
     })
 
-    it('should handle multiple items', async () => {
+    it('should handle multiple items with different users', async () => {
       const items = [
-        createMockWishlistItem({ id: 1, sku: { price: 94000 } }), // 6% drop
-        createMockWishlistItem({ id: 2, sku: { price: 96000 } }), // 4% drop
-        createMockWishlistItem({ id: 3, sku: { price: 90000 } }), // 10% drop
+        createMockWishlistItem({ id: 1, userId: 1, user: { id: 1, email: 'u1@test.com', name: 'U1' }, product: { id: 101, name: 'P1', basePrice: 100000 }, sku: { price: 94000 } }), // 6% drop
+        createMockWishlistItem({ id: 2, userId: 2, user: { id: 2, email: 'u2@test.com', name: 'U2' }, product: { id: 102, name: 'P2', basePrice: 100000 }, sku: { price: 96000 } }), // 4% drop — no alert
+        createMockWishlistItem({ id: 3, userId: 3, user: { id: 3, email: 'u3@test.com', name: 'U3' }, product: { id: 103, name: 'P3', basePrice: 100000 }, sku: { price: 90000 } }), // 10% drop
       ]
       const job = createMockJob(PRICE_CHECK_JOB_NAME)
       mockWishlistRepo.getItemsForPriceCheck.mockResolvedValue(items as any)
@@ -293,7 +294,7 @@ describe('WishlistConsumer', () => {
       const result = await consumer.process(job)
 
       expect(mockWishlistRepo.updatePriceAlert).toHaveBeenCalledTimes(3)
-      expect(mockWishlistProducer.addSendPriceAlertJob).toHaveBeenCalledTimes(2) // Only items 1 and 3
+      expect(mockWishlistProducer.addSendPriceAlertJob).toHaveBeenCalledTimes(2) // Items 1 and 3
       expect(result).toEqual({ success: true, itemsChecked: 3, alertsSent: 2 })
     })
 

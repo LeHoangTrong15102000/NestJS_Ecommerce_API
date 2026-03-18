@@ -265,6 +265,42 @@ describe('PaymentService', () => {
         expect(result).toEqual({ message: 'Payment received successfully' })
         expect(mockPaymentRepo.receiver).toHaveBeenCalledWith(webhookPayload)
       })
+
+      it('should handle duplicate webhook with same transaction id', async () => {
+        // Arrange - same payload sent twice
+        const webhookPayload = createWebhookPayload({ id: 12345 })
+        mockPaymentRepo.receiver.mockResolvedValueOnce(10)
+        mockPaymentRepo.receiver.mockRejectedValueOnce(new Error('Duplicate transaction'))
+
+        // Act - first call succeeds
+        const result1 = await service.receiver(webhookPayload)
+        expect(result1).toEqual({ message: 'Payment received successfully' })
+
+        // Act - second call with same id fails at repo level
+        await expect(service.receiver(webhookPayload)).rejects.toThrow('Duplicate transaction')
+      })
+
+      it('should handle repo returning negative userId', async () => {
+        // Arrange
+        const webhookPayload = createWebhookPayload()
+        mockPaymentRepo.receiver.mockResolvedValue(-1)
+
+        // Act
+        await service.receiver(webhookPayload)
+
+        // Assert - still emits, validation is repo's responsibility
+        expect(mockPaymentGateway.emitPaymentSuccess).toHaveBeenCalledWith(-1)
+      })
+
+      it('should handle timeout-like errors from repo', async () => {
+        // Arrange
+        const webhookPayload = createWebhookPayload()
+        mockPaymentRepo.receiver.mockRejectedValue(new Error('Connection timeout'))
+
+        // Act & Assert
+        await expect(service.receiver(webhookPayload)).rejects.toThrow('Connection timeout')
+        expect(mockPaymentGateway.emitPaymentSuccess).not.toHaveBeenCalled()
+      })
     })
   })
 

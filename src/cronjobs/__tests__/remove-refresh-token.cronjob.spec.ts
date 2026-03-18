@@ -84,18 +84,22 @@ describe('RemoveRefreshTokenCronjob', () => {
       }
     })
 
-    it('should propagate database errors', async () => {
+    it('should catch database errors and log them', async () => {
       const error = new Error('Database connection failed')
       mockDeleteMany.mockRejectedValue(error)
+      const loggerSpy = jest.spyOn(cronjob['logger'], 'error')
 
-      await expect(cronjob.handleCron()).rejects.toThrow('Database connection failed')
+      await expect(cronjob.handleCron()).resolves.not.toThrow()
+      expect(loggerSpy).toHaveBeenCalledWith('Failed to cleanup expired refresh tokens:', error)
     })
 
-    it('should handle Prisma errors', async () => {
+    it('should catch Prisma errors and log them', async () => {
       const prismaError = new Error('P2002: Unique constraint failed')
       mockDeleteMany.mockRejectedValue(prismaError)
+      const loggerSpy = jest.spyOn(cronjob['logger'], 'error')
 
-      await expect(cronjob.handleCron()).rejects.toThrow('P2002: Unique constraint failed')
+      await expect(cronjob.handleCron()).resolves.not.toThrow()
+      expect(loggerSpy).toHaveBeenCalledWith('Failed to cleanup expired refresh tokens:', prismaError)
     })
 
     it('should call deleteMany exactly once per execution', async () => {
@@ -118,12 +122,13 @@ describe('RemoveRefreshTokenCronjob', () => {
       expect(callArgs.where.expiresAt).not.toHaveProperty('gte')
     })
 
-    it('should handle concurrent executions', async () => {
+    it('should prevent concurrent executions via isRunning flag', async () => {
       mockDeleteMany.mockResolvedValue({ count: 3 })
 
       await Promise.all([cronjob.handleCron(), cronjob.handleCron(), cronjob.handleCron()])
 
-      expect(mockDeleteMany).toHaveBeenCalledTimes(3)
+      // isRunning flag prevents concurrent execution — only 1st call runs deleteMany
+      expect(mockDeleteMany).toHaveBeenCalledTimes(1)
     })
 
     it('should not affect non-expired tokens', async () => {
@@ -152,31 +157,31 @@ describe('RemoveRefreshTokenCronjob', () => {
   })
 
   describe('logging', () => {
-    it('should log deletion count', async () => {
+    it('should log batch deletion when count > 0', async () => {
       const loggerSpy = jest.spyOn(cronjob['logger'], 'debug')
       mockDeleteMany.mockResolvedValue({ count: 10 })
 
       await cronjob.handleCron()
 
-      expect(loggerSpy).toHaveBeenCalledWith('Removed 10 expired refresh tokens.')
+      expect(loggerSpy).toHaveBeenCalledWith('Deleted batch of 10 expired refresh tokens')
     })
 
-    it('should log zero deletions', async () => {
+    it('should not log batch deletion when count is 0', async () => {
       const loggerSpy = jest.spyOn(cronjob['logger'], 'debug')
       mockDeleteMany.mockResolvedValue({ count: 0 })
 
       await cronjob.handleCron()
 
-      expect(loggerSpy).toHaveBeenCalledWith('Removed 0 expired refresh tokens.')
+      expect(loggerSpy).not.toHaveBeenCalled()
     })
 
-    it('should log large deletion counts', async () => {
-      const loggerSpy = jest.spyOn(cronjob['logger'], 'debug')
+    it('should log completion with total count and duration', async () => {
+      const loggerSpy = jest.spyOn(cronjob['logger'], 'log')
       mockDeleteMany.mockResolvedValue({ count: 99999 })
 
       await cronjob.handleCron()
 
-      expect(loggerSpy).toHaveBeenCalledWith('Removed 99999 expired refresh tokens.')
+      expect(loggerSpy).toHaveBeenCalledWith(expect.stringContaining('Removed 99999 tokens'))
     })
   })
 
@@ -197,18 +202,22 @@ describe('RemoveRefreshTokenCronjob', () => {
       expect(mockDeleteMany).toHaveBeenCalled()
     })
 
-    it('should handle timeout errors', async () => {
+    it('should catch timeout errors and log them', async () => {
       const timeoutError = new Error('Query timeout')
       mockDeleteMany.mockRejectedValue(timeoutError)
+      const loggerSpy = jest.spyOn(cronjob['logger'], 'error')
 
-      await expect(cronjob.handleCron()).rejects.toThrow('Query timeout')
+      await expect(cronjob.handleCron()).resolves.not.toThrow()
+      expect(loggerSpy).toHaveBeenCalledWith('Failed to cleanup expired refresh tokens:', timeoutError)
     })
 
-    it('should handle network errors', async () => {
+    it('should catch network errors and log them', async () => {
       const networkError = new Error('Network unreachable')
       mockDeleteMany.mockRejectedValue(networkError)
+      const loggerSpy = jest.spyOn(cronjob['logger'], 'error')
 
-      await expect(cronjob.handleCron()).rejects.toThrow('Network unreachable')
+      await expect(cronjob.handleCron()).resolves.not.toThrow()
+      expect(loggerSpy).toHaveBeenCalledWith('Failed to cleanup expired refresh tokens:', networkError)
     })
   })
 
@@ -223,7 +232,7 @@ describe('RemoveRefreshTokenCronjob', () => {
       expect(endTime - startTime).toBeLessThan(1000) // Should complete in less than 1 second
     })
 
-    it('should handle rapid successive calls', async () => {
+    it('should handle rapid successive calls with isRunning guard', async () => {
       mockDeleteMany.mockResolvedValue({ count: 5 })
 
       const promises = Array(10)
@@ -231,7 +240,8 @@ describe('RemoveRefreshTokenCronjob', () => {
         .map(() => cronjob.handleCron())
 
       await expect(Promise.all(promises)).resolves.not.toThrow()
-      expect(mockDeleteMany).toHaveBeenCalledTimes(10)
+      // isRunning flag prevents concurrent execution — only 1st call runs deleteMany
+      expect(mockDeleteMany).toHaveBeenCalledTimes(1)
     })
   })
 

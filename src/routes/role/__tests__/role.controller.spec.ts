@@ -117,7 +117,7 @@ const createTestData = {
     ...overrides,
   }),
 
-  messageResponse: (message = 'Delete successfully') => ({
+  messageResponse: (message: 'Delete successfully' = 'Delete successfully') => ({
     message,
   }),
 }
@@ -718,6 +718,37 @@ describe('RoleController', () => {
         const params = createTestData.getRoleParams({ roleId })
         await expect(controller.update(body, params, userId)).rejects.toThrow(ProhibitedActionOnBaseRoleException)
       }
+    })
+  })
+
+  // ===== RESPONSE STRUCTURE SNAPSHOTS =====
+
+  describe('Response Structure Snapshots', () => {
+    it('should match role list response structure', async () => {
+      const mockResponse = {
+        data: [createTestData.roleResponse(), createTestData.roleResponse({ id: 2, name: 'Admin' })],
+        totalItems: 2,
+        page: 1,
+        limit: 10,
+        totalPages: 1,
+      }
+      mockRoleService.list.mockResolvedValue(mockResponse)
+      const result = await controller.list(createTestData.getRolesQuery())
+      expect(result).toMatchSnapshot()
+    })
+
+    it('should match role detail response structure', async () => {
+      const mockResponse = createTestData.roleWithPermissionsResponse()
+      mockRoleService.findById.mockResolvedValue(mockResponse)
+      const result = await controller.findById(createTestData.getRoleParams())
+      expect(result).toMatchSnapshot()
+    })
+
+    it('should match role create response structure', async () => {
+      const mockResponse = createTestData.roleResponse({ id: 10, name: 'New Role' })
+      mockRoleService.create.mockResolvedValue(mockResponse)
+      const result = await controller.create(createTestData.createRoleBody(), 1)
+      expect(result).toMatchSnapshot()
     })
   })
 })

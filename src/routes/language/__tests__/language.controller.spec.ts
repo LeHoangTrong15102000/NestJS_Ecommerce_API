@@ -335,7 +335,7 @@ describe('LanguageController', () => {
     it('should delete language successfully (HARD delete)', async () => {
       // Arrange
       const params: GetLanguageParamsDTO = { languageId: 'fr' }
-      const mockResponse = { message: 'Delete successfully' }
+      const mockResponse = { message: 'Delete successfully' } as const
       mockLanguageService.delete.mockResolvedValue(mockResponse)
 
       // Act
@@ -360,7 +360,7 @@ describe('LanguageController', () => {
     it('should perform hard delete (not soft delete)', async () => {
       // Arrange
       const params: GetLanguageParamsDTO = { languageId: 'ja' }
-      const mockResponse = { message: 'Delete successfully' }
+      const mockResponse = { message: 'Delete successfully' } as const
       mockLanguageService.delete.mockResolvedValue(mockResponse)
 
       // Act
@@ -444,6 +444,39 @@ describe('LanguageController', () => {
 
       // Assert
       expect(result.name).toBe('Test Language (Special: @#$%^&*)')
+    })
+  })
+
+  // ===== RESPONSE STRUCTURE SNAPSHOTS =====
+
+  describe('Response Structure Snapshots', () => {
+    const fixedDate = '2024-01-01T00:00:00.000Z'
+
+    it('should match language list response structure', async () => {
+      const mockResponse = {
+        data: [
+          createMockLanguage({ id: 'en', name: 'English', createdAt: fixedDate, updatedAt: fixedDate }),
+          createMockLanguage({ id: 'vi', name: 'Tiếng Việt', createdAt: fixedDate, updatedAt: fixedDate }),
+        ],
+        totalItems: 2,
+      }
+      mockLanguageService.findAll.mockResolvedValue(mockResponse)
+      const result = await controller.getLanguages()
+      expect(result).toMatchSnapshot()
+    })
+
+    it('should match language detail response structure', async () => {
+      const mockLanguage = createMockLanguage({ createdAt: fixedDate, updatedAt: fixedDate })
+      mockLanguageService.findById.mockResolvedValue(mockLanguage)
+      const result = await controller.findById({ languageId: 'en' })
+      expect(result).toMatchSnapshot()
+    })
+
+    it('should match language create response structure', async () => {
+      const mockLanguage = createMockLanguage({ id: 'ja', name: 'Japanese', createdAt: fixedDate, updatedAt: fixedDate })
+      mockLanguageService.create.mockResolvedValue(mockLanguage)
+      const result = await controller.create({ id: 'ja', name: 'Japanese' }, 1)
+      expect(result).toMatchSnapshot()
     })
   })
 })

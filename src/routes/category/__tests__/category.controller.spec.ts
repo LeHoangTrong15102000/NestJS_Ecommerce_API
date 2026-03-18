@@ -352,7 +352,7 @@ describe('CategoryController', () => {
       const userId = 1
       const params: GetCategoryParamsDTO = { categoryId: 1 }
       const mockResponse = { message: 'Delete successfully' }
-      mockCategoryService.delete.mockResolvedValue(mockResponse)
+      mockCategoryService.delete.mockResolvedValue(mockResponse as any)
 
       // Act
       const result = await controller.delete(params, userId)
@@ -385,7 +385,7 @@ describe('CategoryController', () => {
       const userId = 5
       const params: GetCategoryParamsDTO = { categoryId: 10 }
       const mockResponse = { message: 'Delete successfully' }
-      mockCategoryService.delete.mockResolvedValue(mockResponse)
+      mockCategoryService.delete.mockResolvedValue(mockResponse as any)
 
       // Act
       await controller.delete(params, userId)
@@ -459,6 +459,45 @@ describe('CategoryController', () => {
       // Assert
       expect(result.data.length).toBe(2)
       expect(result.data.every((cat) => cat.parentCategoryId === 4)).toBe(true)
+    })
+  })
+
+  // ===== RESPONSE STRUCTURE SNAPSHOTS =====
+
+  describe('Response Structure Snapshots', () => {
+    const fixedDate = '2024-01-01T00:00:00.000Z'
+
+    it('should match category list response structure', async () => {
+      const mockResponse = {
+        data: [
+          createMockCategory({ id: 1, name: 'Electronics', createdAt: fixedDate, updatedAt: fixedDate }),
+          createMockCategory({ id: 2, name: 'Clothing', createdAt: fixedDate, updatedAt: fixedDate }),
+        ],
+        totalItems: 2,
+      }
+      mockCategoryService.findAll.mockResolvedValue(mockResponse)
+      const result = await controller.findAll({})
+      expect(result).toMatchSnapshot()
+    })
+
+    it('should match category detail response structure', async () => {
+      const mockCategory = createMockCategory({ createdAt: fixedDate, updatedAt: fixedDate })
+      mockCategoryService.findById.mockResolvedValue(mockCategory)
+      const result = await controller.findById({ categoryId: 1 })
+      expect(result).toMatchSnapshot()
+    })
+
+    it('should match category create response structure', async () => {
+      const mockCategory = createMockCategory({ id: 10, name: 'New Category', createdAt: fixedDate, updatedAt: fixedDate })
+      mockCategoryService.create.mockResolvedValue(mockCategory)
+      const result = await controller.create({ name: 'New Category', logo: null, parentCategoryId: null }, 1)
+      expect(result).toMatchSnapshot()
+    })
+
+    it('should match category delete response structure', async () => {
+      mockCategoryService.delete.mockResolvedValue({ message: 'Delete successfully' })
+      const result = await controller.delete({ categoryId: 1 }, 1)
+      expect(result).toMatchSnapshot()
     })
   })
 })

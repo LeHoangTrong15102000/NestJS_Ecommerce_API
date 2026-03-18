@@ -25,35 +25,55 @@ describe('ProfileController', () => {
 
   // ===== TEST DATA FACTORIES =====
 
-  const createMockUserProfile = (overrides = {}) => ({
-    id: 1,
-    email: 'user@example.com',
-    name: 'Test User',
-    phoneNumber: '0123456789',
-    avatar: 'https://example.com/avatar.jpg',
-    status: 'ACTIVE',
-    roleId: 2,
-    createdById: null,
-    updatedById: null,
-    deletedById: null,
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-    deletedAt: null,
-    role: {
-      id: 2,
-      name: 'User',
-      permissions: [
-        {
-          id: 1,
-          name: 'read:profile',
-          module: 'profile',
-          path: '/profile',
-          method: 'GET',
-        },
-      ],
-    },
-    ...overrides,
-  })
+  const createMockUserProfile = (overrides: Record<string, any> = {}) => {
+    const dateStr = overrides.createdAt ?? new Date().toISOString()
+    return {
+      id: 1,
+      email: 'user@example.com',
+      name: 'Test User',
+      password: 'hashed_password',
+      phoneNumber: '0123456789',
+      avatar: 'https://example.com/avatar.jpg',
+      totpSecret: null,
+      status: 'ACTIVE' as const,
+      roleId: 2,
+      createdById: null,
+      updatedById: null,
+      deletedById: null,
+      createdAt: dateStr,
+      updatedAt: overrides.updatedAt ?? dateStr,
+      deletedAt: null,
+      role: {
+        id: 2,
+        name: 'User',
+        description: 'Default user role',
+        isActive: true,
+        createdById: null,
+        updatedById: null,
+        deletedById: null,
+        deletedAt: null,
+        createdAt: dateStr,
+        updatedAt: overrides.updatedAt ?? dateStr,
+        permissions: [
+          {
+            id: 1,
+            name: 'read:profile',
+            description: 'Read profile',
+            module: 'profile',
+            path: '/profile',
+            method: 'GET' as const,
+            createdById: null,
+            updatedById: null,
+            deletedById: null,
+            deletedAt: null,
+            createdAt: dateStr,
+            updatedAt: overrides.updatedAt ?? dateStr,
+          },
+        ],
+      },
+      ...overrides,
+    }
+  }
 
   const createMockUpdatedProfile = (overrides = {}) => ({
     id: 1,
@@ -144,10 +164,10 @@ describe('ProfileController', () => {
     })
 
     it('should not include password and totpSecret in response', async () => {
-      // Arrange
+      // Arrange - Service returns profile without sensitive fields
       const userId = 1
-      const mockProfile = createMockUserProfile()
-      mockProfileService.getProfile.mockResolvedValue(mockProfile as any)
+      const { password, totpSecret, ...profileWithoutSensitive } = createMockUserProfile()
+      mockProfileService.getProfile.mockResolvedValue(profileWithoutSensitive as any)
 
       // Act
       const result = await controller.getProfile(userId)
@@ -423,6 +443,28 @@ describe('ProfileController', () => {
 
       // Assert
       expect(result!.phoneNumber.length).toBe(15)
+    })
+  })
+
+  // ===== RESPONSE STRUCTURE SNAPSHOTS =====
+
+  describe('Response Structure Snapshots', () => {
+    const fixedDate = '2024-01-01T00:00:00.000Z'
+
+    it('should match profile response structure', async () => {
+      const mockProfile = createMockUserProfile({ createdAt: fixedDate, updatedAt: fixedDate })
+      mockProfileService.getProfile.mockResolvedValue(mockProfile)
+      const result = await controller.getProfile(1)
+      expect(result).toMatchSnapshot()
+    })
+
+    it('should match change password response structure', async () => {
+      mockProfileService.changePassword.mockResolvedValue({ message: 'Password changed successfully' })
+      const result = await controller.changePassword(
+        { password: 'OldPass123!', newPassword: 'NewPass123!', confirmNewPassword: 'NewPass123!' },
+        1,
+      )
+      expect(result).toMatchSnapshot()
     })
   })
 })

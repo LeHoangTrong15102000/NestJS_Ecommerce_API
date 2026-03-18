@@ -513,4 +513,62 @@ describe('CartController', () => {
       expect(mockCartService.deleteCart).toHaveBeenCalledWith(userId, body)
     })
   })
+
+  // ===== RESPONSE STRUCTURE SNAPSHOTS =====
+
+  describe('Response Structure Snapshots', () => {
+    const fixedDate = '2024-01-01T00:00:00.000Z'
+
+    it('should match cart list response structure', async () => {
+      const mockResponse = createTestData.cartResponse({
+        data: [
+          {
+            shop: { id: 1, name: 'Test Shop', avatar: null },
+            cartItems: [
+              {
+                id: 1,
+                quantity: 2,
+                skuId: 1,
+                userId: 1,
+                createdAt: fixedDate,
+                updatedAt: fixedDate,
+                sku: {
+                  id: 1,
+                  value: 'Size: M, Color: Red',
+                  price: 50000,
+                  stock: 100,
+                  image: 'test-image.jpg',
+                  productId: 1,
+                  product: {
+                    id: 1,
+                    name: 'Test Product',
+                    variants: [{ value: 'Size', options: ['M', 'L', 'XL'] }],
+                    publishedAt: fixedDate,
+                    productTranslations: [{ id: 1, name: 'Test Product', description: 'Test Description', languageId: 'vi' }],
+                  },
+                },
+              },
+            ],
+          },
+        ],
+      })
+      mockCartService.getCart.mockResolvedValue(mockResponse)
+      const result = await controller.getCart(1, createTestData.paginationQuery())
+      expect(result).toMatchSnapshot()
+    })
+
+    it('should match add to cart response structure', async () => {
+      const mockResponse = createTestData.cartItem({ createdAt: fixedDate, updatedAt: fixedDate })
+      mockCartService.addToCart.mockResolvedValue(mockResponse)
+      const result = await controller.addToCart(createTestData.addToCartBody(), 1)
+      expect(result).toMatchSnapshot()
+    })
+
+    it('should match delete cart response structure', async () => {
+      const mockResponse = createTestData.deleteMessage(3)
+      mockCartService.deleteCart.mockResolvedValue(mockResponse)
+      const result = await controller.deleteCart(createTestData.deleteCartBody(), 1)
+      expect(result).toMatchSnapshot()
+    })
+  })
 })

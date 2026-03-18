@@ -99,9 +99,9 @@ const createTestData = {
     ...overrides,
   }),
 
-  messageResponse: (message = 'Delete successfully') => ({
+  messageResponse: (message: 'Delete successfully' = 'Delete successfully') => ({
     message,
-  }),
+  }) as const,
 }
 
 describe('PermissionController', () => {
@@ -828,6 +828,37 @@ describe('PermissionController', () => {
       expect(modules).toContain('product')
       expect(modules).toContain('order')
       expect(modules).toContain('payment')
+    })
+  })
+
+  // ===== RESPONSE STRUCTURE SNAPSHOTS =====
+
+  describe('Response Structure Snapshots', () => {
+    it('should match permission list response structure', async () => {
+      const mockResponse = {
+        data: [createTestData.permissionResponse(), createTestData.permissionResponse({ id: 2, name: 'Create Users' })],
+        totalItems: 2,
+        page: 1,
+        limit: 10,
+        totalPages: 1,
+      }
+      mockPermissionService.list.mockResolvedValue(mockResponse)
+      const result = await controller.list(createTestData.getPermissionsQuery())
+      expect(result).toMatchSnapshot()
+    })
+
+    it('should match permission detail response structure', async () => {
+      const mockResponse = createTestData.permissionResponse()
+      mockPermissionService.findById.mockResolvedValue(mockResponse)
+      const result = await controller.findById(createTestData.getPermissionParams())
+      expect(result).toMatchSnapshot()
+    })
+
+    it('should match permission create response structure', async () => {
+      const mockResponse = createTestData.permissionResponse({ id: 10, name: 'New Permission' })
+      mockPermissionService.create.mockResolvedValue(mockResponse)
+      const result = await controller.create(createTestData.createPermissionBody(), 1)
+      expect(result).toMatchSnapshot()
     })
   })
 })

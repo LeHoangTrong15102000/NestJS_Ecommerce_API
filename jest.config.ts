@@ -12,6 +12,11 @@ const config: Config = {
   transform: {
     '^.+\\.(t|j)sx?$': 'ts-jest',
   },
+  // Allow ts-jest to transform ESM packages (MSW v2 and its deps)
+  // Must handle pnpm's .pnpm directory structure on both Unix and Windows
+  transformIgnorePatterns: [
+    '<rootDir>/node_modules/.pnpm/(?!(msw|until-async|@mswjs))',
+  ],
 
   // Module resolution - fix để support src/* imports
   rootDir: '.',
@@ -39,15 +44,61 @@ const config: Config = {
     '!src/**/*.module.ts',
     '!src/shared/config.ts',
     '!src/shared/modules/**',
+    // Exclude BullMQ producer files — thin queue infrastructure wrappers, not business logic
+    '!src/**/*.producer.ts',
   ],
   coverageDirectory: './coverage',
   coverageReporters: ['text', 'lcov', 'html', 'json'],
   coverageThreshold: {
     global: {
-      branches: 60,
-      functions: 60,
-      lines: 70,
-      statements: 70,
+      branches: 75,
+      functions: 80,
+      lines: 80,
+      statements: 80,
+    },
+    // Critical modules — highest coverage expectations
+    './src/routes/auth/': {
+      branches: 90,
+      functions: 95,
+      lines: 95,
+      statements: 95,
+    },
+    './src/routes/payment/': {
+      branches: 90,
+      functions: 95,
+      lines: 95,
+      statements: 95,
+    },
+    './src/routes/order/': {
+      branches: 90,
+      functions: 95,
+      lines: 95,
+      statements: 95,
+    },
+    // Business modules — strong coverage expectations
+    './src/routes/product/': {
+      branches: 80,
+      functions: 85,
+      lines: 85,
+      statements: 85,
+    },
+    './src/routes/cart/': {
+      branches: 80,
+      functions: 85,
+      lines: 85,
+      statements: 85,
+    },
+    './src/routes/wishlist/': {
+      branches: 80,
+      functions: 85,
+      lines: 85,
+      statements: 85,
+    },
+    './src/routes/voucher/': {
+      branches: 80,
+      functions: 85,
+      lines: 85,
+      statements: 85,
     },
   },
 

@@ -60,8 +60,8 @@ describe('VoucherRepository', () => {
     }),
     voucher: (overrides = {}) => {
       const now = new Date()
-      const startDate = new Date(now.getTime() - 24 * 60 * 60 * 1000) // 1 day ago
-      const endDate = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000) // 7 days from now
+      const startDate = new Date(now.getTime() - 24 * 60 * 60 * 1000).toISOString()
+      const endDate = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000).toISOString()
       return {
         id: 1,
         code: 'SUMMER2024',
@@ -83,8 +83,8 @@ describe('VoucherRepository', () => {
         createdById: 1,
         updatedById: null,
         deletedById: null,
-        createdAt: new Date(),
-        updatedAt: new Date(),
+        createdAt: now.toISOString(),
+        updatedAt: now.toISOString(),
         deletedAt: null,
         ...overrides,
       }
@@ -93,7 +93,7 @@ describe('VoucherRepository', () => {
       userId: 1,
       voucherId: 1,
       usedCount: 0,
-      savedAt: new Date(),
+      savedAt: new Date().toISOString(),
       usedAt: null,
       voucher: createTestData.voucher(),
       ...overrides,
@@ -341,7 +341,7 @@ describe('VoucherRepository', () => {
       // Arrange - Chuẩn bị dữ liệu
       const id = 1
       const deletedById = 1
-      const mockVoucher = createTestData.voucher({ id, deletedById, deletedAt: new Date() })
+      const mockVoucher = createTestData.voucher({ id, deletedById, deletedAt: new Date().toISOString() })
 
       mockPrismaService.voucher.update.mockResolvedValue(mockVoucher)
 
@@ -362,7 +362,7 @@ describe('VoucherRepository', () => {
     it('should soft delete voucher without deletedById', async () => {
       // Arrange - Chuẩn bị dữ liệu không có deletedById
       const id = 1
-      const mockVoucher = createTestData.voucher({ id, deletedAt: new Date() })
+      const mockVoucher = createTestData.voucher({ id, deletedAt: new Date().toISOString() })
 
       mockPrismaService.voucher.update.mockResolvedValue(mockVoucher)
 
@@ -733,10 +733,11 @@ describe('VoucherRepository', () => {
       const userId = 1
       const code = 'SUMMER2024'
       const orderAmount = 100000
-      const futureDate = new Date('2026-01-01')
+      const futureDate = new Date('2099-01-01')
       const mockVoucher = createTestData.voucher({ code, startDate: futureDate })
 
-      mockPrismaService.voucher.findFirst.mockResolvedValue(mockVoucher)
+      // Spy on findByCode to bypass @SerializeAll() decorator which converts Date to string
+      jest.spyOn(repository as any, 'findByCode').mockResolvedValue(mockVoucher)
 
       // Act - Thực hiện kiểm tra
       const result = await repository.canApplyVoucher(userId, code, orderAmount)
@@ -756,7 +757,8 @@ describe('VoucherRepository', () => {
       const pastDate = new Date('2020-01-01')
       const mockVoucher = createTestData.voucher({ code, endDate: pastDate })
 
-      mockPrismaService.voucher.findFirst.mockResolvedValue(mockVoucher)
+      // Spy on findByCode to bypass @SerializeAll() decorator which converts Date to string
+      jest.spyOn(repository as any, 'findByCode').mockResolvedValue(mockVoucher)
 
       // Act - Thực hiện kiểm tra
       const result = await repository.canApplyVoucher(userId, code, orderAmount)

@@ -218,7 +218,7 @@ describe('AuthController', () => {
         type: 'REGISTER' as const,
       }
       const mockResponse = createMockMessageResponse('Gửi mã OTP thành công')
-      mockAuthService.sendOTP.mockResolvedValue(mockResponse)
+      mockAuthService.sendOTP.mockResolvedValue(mockResponse as any)
 
       // Act: Thực hiện send OTP
       const result = await controller.sendOTP(otpBody as any)
@@ -237,7 +237,7 @@ describe('AuthController', () => {
         type: 'FORGOT_PASSWORD' as const,
       }
       const mockResponse = createMockMessageResponse('Gửi mã OTP thành công')
-      mockAuthService.sendOTP.mockResolvedValue(mockResponse)
+      mockAuthService.sendOTP.mockResolvedValue(mockResponse as any)
 
       // Act: Thực hiện send OTP
       const result = await controller.sendOTP(otpBody as any)
@@ -258,7 +258,7 @@ describe('AuthController', () => {
         type: 'LOGIN' as const,
       }
       const mockResponse = createMockMessageResponse('Gửi mã OTP thành công')
-      mockAuthService.sendOTP.mockResolvedValue(mockResponse)
+      mockAuthService.sendOTP.mockResolvedValue(mockResponse as any)
 
       // Act: Thực hiện send OTP
       const result = await controller.sendOTP(otpBody as any)
@@ -454,7 +454,7 @@ describe('AuthController', () => {
         refreshToken: 'token-to-invalidate',
       }
       const mockResponse = createMockMessageResponse('Đăng xuất thành công')
-      mockAuthService.logout.mockResolvedValue(mockResponse)
+      mockAuthService.logout.mockResolvedValue(mockResponse as any)
 
       // Act: Thực hiện logout
       const result = await controller.logout(logoutBody as any)
@@ -472,7 +472,7 @@ describe('AuthController', () => {
         refreshToken: 'active-token-123',
       }
       const mockResponse = createMockMessageResponse('Đăng xuất thành công')
-      mockAuthService.logout.mockResolvedValue(mockResponse)
+      mockAuthService.logout.mockResolvedValue(mockResponse as any)
 
       // Act: Thực hiện logout
       await controller.logout(logoutBody as any)
@@ -496,7 +496,7 @@ describe('AuthController', () => {
         confirmNewPassword: 'newSecurePass123',
       }
       const mockResponse = createMockMessageResponse('Đổi mật khẩu thành công')
-      mockAuthService.forgotPassword.mockResolvedValue(mockResponse)
+      mockAuthService.forgotPassword.mockResolvedValue(mockResponse as any)
 
       // Act: Thực hiện forgot password
       const result = await controller.forgotPassword(forgotBody as any)
@@ -517,7 +517,7 @@ describe('AuthController', () => {
         confirmNewPassword: 'newPass456',
       }
       const mockResponse = createMockMessageResponse('Đổi mật khẩu thành công')
-      mockAuthService.forgotPassword.mockResolvedValue(mockResponse)
+      mockAuthService.forgotPassword.mockResolvedValue(mockResponse as any)
 
       // Act: Thực hiện forgot password
       await controller.forgotPassword(forgotBody as any)
@@ -600,7 +600,7 @@ describe('AuthController', () => {
       }
       const userId = 1
       const mockResponse = createMockMessageResponse('Tắt xác thực 2 yếu tố thành công')
-      mockAuthService.disableTwoFactorAuth.mockResolvedValue(mockResponse)
+      mockAuthService.disableTwoFactorAuth.mockResolvedValue(mockResponse as any)
 
       // Act: Thực hiện disable 2FA
       const result = await controller.disableTwoFactorAuth(disableBody as any, userId)
@@ -622,7 +622,7 @@ describe('AuthController', () => {
       }
       const userId = 2
       const mockResponse = createMockMessageResponse('Tắt xác thực 2 yếu tố thành công')
-      mockAuthService.disableTwoFactorAuth.mockResolvedValue(mockResponse)
+      mockAuthService.disableTwoFactorAuth.mockResolvedValue(mockResponse as any)
 
       // Act: Thực hiện disable 2FA
       const result = await controller.disableTwoFactorAuth(disableBody as any, userId)
@@ -643,7 +643,7 @@ describe('AuthController', () => {
       }
       const userId = 99
       const mockResponse = createMockMessageResponse('Tắt xác thực 2 yếu tố thành công')
-      mockAuthService.disableTwoFactorAuth.mockResolvedValue(mockResponse)
+      mockAuthService.disableTwoFactorAuth.mockResolvedValue(mockResponse as any)
 
       // Act: Thực hiện disable 2FA
       await controller.disableTwoFactorAuth(disableBody as any, userId)
@@ -809,6 +809,67 @@ describe('AuthController', () => {
       // Assert: Verify redirect URL format
       const redirectUrl = (mockResponse.redirect as jest.Mock).mock.calls[0][0]
       expect(redirectUrl).toMatch(/\?accessToken=.+&refreshToken=.+/)
+    })
+  })
+
+  // ===== RESPONSE STRUCTURE SNAPSHOTS =====
+
+  describe('Response Structure Snapshots', () => {
+    const fixedDate = '2024-01-01T00:00:00.000Z'
+
+    it('should match register response structure', async () => {
+      const mockResult = {
+        ...createMockUser({ createdAt: fixedDate, updatedAt: fixedDate }),
+        ...createMockTokens(),
+      }
+      mockAuthService.register.mockResolvedValue(mockResult as any)
+      const result = await controller.register({
+        email: 'test@example.com',
+        name: 'Test User',
+        password: 'Password123!',
+        confirmPassword: 'Password123!',
+        phoneNumber: '0123456789',
+        code: '123456',
+      })
+      expect(result).toMatchSnapshot()
+    })
+
+    it('should match login response structure', async () => {
+      const mockResult = {
+        ...createMockUser({ createdAt: fixedDate, updatedAt: fixedDate }),
+        ...createMockTokens(),
+      }
+      mockAuthService.login.mockResolvedValue(mockResult as any)
+      const result = await controller.login(
+        {
+          email: 'test@example.com',
+          password: 'Password123!',
+        },
+        'test-user-agent',
+        '127.0.0.1',
+      )
+      expect(result).toMatchSnapshot()
+    })
+
+    it('should match message response structure', async () => {
+      const mockResult = createMockMessageResponse('OTP sent successfully')
+      mockAuthService.sendOTP.mockResolvedValue(mockResult as any)
+      const result = await controller.sendOTP({ email: 'test@example.com', type: 'REGISTER' } as any)
+      expect(result).toMatchSnapshot()
+    })
+
+    it('should match 2FA setup response structure', async () => {
+      const mockResult = createMockTwoFactorResponse()
+      mockAuthService.enableTwoFactorAuth.mockResolvedValue(mockResult as any)
+      const result = await controller.enableTwoFactorAuth({} as any, 1)
+      expect(result).toMatchSnapshot()
+    })
+
+    it('should match refresh token response structure', async () => {
+      const mockResult = createMockTokens()
+      mockAuthService.refreshToken.mockResolvedValue(mockResult as any)
+      const result = await controller.refreshToken({ refreshToken: 'mock-refresh-token' } as any, 'Mozilla/5.0', '127.0.0.1')
+      expect(result).toMatchSnapshot()
     })
   })
 })

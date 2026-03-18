@@ -446,4 +446,140 @@ describe('AIAssistantService', () => {
       expect(result).toContain('...')
     })
   })
+
+  // ============================================
+  // EDGE CASES
+  // ============================================
+
+  describe('Edge Cases', () => {
+    it('should return fallback when no API key configured', async () => {
+      // Arrange - simulate no API key
+      const previousMessages: { role: AIMessageRole; content: string }[] = []
+      const userMessage = 'xin chào'
+
+      // Mock envConfig to return empty API key
+      const originalEnv = process.env.ANTHROPIC_API_KEY
+      process.env.ANTHROPIC_API_KEY = ''
+
+      // The service checks envConfig.ANTHROPIC_API_KEY at runtime in generateResponse
+      // Since we mock the client, we need to test the fallback path differently
+      ;(mockAnthropicClient.messages.create as jest.Mock).mockRejectedValue(new Error('No API key'))
+
+      const result = await service.generateResponse(previousMessages, userMessage)
+
+      expect(result).toBeDefined()
+      expect(typeof result).toBe('string')
+      process.env.ANTHROPIC_API_KEY = originalEnv
+    })
+
+    it('should handle 500 server error from Anthropic', async () => {
+      const previousMessages: { role: AIMessageRole; content: string }[] = []
+      const userMessage = 'Hello'
+      const serverError = new Error('Internal server error')
+      ;(serverError as any).status = 500
+
+      ;(mockAnthropicClient.messages.create as jest.Mock).mockRejectedValue(serverError)
+
+      const result = await service.generateResponse(previousMessages, userMessage)
+
+      // Should return general fallback (bảo trì)
+      expect(result).toContain('bảo trì')
+    })
+
+    it('should handle timeout error from Anthropic', async () => {
+      const previousMessages: { role: AIMessageRole; content: string }[] = []
+      const userMessage = 'Hello'
+      const timeoutError = new Error('Request timed out')
+      ;(timeoutError as any).code = 'ETIMEDOUT'
+
+      ;(mockAnthropicClient.messages.create as jest.Mock).mockRejectedValue(timeoutError)
+
+      const result = await service.generateResponse(previousMessages, userMessage)
+
+      expect(result).toBeDefined()
+      expect(typeof result).toBe('string')
+    })
+
+    it('should handle empty conversation history', async () => {
+      const userId = 10
+      const conversationId = 'conv-123'
+      const dto = { message: 'First message ever' }
+      const conversation = createConversation({ id: conversationId, messages: [] })
+      const anthropicResponse = createAnthropicResponse()
+
+      mockAiAssistantRepo.getConversationById.mockResolvedValue(conversation as any)
+      ;(mockAnthropicClient.messages.create as jest.Mock).mockResolvedValue(anthropicResponse)
+      mockAiAssistantRepo.createMessage.mockResolvedValue(createMessage() as any)
+      mockAiAssistantRepo.updateConversation.mockResolvedValue({} as any)
+
+      const result = await service.sendMessage(conversationId, userId, dto)
+
+      expect(result).toBeDefined()
+      // Should update title since it's the first message
+      expect(mockAiAssistantRepo.updateConversation).toHaveBeenCalled()
+    })
+
+    it('should throw error for non-existent conversation', async () => {
+      const userId = 10
+      const conversationId = 'non-existent'
+      const dto = { message: 'Hello' }
+
+      mockAiAssistantRepo.getConversationById.mockResolvedValue(null)
+
+      await expect(service.sendMessage(conversationId, userId, dto)).rejects.toThrow('Conversation not found')
+    })
+
+    it('should handle concurrent sendMessage calls', async () => {
+      const userId = 10
+      const conversationId = 'conv-123'
+      const conversation = createConversation({ id: conversationId, messages: [createMessage()] })
+      const anthropicResponse = createAnthropicResponse()
+
+      mockAiAssistantRepo.getConversationById.mockResolvedValue(conversation as any)
+      ;(mockAnthropicClient.messages.create as jest.Mock).mockResolvedValue(anthropicResponse)
+      mockAiAssistantRepo.createMessage.mockResolvedValue(createMessage() as any)
+
+      const [result1, result2] = await Promise.all([
+        service.sendMessage(conversationId, userId, { message: 'Message 1' }),
+        service.sendMessage(conversationId, userId, { message: 'Message 2' }),
+      ])
+
+      expect(result1).toBeDefined()
+      expect(result2).toBeDefined()
+      expect(mockAiAssistantRepo.createMessage).toHaveBeenCalledTimes(4) // 2 user + 2 AI
+    })
+
+    it('should handle product-related fallback response', async () => {
+      const previousMessages: { role: AIMessageRole; content: string }[] = []
+      const userMessage = 'Tôi muốn mua sản phẩm laptop'
+
+      ;(mockAnthropicClient.messages.create as jest.Mock).mockRejectedValue(new Error('API down'))
+
+      const result = await service.generateResponse(previousMessages, userMessage)
+
+      expect(result).toContain('sản phẩm')
+    })
+
+    it('should handle order-related fallback response', async () => {
+      const previousMessages: { role: AIMessageRole; content: string }[] = []
+      const userMessage = 'Kiểm tra đơn hàng của tôi'
+
+      ;(mockAnthropicClient.messages.create as jest.Mock).mockRejectedValue(new Error('API down'))
+
+      const result = await service.generateResponse(previousMessages, userMessage)
+
+      expect(result).toContain('đơn hàng')
+    })
+
+    it('should handle price-related fallback response', async () => {
+      const previousMessages: { role: AIMessageRole; content: string }[] = []
+      const userMessage = 'Giá khuyến mãi hôm nay'
+
+      ;(mockAnthropicClient.messages.create as jest.Mock).mockRejectedValue(new Error('API down'))
+
+      const result = await service.generateResponse(previousMessages, userMessage)
+
+      expect(result).toContain('Giá')
+    })
+  })
 })

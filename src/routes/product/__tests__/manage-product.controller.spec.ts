@@ -27,6 +27,7 @@ describe('ManageProductController', () => {
   let mockManageProductService: jest.Mocked<ManageProductService>
 
   // ===== TEST DATA FACTORIES =====
+  const FIXED_DATE = '2024-01-01T00:00:00.000Z'
 
   const createMockUser = (overrides = {}): AccessTokenPayload => ({
     userId: 1,
@@ -49,7 +50,7 @@ describe('ManageProductController', () => {
 
   const createMockProduct = (overrides = {}) => ({
     id: 1,
-    publishedAt: new Date(),
+    publishedAt: new Date(FIXED_DATE),
     name: 'Test Product',
     basePrice: 100000,
     virtualPrice: 150000,
@@ -60,8 +61,8 @@ describe('ManageProductController', () => {
     updatedById: null,
     deletedById: null,
     deletedAt: null,
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
+    createdAt: new Date(FIXED_DATE).toISOString(),
+    updatedAt: new Date(FIXED_DATE).toISOString(),
     ...overrides,
   })
 
@@ -78,8 +79,8 @@ describe('ManageProductController', () => {
         updatedById: null,
         deletedById: null,
         deletedAt: null,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
+        createdAt: new Date(FIXED_DATE).toISOString(),
+        updatedAt: new Date(FIXED_DATE).toISOString(),
       },
     ],
     skus: [
@@ -94,8 +95,8 @@ describe('ManageProductController', () => {
         updatedById: null,
         deletedById: null,
         deletedAt: null,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
+        createdAt: new Date(FIXED_DATE).toISOString(),
+        updatedAt: new Date(FIXED_DATE).toISOString(),
       },
     ],
     categories: [
@@ -108,8 +109,8 @@ describe('ManageProductController', () => {
         updatedById: null,
         deletedById: null,
         deletedAt: null,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
+        createdAt: new Date(FIXED_DATE).toISOString(),
+        updatedAt: new Date(FIXED_DATE).toISOString(),
       },
     ],
     brand: {
@@ -120,8 +121,8 @@ describe('ManageProductController', () => {
       updatedById: null,
       deletedById: null,
       deletedAt: null,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
+      createdAt: new Date(FIXED_DATE).toISOString(),
+      updatedAt: new Date(FIXED_DATE).toISOString(),
     },
   })
 
@@ -336,7 +337,7 @@ describe('ManageProductController', () => {
       // Arrange
       const userId = 1
       const body: CreateProductBodyDTO = {
-        publishedAt: new Date(),
+        publishedAt: new Date(FIXED_DATE),
         name: 'New Product',
         basePrice: 100000,
         virtualPrice: 150000,
@@ -367,7 +368,7 @@ describe('ManageProductController', () => {
       // Arrange
       const userId = 1
       const body: CreateProductBodyDTO = {
-        publishedAt: new Date(),
+        publishedAt: new Date(FIXED_DATE),
         name: 'Multi-variant Product',
         basePrice: 200000,
         virtualPrice: 250000,
@@ -472,7 +473,7 @@ describe('ManageProductController', () => {
       // Arrange
       const params: GetProductParamsDTO = { productId: 1 } as any
       const user = createMockUser()
-      const mockResponse = { message: 'Delete successfully' }
+      const mockResponse = { message: 'Delete successfully' as const }
       mockManageProductService.delete.mockResolvedValue(mockResponse)
 
       // Act
@@ -491,7 +492,7 @@ describe('ManageProductController', () => {
       // Arrange
       const params: GetProductParamsDTO = { productId: 1 } as any
       const user = createMockAdminUser()
-      const mockResponse = { message: 'Delete successfully' }
+      const mockResponse = { message: 'Delete successfully' as const }
       mockManageProductService.delete.mockResolvedValue(mockResponse)
 
       // Act
@@ -551,6 +552,77 @@ describe('ManageProductController', () => {
 
       // Act & Assert
       await expect(controller.create(body, userId)).rejects.toThrow('Unexpected error')
+    })
+  })
+
+  // ===== RESPONSE STRUCTURE SNAPSHOTS =====
+
+  describe('Response Structure Snapshots', () => {
+    const fixedDate = '2024-01-01T00:00:00.000Z'
+
+    it('should match product detail response structure', async () => {
+      const mockProduct = createMockProductDetail({
+        publishedAt: new Date(fixedDate),
+        createdAt: fixedDate,
+        updatedAt: fixedDate,
+        productTranslations: [
+          {
+            id: 1,
+            productId: 1,
+            languageId: 'en',
+            name: 'Test Product',
+            description: 'Test Description',
+            createdById: 1,
+            updatedById: null,
+            deletedById: null,
+            deletedAt: null,
+            createdAt: fixedDate,
+            updatedAt: fixedDate,
+          },
+        ],
+        skus: [
+          {
+            id: 1,
+            productId: 1,
+            value: 'Red',
+            price: 100000,
+            stock: 100,
+            image: 'https://example.com/red.jpg',
+            createdById: 1,
+            updatedById: null,
+            deletedById: null,
+            deletedAt: null,
+            createdAt: fixedDate,
+            updatedAt: fixedDate,
+          },
+        ],
+      })
+      const params: GetProductParamsDTO = { productId: 1 }
+      const user = createMockUser({ exp: 1704067200, iat: 1704063600 })
+      mockManageProductService.getDetail.mockResolvedValue(mockProduct as any)
+      const result = await controller.findById(params, user)
+      expect(result).toMatchSnapshot()
+    })
+
+    it('should match create product response structure', async () => {
+      const mockProduct = createMockProduct({
+        publishedAt: new Date(fixedDate),
+        createdAt: fixedDate,
+        updatedAt: fixedDate,
+      })
+      mockManageProductService.create.mockResolvedValue(mockProduct as any)
+      const body: CreateProductBodyDTO = {
+        name: 'Test',
+        basePrice: 100000,
+        virtualPrice: 150000,
+        brandId: 1,
+        images: [],
+        variants: [],
+        categories: [],
+        skus: [],
+      } as any
+      const result = await controller.create(body, 1)
+      expect(result).toMatchSnapshot()
     })
   })
 })

@@ -55,8 +55,8 @@ describe('AddressRepository', () => {
       fullAddress: 'Số 1 Hoàng Hoa Thám, Phường Điện Biên, Quận Ba Đình, Hà Nội',
       isDefault: false,
       isActive: true,
-      createdAt: new Date(),
-      updatedAt: new Date(),
+      createdAt: new Date().toISOString() as any,
+      updatedAt: new Date().toISOString() as any,
       ...overrides,
     }),
     listAddressesQuery: (): ListAddressesQuery => ({

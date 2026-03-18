@@ -674,4 +674,80 @@ describe('OrderController', () => {
       expect(result).toEqual(originalResponse) // Same content
     })
   })
+
+  // ===== RESPONSE STRUCTURE SNAPSHOTS =====
+
+  describe('Response Structure Snapshots', () => {
+    const fixedDate = '2024-01-01T00:00:00.000Z'
+
+    it('should match order list response structure', async () => {
+      const mockResponse = createTestData.orderListResponse({
+        data: [
+          {
+            id: 1,
+            userId: 1,
+            shopId: 1,
+            status: OrderStatus.PENDING_PAYMENT,
+            totalAmount: 100000,
+            paymentId: 1,
+            createdAt: fixedDate,
+            updatedAt: fixedDate,
+            items: [
+              {
+                id: 1,
+                productId: 1,
+                productName: 'Test Product',
+                productTranslations: [{ id: 1, name: 'Test Product', description: 'Test Description', languageId: 'vi' }],
+                skuPrice: 50000,
+                image: 'test-image.jpg',
+                skuValue: 'Size: M, Color: Red',
+                skuId: 1,
+                orderId: 1,
+                quantity: 2,
+                createdAt: fixedDate,
+              },
+            ],
+          },
+        ],
+      })
+      mockOrderService.list.mockResolvedValue(mockResponse)
+      const result = await controller.getCart(1, createTestData.orderListQuery())
+      expect(result).toMatchSnapshot()
+    })
+
+    it('should match create order response structure', async () => {
+      const mockResponse = createTestData.createOrderResponse({
+        orders: [
+          {
+            id: 1,
+            userId: 1,
+            shopId: 1,
+            status: OrderStatus.PENDING_PAYMENT,
+            totalAmount: 100000,
+            receiver: { name: 'Nguyễn Văn A', phone: '0123456789', address: '123 Đường ABC, Quận 1, TP.HCM' },
+            paymentId: 1,
+            createdAt: fixedDate,
+            updatedAt: fixedDate,
+            createdById: null,
+            updatedById: null,
+            deletedById: null,
+            deletedAt: null,
+          },
+        ],
+      })
+      mockOrderService.create.mockResolvedValue(mockResponse)
+      const result = await controller.create(1, createTestData.createOrderBody())
+      expect(result).toMatchSnapshot()
+    })
+
+    it('should match cancel order response structure', async () => {
+      const mockResponse = createTestData.cancelOrderResponse({
+        createdAt: fixedDate,
+        updatedAt: fixedDate,
+      })
+      mockOrderService.cancel.mockResolvedValue(mockResponse)
+      const result = await controller.cancel(1, createTestData.orderParams(), createTestData.cancelOrderBody())
+      expect(result).toMatchSnapshot()
+    })
+  })
 })

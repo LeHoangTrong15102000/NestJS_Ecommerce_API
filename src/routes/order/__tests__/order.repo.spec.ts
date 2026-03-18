@@ -411,6 +411,21 @@ describe('OrderRepo', () => {
       // Act & Assert - Kiểm tra lỗi
       await expect(repository.fetchAndValidateCartItems(userId, body)).rejects.toThrow(SKUNotBelongToShopException)
     })
+
+    it('should throw NotFoundCartItemException when cartItemId not in map during shop validation', async () => {
+      // Arrange - cartItemIds includes an ID that DB returns but map lookup fails
+      // This tests the defensive !cartItem check in validateShopOwnership (line 264)
+      const userId = 1
+      // Body references cartItemId 3 which won't be in the map
+      const body = createTestData.createOrderBody({ cartItemIds: [1, 3] })
+      // DB returns both items (length matches), but cartItem id=3 maps differently
+      const mockCartItems = [createTestData.cartItem({ id: 1 }), createTestData.cartItem({ id: 2 })]
+
+      mockPrismaService.cartItem.findMany.mockResolvedValue(mockCartItems)
+
+      // Act & Assert - cartItemId 3 not in map triggers NotFoundCartItemException
+      await expect(repository.fetchAndValidateCartItems(userId, body)).rejects.toThrow(NotFoundCartItemException)
+    })
   })
 
   describe('create', () => {
@@ -482,6 +497,110 @@ describe('OrderRepo', () => {
       expect(result.paymentId).toBe(mockPayment.id)
       expect(result.orders).toHaveLength(1)
       expect(mockPrismaService.$transaction).toHaveBeenCalled()
+    })
+
+    it('should throw OutOfStockSKUException when $executeRaw returns 0 (concurrent stock depletion)', async () => {
+      // Arrange - SKU stock depleted between validation and update
+      const userId = 1
+      const body = createTestData.createOrderBody()
+      const mockCartItems = [
+        createTestData.cartItem({
+          id: 1,
+          sku: {
+            ...createTestData.cartItem().sku,
+            product: {
+              ...createTestData.cartItem().sku.product,
+              productTranslations: [],
+            },
+          },
+        }),
+        createTestData.cartItem({ id: 2 }),
+      ]
+      const ordersWithCalculations = [
+        {
+          item: body[0],
+          totalAmount: 200000,
+          discountAmount: 0,
+          voucherId: null,
+        },
+      ]
+
+      mockPrismaService.$transaction.mockImplementation(async (callback) => {
+        const tx = {
+          payment: {
+            create: jest.fn().mockResolvedValue(createTestData.payment()),
+          },
+          order: {
+            create: jest.fn().mockResolvedValue(createTestData.order()),
+          },
+          cartItem: {
+            deleteMany: jest.fn().mockResolvedValue({ count: 2 }),
+          },
+          voucher: {
+            update: jest.fn().mockResolvedValue({}),
+          },
+          userVoucher: {
+            updateMany: jest.fn().mockResolvedValue({ count: 1 }),
+          },
+          $executeRaw: jest.fn().mockResolvedValue(0), // No rows updated = out of stock
+        }
+        mockOrderProducer.addCancelPaymentJob.mockResolvedValue(undefined)
+        return callback(tx)
+      })
+
+      // Act & Assert
+      await expect(repository.create(userId, body, mockCartItems, ordersWithCalculations)).rejects.toThrow(
+        OutOfStockSKUException,
+      )
+    })
+
+    it('should throw NotFoundCartItemException when cartItemId missing from map in buildOrderCreateData', async () => {
+      // Arrange - body references cartItemId 99 which is not in the cartItems array
+      const userId = 1
+      const body = createTestData.createOrderBody({ cartItemIds: [1, 99] })
+      const mockCartItems = [createTestData.cartItem({ id: 1 })]
+      const ordersWithCalculations = [
+        {
+          item: body[0],
+          totalAmount: 200000,
+          discountAmount: 0,
+          voucherId: null,
+        },
+      ]
+
+      mockPrismaService.$transaction.mockImplementation(async (callback) => {
+        const tx = {
+          payment: {
+            create: jest.fn().mockResolvedValue(createTestData.payment()),
+          },
+          order: {
+            create: jest.fn().mockImplementation(({ data }) => {
+              // Force evaluation of the items.create array which triggers buildOrderCreateData
+              if (data.items?.create) {
+                data.items.create.forEach(() => {})
+              }
+              return createTestData.order()
+            }),
+          },
+          cartItem: {
+            deleteMany: jest.fn().mockResolvedValue({ count: 1 }),
+          },
+          voucher: {
+            update: jest.fn().mockResolvedValue({}),
+          },
+          userVoucher: {
+            updateMany: jest.fn().mockResolvedValue({ count: 1 }),
+          },
+          $executeRaw: jest.fn().mockResolvedValue(1),
+        }
+        mockOrderProducer.addCancelPaymentJob.mockResolvedValue(undefined)
+        return callback(tx)
+      })
+
+      // Act & Assert - cartItemId 99 not in map triggers NotFoundCartItemException
+      await expect(repository.create(userId, body, mockCartItems, ordersWithCalculations)).rejects.toThrow(
+        NotFoundCartItemException,
+      )
     })
 
     it('should create order with voucher discount', async () => {
@@ -611,6 +730,19 @@ describe('OrderRepo', () => {
 
       // Act & Assert - Kiểm tra lỗi
       await expect(repository.cancel(userId, orderId)).rejects.toThrow(OrderNotFoundException)
+    })
+
+    it('should re-throw non-Prisma errors', async () => {
+      // Arrange
+      const userId = 1
+      const orderId = 1
+      const genericError = new Error('Database connection lost')
+
+      mockPrismaService.order.findUniqueOrThrow.mockRejectedValue(genericError)
+      mockIsNotFoundPrismaError.mockReturnValue(false)
+
+      // Act & Assert
+      await expect(repository.cancel(userId, orderId)).rejects.toThrow('Database connection lost')
     })
   })
 })

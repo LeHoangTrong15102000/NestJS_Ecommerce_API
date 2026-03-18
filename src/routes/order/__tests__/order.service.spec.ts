@@ -459,7 +459,7 @@ describe('OrderService', () => {
         cartItems: mockCartItems,
         cartItemMap: mockCartItemMap,
       })
-      mockVoucherRepository.findById.mockResolvedValue(mockVoucher)
+      mockVoucherRepository.findById.mockResolvedValue(mockVoucher as any)
       mockOrderRepo.create.mockResolvedValue(mockCreateOrderResponse)
 
       // Act - Thực hiện tạo order với voucher
@@ -516,7 +516,7 @@ describe('OrderService', () => {
         cartItems: mockCartItems,
         cartItemMap: mockCartItemMap,
       })
-      mockVoucherRepository.findById.mockResolvedValue(mockVoucher)
+      mockVoucherRepository.findById.mockResolvedValue(mockVoucher as any)
       mockOrderRepo.create.mockResolvedValue(mockCreateOrderResponse)
 
       // Act - Thực hiện tạo order với voucher có maxDiscount
@@ -569,7 +569,7 @@ describe('OrderService', () => {
         cartItems: mockCartItems,
         cartItemMap: mockCartItemMap,
       })
-      mockVoucherRepository.findById.mockResolvedValue(mockVoucher)
+      mockVoucherRepository.findById.mockResolvedValue(mockVoucher as any)
       mockOrderRepo.create.mockResolvedValue(mockCreateOrderResponse)
 
       // Act - Thực hiện tạo order với voucher FIXED_AMOUNT
@@ -781,71 +781,222 @@ describe('OrderService', () => {
 
   describe('edge cases and error handling', () => {
     it('should handle repository errors in list', async () => {
-      // Arrange - Chuẩn bị lỗi từ repository
       const userId = 1
       const query = createTestData.orderListQuery()
       const repositoryError = new Error('Database connection failed')
 
       mockOrderRepo.list.mockRejectedValue(repositoryError)
 
-      // Act & Assert - Thực hiện test và kiểm tra lỗi
       await expect(service.list(userId, query)).rejects.toThrow('Database connection failed')
       expect(mockOrderRepo.list).toHaveBeenCalledWith(userId, query)
     })
 
     it('should handle repository errors in create', async () => {
-      // Arrange - Chuẩn bị lỗi từ repository
       const userId = 1
       const body = createTestData.createOrderBody()
       const repositoryError = new Error('Cart item not found')
 
-      mockOrderRepo.create.mockRejectedValue(repositoryError)
+      mockOrderRepo.fetchAndValidateCartItems.mockRejectedValue(repositoryError)
 
-      // Act & Assert - Thực hiện test và kiểm tra lỗi
       await expect(service.create(userId, body)).rejects.toThrow('Cart item not found')
-      expect(mockOrderRepo.create).toHaveBeenCalledWith(userId, body)
     })
 
     it('should handle repository errors in cancel', async () => {
-      // Arrange - Chuẩn bị lỗi từ repository
       const userId = 1
       const orderId = 1
       const repositoryError = new Error('Order not found')
 
       mockOrderRepo.cancel.mockRejectedValue(repositoryError)
 
-      // Act & Assert - Thực hiện test và kiểm tra lỗi
       await expect(service.cancel(userId, orderId)).rejects.toThrow('Order not found')
       expect(mockOrderRepo.cancel).toHaveBeenCalledWith(userId, orderId)
     })
 
     it('should handle repository errors in detail', async () => {
-      // Arrange - Chuẩn bị lỗi từ repository
       const userId = 1
       const orderId = 1
       const repositoryError = new Error('Order not found')
 
       mockOrderRepo.detail.mockRejectedValue(repositoryError)
 
-      // Act & Assert - Thực hiện test và kiểm tra lỗi
       await expect(service.detail(userId, orderId)).rejects.toThrow('Order not found')
       expect(mockOrderRepo.detail).toHaveBeenCalledWith(userId, orderId)
     })
 
     it('should pass through repository responses without modification', async () => {
-      // Arrange - Chuẩn bị test để đảm bảo service không modify data
       const userId = 1
       const query = createTestData.orderListQuery()
       const originalResponse = createTestData.orderListResponse()
 
       mockOrderRepo.list.mockResolvedValue(originalResponse)
 
-      // Act - Thực hiện lấy danh sách orders
       const result = await service.list(userId, query)
 
-      // Assert - Kiểm tra kết quả không bị thay đổi
-      expect(result).toBe(originalResponse) // Same reference
-      expect(result).toEqual(originalResponse) // Same content
+      expect(result).toBe(originalResponse)
+      expect(result).toEqual(originalResponse)
+    })
+
+    it('should cap FIXED_AMOUNT voucher at order total when voucher exceeds total', async () => {
+      const userId = 1
+      const body: CreateOrderBodyType = [
+        {
+          shopId: 1,
+          receiver: { name: 'Test', phone: '0123456789', address: 'Test Address' },
+          cartItemIds: [1],
+          voucherId: 1,
+        },
+      ]
+      const mockCartItems = createMockCartItems([{ quantity: 1, sku: { ...createMockCartItems()[0].sku, price: 50000 } }])
+      const mockCartItemMap = new Map<number, CartItemWithRelations>()
+      mockCartItems.forEach((item) => mockCartItemMap.set(item.id, item))
+      const mockVoucher = { id: 1, type: 'FIXED_AMOUNT', value: 999999 } // exceeds order total
+
+      mockOrderRepo.fetchAndValidateCartItems.mockResolvedValue({ cartItems: mockCartItems, cartItemMap: mockCartItemMap })
+      mockVoucherRepository.findById.mockResolvedValue(mockVoucher as any)
+      mockOrderRepo.create.mockResolvedValue(createTestData.createOrderResponse())
+
+      await service.create(userId, body)
+
+      expect(mockOrderRepo.create).toHaveBeenCalledWith(
+        userId,
+        body,
+        mockCartItems,
+        expect.arrayContaining([
+          expect.objectContaining({
+            discountAmount: 50000, // capped at itemsTotal
+            totalAmount: 0,
+          }),
+        ]),
+      )
+    })
+
+    it('should create order without voucher (no voucherId)', async () => {
+      const userId = 1
+      const body: CreateOrderBodyType = [
+        {
+          shopId: 1,
+          receiver: { name: 'Test', phone: '0123456789', address: 'Test Address' },
+          cartItemIds: [1, 2],
+        },
+      ]
+      const mockCartItems = createMockCartItems()
+      const mockCartItemMap = new Map<number, CartItemWithRelations>()
+      mockCartItems.forEach((item) => mockCartItemMap.set(item.id, item))
+
+      mockOrderRepo.fetchAndValidateCartItems.mockResolvedValue({ cartItems: mockCartItems, cartItemMap: mockCartItemMap })
+      mockOrderRepo.create.mockResolvedValue(createTestData.createOrderResponse())
+
+      await service.create(userId, body)
+
+      expect(mockVoucherRepository.findById).not.toHaveBeenCalled()
+      expect(mockOrderRepo.create).toHaveBeenCalledWith(
+        userId,
+        body,
+        mockCartItems,
+        expect.arrayContaining([
+          expect.objectContaining({
+            discountAmount: 0,
+            voucherId: null,
+          }),
+        ]),
+      )
+    })
+
+    it('should handle voucher not found (expired/used voucher)', async () => {
+      const userId = 1
+      const body: CreateOrderBodyType = [
+        {
+          shopId: 1,
+          receiver: { name: 'Test', phone: '0123456789', address: 'Test Address' },
+          cartItemIds: [1, 2],
+          voucherId: 999,
+        },
+      ]
+      const mockCartItems = createMockCartItems()
+      const mockCartItemMap = new Map<number, CartItemWithRelations>()
+      mockCartItems.forEach((item) => mockCartItemMap.set(item.id, item))
+
+      mockOrderRepo.fetchAndValidateCartItems.mockResolvedValue({ cartItems: mockCartItems, cartItemMap: mockCartItemMap })
+      mockVoucherRepository.findById.mockResolvedValue(null)
+      mockOrderRepo.create.mockResolvedValue(createTestData.createOrderResponse())
+
+      await service.create(userId, body)
+
+      expect(mockOrderRepo.create).toHaveBeenCalledWith(
+        userId,
+        body,
+        mockCartItems,
+        expect.arrayContaining([
+          expect.objectContaining({
+            discountAmount: 0,
+            voucherId: 999,
+          }),
+        ]),
+      )
+    })
+
+    it('should handle concurrent order creation (fetchAndValidateCartItems race)', async () => {
+      const userId = 1
+      const body = createTestData.createOrderBody()
+      const mockCartItems = createMockCartItems()
+      const mockCartItemMap = new Map<number, CartItemWithRelations>()
+      mockCartItems.forEach((item) => mockCartItemMap.set(item.id, item))
+
+      mockOrderRepo.fetchAndValidateCartItems.mockResolvedValue({ cartItems: mockCartItems, cartItemMap: mockCartItemMap })
+      mockOrderRepo.create.mockResolvedValue(createTestData.createOrderResponse())
+
+      // Concurrent calls should both succeed at service level (repo handles locking)
+      const [result1, result2] = await Promise.all([service.create(userId, body), service.create(userId, body)])
+
+      expect(result1).toBeDefined()
+      expect(result2).toBeDefined()
+      expect(mockOrderRepo.fetchAndValidateCartItems).toHaveBeenCalledTimes(2)
+    })
+
+    it('should handle pagination with page beyond total pages', async () => {
+      const userId = 1
+      const query = createTestData.orderListQuery({ page: 999, limit: 10 })
+      const emptyResponse = createTestData.orderListResponse({ data: [], totalItems: 5, page: 999, totalPages: 1 })
+
+      mockOrderRepo.list.mockResolvedValue(emptyResponse)
+
+      const result = await service.list(userId, query)
+
+      expect(result.data).toEqual([])
+      expect(mockOrderRepo.list).toHaveBeenCalledWith(userId, query)
+    })
+
+    it('should handle multiple shops with different vouchers in single order', async () => {
+      const userId = 1
+      const body: CreateOrderBodyType = [
+        {
+          shopId: 1,
+          receiver: { name: 'Test', phone: '0123456789', address: 'Test Address' },
+          cartItemIds: [1],
+          voucherId: 1,
+        },
+        {
+          shopId: 2,
+          receiver: { name: 'Test', phone: '0123456789', address: 'Test Address' },
+          cartItemIds: [2],
+          voucherId: 2,
+        },
+      ]
+      const mockCartItems = createMockCartItems()
+      const mockCartItemMap = new Map<number, CartItemWithRelations>()
+      mockCartItems.forEach((item) => mockCartItemMap.set(item.id, item))
+      const mockVoucher1 = { id: 1, type: 'PERCENTAGE', value: 10, maxDiscount: null }
+      const mockVoucher2 = { id: 2, type: 'FIXED_AMOUNT', value: 20000 }
+
+      mockOrderRepo.fetchAndValidateCartItems.mockResolvedValue({ cartItems: mockCartItems, cartItemMap: mockCartItemMap })
+      mockVoucherRepository.findById.mockResolvedValueOnce(mockVoucher1 as any).mockResolvedValueOnce(mockVoucher2 as any)
+      mockOrderRepo.create.mockResolvedValue(createTestData.createOrderResponse())
+
+      await service.create(userId, body)
+
+      expect(mockVoucherRepository.findById).toHaveBeenCalledTimes(2)
+      expect(mockVoucherRepository.findById).toHaveBeenCalledWith(1)
+      expect(mockVoucherRepository.findById).toHaveBeenCalledWith(2)
     })
   })
 })

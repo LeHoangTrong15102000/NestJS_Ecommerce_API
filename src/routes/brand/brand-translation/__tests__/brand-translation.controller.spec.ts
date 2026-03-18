@@ -259,7 +259,7 @@ describe('BrandTranslationController', () => {
     it('should delete brand translation', async () => {
       const params: GetBrandTranslationParamsDTO = { brandTranslationId: 1 }
       const userId = 1
-      const deleteResponse = { message: 'Delete successfully' }
+      const deleteResponse = { message: 'Delete successfully' } as const
       mockService.delete.mockResolvedValue(deleteResponse)
 
       const result = await controller.delete(params, userId)
@@ -287,7 +287,7 @@ describe('BrandTranslationController', () => {
     it('should delete with different user IDs', async () => {
       const params: GetBrandTranslationParamsDTO = { brandTranslationId: 1 }
       const userIds = [1, 5, 10]
-      const deleteResponse = { message: 'Delete successfully' }
+      const deleteResponse = { message: 'Delete successfully' } as const
 
       for (const userId of userIds) {
         mockService.delete.mockResolvedValue(deleteResponse)
@@ -305,7 +305,7 @@ describe('BrandTranslationController', () => {
     it('should return success message on deletion', async () => {
       const params: GetBrandTranslationParamsDTO = { brandTranslationId: 1 }
       const userId = 1
-      const deleteResponse = { message: 'Delete successfully' }
+      const deleteResponse = { message: 'Delete successfully' } as const
       mockService.delete.mockResolvedValue(deleteResponse)
 
       const result = await controller.delete(params, userId)

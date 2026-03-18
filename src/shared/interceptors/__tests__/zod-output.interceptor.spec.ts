@@ -26,6 +26,7 @@ describe('ZodOutputInterceptor', () => {
   let mockExecutionContext: jest.Mocked<ExecutionContext>
   let mockCallHandler: jest.Mocked<CallHandler>
   let consoleWarnSpy: jest.SpyInstance
+  let loggerWarnSpy: jest.SpyInstance
 
   beforeEach(() => {
     // Mock Reflector
@@ -39,13 +40,14 @@ describe('ZodOutputInterceptor', () => {
     // Khởi tạo interceptor
     interceptor = new ZodOutputInterceptor(mockReflector)
 
-    // Mock console.warn
+    // Mock console.warn — also spy on Logger.warn for NestJS Logger
     consoleWarnSpy = jest.spyOn(console, 'warn').mockImplementation()
+    loggerWarnSpy = jest.spyOn(interceptor['logger'], 'warn').mockImplementation()
 
     // Mock ExecutionContext
     mockExecutionContext = {
-      getHandler: jest.fn(),
-      getClass: jest.fn(),
+      getHandler: jest.fn().mockReturnValue(function testHandler() {}),
+      getClass: jest.fn().mockReturnValue(class TestController {}),
       getArgs: jest.fn(),
       getArgByIndex: jest.fn(),
       switchToRpc: jest.fn(),
@@ -169,7 +171,7 @@ describe('ZodOutputInterceptor', () => {
       result$.subscribe({
         next: (value) => {
           expect(value).toEqual(invalidData)
-          expect(consoleWarnSpy).toHaveBeenCalledWith('Zod output validation failed:', expect.any(String))
+          expect(loggerWarnSpy).toHaveBeenCalled()
           done()
         },
       })
@@ -194,7 +196,7 @@ describe('ZodOutputInterceptor', () => {
       result$.subscribe({
         next: (value) => {
           expect(value).toEqual(incompleteData)
-          expect(consoleWarnSpy).toHaveBeenCalled()
+          expect(loggerWarnSpy).toHaveBeenCalled()
           done()
         },
       })
@@ -217,7 +219,7 @@ describe('ZodOutputInterceptor', () => {
       result$.subscribe({
         next: (value) => {
           expect(value).toEqual(wrongTypeData)
-          expect(consoleWarnSpy).toHaveBeenCalled()
+          expect(loggerWarnSpy).toHaveBeenCalled()
           done()
         },
       })
@@ -242,7 +244,7 @@ describe('ZodOutputInterceptor', () => {
       result$.subscribe({
         next: (value) => {
           expect(value).toEqual(responseData)
-          expect(consoleWarnSpy).not.toHaveBeenCalled()
+          expect(loggerWarnSpy).not.toHaveBeenCalled()
           done()
         },
       })
@@ -320,7 +322,7 @@ describe('ZodOutputInterceptor', () => {
       // Assert: Verify không validate
       result$.subscribe({
         error: () => {
-          expect(consoleWarnSpy).not.toHaveBeenCalled()
+          expect(loggerWarnSpy).not.toHaveBeenCalled()
           done()
         },
       })

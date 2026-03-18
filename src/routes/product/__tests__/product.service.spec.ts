@@ -1,4 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing'
+import { CACHE_MANAGER } from '@nestjs/cache-manager'
 import { ProductService } from '../product.service'
 import { ProductRepo } from '../product.repo'
 import { NotFoundRecordException } from 'src/shared/error'
@@ -195,7 +196,11 @@ describe('ProductService', () => {
     } as any
 
     module = await Test.createTestingModule({
-      providers: [ProductService, { provide: ProductRepo, useValue: mockProductRepo }],
+      providers: [
+        ProductService,
+        { provide: ProductRepo, useValue: mockProductRepo },
+        { provide: CACHE_MANAGER, useValue: { get: jest.fn(), set: jest.fn(), del: jest.fn() } },
+      ],
     }).compile()
 
     service = module.get<ProductService>(ProductService)

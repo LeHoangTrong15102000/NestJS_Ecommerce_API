@@ -613,4 +613,29 @@ describe('AddressController', () => {
       expect(mockAddressService.getAddresses).toHaveBeenCalledTimes(3)
     })
   })
+
+  // ===== RESPONSE STRUCTURE SNAPSHOTS =====
+
+  describe('Response Structure Snapshots', () => {
+    it('should match address list response structure', async () => {
+      const mockResponse = createTestData.addressListResponse()
+      mockAddressService.getAddresses.mockResolvedValue(mockResponse)
+      const result = await controller.getAddresses(1, createTestData.listAddressesQuery())
+      expect(result).toMatchSnapshot()
+    })
+
+    it('should match address detail response structure', async () => {
+      const mockResponse = createTestData.addressResponse()
+      mockAddressService.getAddressDetail.mockResolvedValue(mockResponse)
+      const result = await controller.getAddressDetail(1, createTestData.getAddressDetailParams())
+      expect(result).toMatchSnapshot()
+    })
+
+    it('should match create address response structure', async () => {
+      const mockResponse = createTestData.addressResponse()
+      mockAddressService.createAddress.mockResolvedValue(mockResponse)
+      const result = await controller.createAddress(1, createTestData.createAddressBody())
+      expect(result).toMatchSnapshot()
+    })
+  })
 })

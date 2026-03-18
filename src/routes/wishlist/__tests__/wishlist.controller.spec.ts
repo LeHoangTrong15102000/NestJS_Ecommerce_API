@@ -734,4 +734,42 @@ describe('WishlistController', () => {
       expect(service.setTargetPrice).toHaveBeenCalledWith(userId, params.itemId, 75000)
     })
   })
+
+  // ===== RESPONSE STRUCTURE SNAPSHOTS =====
+
+  describe('Response Structure Snapshots', () => {
+    const fixedDate = '2024-01-01T00:00:00.000Z'
+
+    it('should match wishlist items list response structure', async () => {
+      const mockResult = {
+        data: [createMockWishlistItem({ createdAt: fixedDate, updatedAt: fixedDate })],
+        totalItems: 1,
+        page: 1,
+        limit: 10,
+        totalPages: 1,
+      }
+      mockWishlistService.getItems.mockResolvedValue(mockResult)
+      const result = await controller.getItems(1, { page: 1, limit: 10, sortBy: 'addedAt', orderBy: 'desc' } as any)
+      expect(result).toMatchSnapshot()
+    })
+
+    it('should match wishlist collection response structure', async () => {
+      const mockResult = {
+        data: [createMockCollection({ createdAt: fixedDate, updatedAt: fixedDate })],
+        totalItems: 1,
+        page: 1,
+        limit: 10,
+        totalPages: 1,
+      }
+      mockWishlistService.getCollections.mockResolvedValue(mockResult)
+      const result = await controller.getCollections(1)
+      expect(result).toMatchSnapshot()
+    })
+
+    it('should match wishlist count response structure', async () => {
+      mockWishlistService.getCount.mockResolvedValue({ count: 5 })
+      const result = await controller.getCount(1)
+      expect(result).toMatchSnapshot()
+    })
+  })
 })

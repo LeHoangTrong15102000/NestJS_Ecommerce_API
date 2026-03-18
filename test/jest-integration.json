@@ -8,6 +8,9 @@
     "^.+\\.(t|j)s$": "ts-jest",
     "^.+\\.tsx$": "ts-jest"
   },
+  "transformIgnorePatterns": [
+    "<rootDir>/node_modules/.pnpm/(?!(msw|until-async|@mswjs))"
+  ],
   "moduleNameMapper": {
     "^src/(.*)$": "<rootDir>/src/$1",
     "^emails/(.*)$": "<rootDir>/emails/$1"

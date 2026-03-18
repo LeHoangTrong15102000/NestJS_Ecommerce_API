@@ -1365,4 +1365,29 @@ describe('ConversationController', () => {
       expect(mockMessageService.getReadReceiptStats).toHaveBeenCalledTimes(1)
     })
   })
+
+  // ===== RESPONSE STRUCTURE SNAPSHOTS =====
+
+  describe('Response Structure Snapshots', () => {
+    it('should match conversations list response structure', async () => {
+      const mockResponse = createTestData.conversationsList()
+      mockConversationService.getUserConversations.mockResolvedValue(mockResponse)
+      const result = await controller.getConversations(1, createTestData.getConversationsQuery())
+      expect(result).toMatchSnapshot()
+    })
+
+    it('should match direct conversation response structure', async () => {
+      const mockConversation = createTestData.conversation()
+      mockConversationService.createDirectConversation.mockResolvedValue(mockConversation)
+      const result = await controller.createDirectConversation(1, createTestData.createDirectConversationBody())
+      expect(result).toMatchSnapshot()
+    })
+
+    it('should match group conversation response structure', async () => {
+      const mockConversation = createTestData.groupConversation()
+      mockConversationService.createGroupConversation.mockResolvedValue(mockConversation)
+      const result = await controller.createGroupConversation(1, createTestData.createGroupConversationBody())
+      expect(result).toMatchSnapshot()
+    })
+  })
 })

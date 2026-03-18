@@ -809,4 +809,52 @@ describe('ReviewController', () => {
       }
     })
   })
+
+  // ===== RESPONSE STRUCTURE SNAPSHOTS =====
+
+  describe('Response Structure Snapshots', () => {
+    const fixedDate = '2024-01-01T00:00:00.000Z'
+
+    it('should match review list response structure', async () => {
+      const mockResponse = createTestData.reviewListResponse({
+        data: [
+          {
+            id: 1,
+            content: 'This is a great product!',
+            rating: 5,
+            orderId: 1,
+            productId: 1,
+            userId: 1,
+            updateCount: 0,
+            createdAt: fixedDate,
+            updatedAt: fixedDate,
+            medias: [{ id: 1, url: 'https://example.com/image1.jpg', type: MediaType.IMAGE, reviewId: 1, createdAt: fixedDate }],
+            user: { id: 1, name: 'Test User', avatar: 'https://example.com/avatar.jpg' },
+          },
+        ],
+      })
+      mockReviewService.list.mockResolvedValue(mockResponse)
+      const result = await controller.getReviews(createTestData.getReviewsParams(), createTestData.paginationQuery())
+      expect(result).toMatchSnapshot()
+    })
+
+    it('should match review create response structure', async () => {
+      const mockResponse = {
+        id: 1,
+        content: 'This is a great product!',
+        rating: 5,
+        orderId: 1,
+        productId: 1,
+        userId: 1,
+        updateCount: 0,
+        createdAt: fixedDate,
+        updatedAt: fixedDate,
+        medias: [{ id: 1, url: 'https://example.com/image1.jpg', type: MediaType.IMAGE, reviewId: 1, createdAt: fixedDate }],
+        user: { id: 1, name: 'Test User', avatar: 'https://example.com/avatar.jpg' },
+      }
+      mockReviewService.create.mockResolvedValue(mockResponse)
+      const result = await controller.updateReview(createTestData.createReviewBody(), 1)
+      expect(result).toMatchSnapshot()
+    })
+  })
 })
