@@ -9,31 +9,37 @@
 ## 📋 MỤC LỤC
 
 ### PHẦN A — SOFTWARE ARCHITECTURE & CLEAN CODE (BỔ SUNG MỚI)
+
 1. [SOLID Principles Chuyên Sâu](#1-solid-principles-chuyên-sâu)
 2. [Clean Code Principles (DRY, KISS, YAGNI, LoD)](#2-clean-code-principles)
 3. [12-Factor App Methodology](#3-12-factor-app-methodology)
 
 ### PHẦN B — ARCHITECTURE PATTERNS (TÓM GỌN TỪ ZZ_11, ZZ_7, ZZ_20, ZZ_25)
+
 4. [Clean Architecture — Tóm Tắt](#4-clean-architecture--tóm-tắt)
 5. [Design Patterns Trong NestJS — Tóm Tắt](#5-design-patterns-trong-nestjs--tóm-tắt)
 6. [CQRS & Event-Driven — Tóm Tắt](#6-cqrs--event-driven--tóm-tắt)
 
 ### PHẦN C — DOCKER & CONTAINERIZATION (TÓM GỌN ZZ_16, ZZ_75, ZZ_76, ZZ_77 + BỔ SUNG)
+
 7. [Docker Core Concepts — Tóm Tắt](#7-docker-core-concepts--tóm-tắt)
 8. [Dockerfile & Multi-Stage Build — Tóm Tắt](#8-dockerfile--multi-stage-build--tóm-tắt)
 9. [Docker Networking Chuyên Sâu (MỚI)](#9-docker-networking-chuyên-sâu)
 10. [Docker Compose Nâng Cao (MỚI)](#10-docker-compose-nâng-cao)
 
 ### PHẦN D — CI/CD & DEVOPS (TÓM GỌN ZZ_80 + BỔ SUNG)
+
 11. [CI/CD Pipeline — Tóm Tắt](#11-cicd-pipeline--tóm-tắt)
 12. [Deployment Strategies — Tóm Tắt](#12-deployment-strategies--tóm-tắt)
 
 ### PHẦN E — CLOUD & INFRASTRUCTURE (BỔ SUNG MỚI)
+
 13. [Cloud Services Tổng Quan (AWS/GCP/Azure)](#13-cloud-services-tổng-quan)
 14. [Kubernetes Chuyên Sâu (MỚI)](#14-kubernetes-chuyên-sâu)
 15. [Infrastructure as Code & GitOps — Tóm Tắt](#15-infrastructure-as-code--gitops--tóm-tắt)
 
 ### PHẦN F — ÁP DỤNG CHO DỰ ÁN
+
 16. [Áp Dụng Cho NestJS Ecommerce API](#16-áp-dụng-cho-nestjs-ecommerce-api)
 17. [Tài Liệu Tham Khảo Chéo](#17-tài-liệu-tham-khảo-chéo)
 
@@ -52,6 +58,7 @@
 **Định nghĩa**: Mỗi class/module chỉ nên có MỘT lý do để thay đổi.
 
 **Tại sao quan trọng?**
+
 - Giảm coupling giữa các concerns
 - Dễ test từng phần riêng biệt
 - Khi requirements thay đổi, chỉ cần sửa 1 nơi
@@ -62,22 +69,34 @@
 // ❌ VI PHẠM SRP — AuthService làm quá nhiều việc
 @Injectable()
 export class AuthService {
-  async register(dto: RegisterDto) { /* ... */ }
-  async login(dto: LoginDto) { /* ... */ }
-  async sendOtpEmail(email: string) { /* ... */ }     // ← Email concern
-  async hashPassword(password: string) { /* ... */ }   // ← Hashing concern
-  async generateToken(user: User) { /* ... */ }        // ← Token concern
-  async uploadAvatar(file: File) { /* ... */ }         // ← File concern
+  async register(dto: RegisterDto) {
+    /* ... */
+  }
+  async login(dto: LoginDto) {
+    /* ... */
+  }
+  async sendOtpEmail(email: string) {
+    /* ... */
+  } // ← Email concern
+  async hashPassword(password: string) {
+    /* ... */
+  } // ← Hashing concern
+  async generateToken(user: User) {
+    /* ... */
+  } // ← Token concern
+  async uploadAvatar(file: File) {
+    /* ... */
+  } // ← File concern
 }
 
 // ✅ TUÂN THỦ SRP — Tách thành các service riêng
 @Injectable()
 export class AuthService {
   constructor(
-    private readonly hashingService: HashingService,     // Hashing concern
-    private readonly tokenService: TokenService,         // Token concern
-    private readonly emailService: EmailService,         // Email concern
-    private readonly authRepo: AuthRepository,           // Data access concern
+    private readonly hashingService: HashingService, // Hashing concern
+    private readonly tokenService: TokenService, // Token concern
+    private readonly emailService: EmailService, // Email concern
+    private readonly authRepo: AuthRepository, // Data access concern
   ) {}
 
   async register(dto: RegisterDto) {
@@ -90,6 +109,7 @@ export class AuthService {
 ```
 
 **Trong dự án hiện tại đã áp dụng SRP:**
+
 - `HashingService` — chỉ lo hash/verify passwords
 - `TokenService` — chỉ lo generate/verify JWT tokens
 - `EmailService` — chỉ lo gửi email
@@ -101,6 +121,7 @@ export class AuthService {
 **Định nghĩa**: Software entities nên OPEN for extension nhưng CLOSED for modification.
 
 **Tại sao quan trọng?**
+
 - Thêm tính năng mới mà không sửa code cũ
 - Giảm risk regression bugs
 - Code ổn định hơn theo thời gian
@@ -114,7 +135,8 @@ export class PaymentService {
       // Stripe logic
     } else if (method === 'vnpay') {
       // VNPay logic
-    } else if (method === 'momo') {  // ← Phải sửa class này mỗi khi thêm method
+    } else if (method === 'momo') {
+      // ← Phải sửa class này mỗi khi thêm method
       // MoMo logic
     }
   }
@@ -127,21 +149,25 @@ interface PaymentStrategy {
 
 @Injectable()
 export class StripePaymentStrategy implements PaymentStrategy {
-  async processPayment(amount: number) { /* Stripe logic */ }
+  async processPayment(amount: number) {
+    /* Stripe logic */
+  }
 }
 
 @Injectable()
 export class VNPayPaymentStrategy implements PaymentStrategy {
-  async processPayment(amount: number) { /* VNPay logic */ }
+  async processPayment(amount: number) {
+    /* VNPay logic */
+  }
 }
 
 // Thêm MoMo? Chỉ cần tạo class mới, KHÔNG sửa code cũ
 @Injectable()
 export class MoMoPaymentStrategy implements PaymentStrategy {
-  async processPayment(amount: number) { /* MoMo logic */ }
+  async processPayment(amount: number) {
+    /* MoMo logic */
+  }
 }
-
-
 ```
 
 **Trong dự án:** NestJS Guards sử dụng OCP — `AuthenticationGuard` delegate cho các strategy (Bearer, API Key, None) mà không cần sửa guard chính.
@@ -153,21 +179,33 @@ export class MoMoPaymentStrategy implements PaymentStrategy {
 ```typescript
 // ❌ VI PHẠM LSP
 class Bird {
-  fly(): void { console.log('Flying') }
+  fly(): void {
+    console.log('Flying')
+  }
 }
 class Penguin extends Bird {
-  fly(): void { throw new Error('Penguins cannot fly!') } // ← Phá vỡ contract
+  fly(): void {
+    throw new Error('Penguins cannot fly!')
+  } // ← Phá vỡ contract
 }
 
 // ✅ TUÂN THỦ LSP — Tách interface
-interface Flyable { fly(): void }
-interface Swimmable { swim(): void }
+interface Flyable {
+  fly(): void
+}
+interface Swimmable {
+  swim(): void
+}
 
 class Eagle implements Flyable {
-  fly(): void { console.log('Flying') }
+  fly(): void {
+    console.log('Flying')
+  }
 }
 class Penguin implements Swimmable {
-  swim(): void { console.log('Swimming') }
+  swim(): void {
+    console.log('Swimming')
+  }
 }
 ```
 
@@ -185,8 +223,8 @@ interface CRUDRepository<T> {
   findById(id: string): Promise<T>
   update(id: string, data: Partial<T>): Promise<T>
   delete(id: string): Promise<void>
-  export(): Promise<Buffer>           // ← Không phải module nào cũng cần
-  generateReport(): Promise<Report>   // ← Không phải module nào cũng cần
+  export(): Promise<Buffer> // ← Không phải module nào cũng cần
+  generateReport(): Promise<Report> // ← Không phải module nào cũng cần
 }
 
 // ✅ TUÂN THỦ ISP — Tách thành interfaces nhỏ
@@ -212,14 +250,14 @@ interface SoftDeletable {
 // ❌ VI PHẠM DIP
 @Injectable()
 export class OrderService {
-  private prisma = new PrismaClient()  // ← Phụ thuộc trực tiếp
+  private prisma = new PrismaClient() // ← Phụ thuộc trực tiếp
 }
 
 // ✅ TUÂN THỦ DIP — Injection
 @Injectable()
 export class OrderService {
   constructor(
-    private readonly orderRepo: OrderRepository,  // ← Abstraction
+    private readonly orderRepo: OrderRepository, // ← Abstraction
   ) {}
 }
 ```
@@ -228,13 +266,13 @@ export class OrderService {
 
 ### 1.6. SOLID Cheat Sheet
 
-| Principle | Tóm tắt | Keyword |
-|-----------|---------|---------|
-| **S**RP | Mỗi class chỉ có 1 lý do thay đổi | "One reason to change" |
-| **O**CP | Mở cho extension, đóng cho modification | "Extend, don't modify" |
-| **L**SP | Subclass thay thế parent không hỏng | "Substitutable" |
-| **I**SP | Interface nhỏ, chuyên biệt | "Don't force unused methods" |
-| **D**IP | Phụ thuộc vào abstraction | "Depend on abstractions" |
+| Principle | Tóm tắt                                 | Keyword                      |
+| --------- | --------------------------------------- | ---------------------------- |
+| **S**RP   | Mỗi class chỉ có 1 lý do thay đổi       | "One reason to change"       |
+| **O**CP   | Mở cho extension, đóng cho modification | "Extend, don't modify"       |
+| **L**SP   | Subclass thay thế parent không hỏng     | "Substitutable"              |
+| **I**SP   | Interface nhỏ, chuyên biệt              | "Don't force unused methods" |
+| **D**IP   | Phụ thuộc vào abstraction               | "Depend on abstractions"     |
 
 ---
 
@@ -254,8 +292,13 @@ Giải pháp đơn giản nhất thường là tốt nhất. Đừng over-engine
 // ❌ Over-engineered — Abstract Factory cho 1 use case
 class PaymentProcessorAbstractFactoryBuilder {
   private strategies = new Map()
-  withStrategy(name, strategy) { this.strategies.set(name, strategy); return this }
-  build() { return new PaymentProcessorFactory(this.strategies) }
+  withStrategy(name, strategy) {
+    this.strategies.set(name, strategy)
+    return this
+  }
+  build() {
+    return new PaymentProcessorFactory(this.strategies)
+  }
 }
 
 // ✅ KISS — Đơn giản, rõ ràng
@@ -292,7 +335,7 @@ Một object chỉ nên giao tiếp với "bạn bè trực tiếp", không nên
 const city = order.getCustomer().getAddress().getCity()
 
 // ✅ Tuân thủ LoD — Delegate
-const city = order.getShippingCity()  // Order tự biết cách lấy city
+const city = order.getShippingCity() // Order tự biết cách lấy city
 ```
 
 ### 2.5. Composition over Inheritance
@@ -301,10 +344,10 @@ const city = order.getShippingCity()  // Order tự biết cách lấy city
 
 ```typescript
 // ❌ Deep inheritance chain
-class Animal { }
-class Mammal extends Animal { }
-class Dog extends Mammal { }
-class GuideDog extends Dog { }  // 4 levels deep!
+class Animal {}
+class Mammal extends Animal {}
+class Dog extends Mammal {}
+class GuideDog extends Dog {} // 4 levels deep!
 
 // ✅ Composition — NestJS Mixins pattern
 const TimeStampMixin = <T extends Constructor>(Base: T) =>
@@ -316,19 +359,21 @@ const TimeStampMixin = <T extends Constructor>(Base: T) =>
 const SoftDeleteMixin = <T extends Constructor>(Base: T) =>
   class extends Base {
     deletedAt: Date | null = null
-    softDelete() { this.deletedAt = new Date() }
+    softDelete() {
+      this.deletedAt = new Date()
+    }
   }
 ```
 
 ### 2.6. Clean Code Cheat Sheet
 
-| Principle | Khi nào áp dụng | Anti-pattern |
-|-----------|-----------------|-------------|
-| **DRY** | Thấy copy-paste code | Shotgun surgery |
-| **KISS** | Thiết kế solution | Over-engineering |
-| **YAGNI** | Planning features | Gold plating |
-| **LoD** | Object communication | Train wreck (a.b.c.d) |
-| **Composition > Inheritance** | Code reuse | Deep inheritance |
+| Principle                     | Khi nào áp dụng      | Anti-pattern          |
+| ----------------------------- | -------------------- | --------------------- |
+| **DRY**                       | Thấy copy-paste code | Shotgun surgery       |
+| **KISS**                      | Thiết kế solution    | Over-engineering      |
+| **YAGNI**                     | Planning features    | Gold plating          |
+| **LoD**                       | Object communication | Train wreck (a.b.c.d) |
+| **Composition > Inheritance** | Code reuse           | Deep inheritance      |
 
 ---
 
@@ -336,22 +381,23 @@ const SoftDeleteMixin = <T extends Constructor>(Base: T) =>
 
 > 12-Factor App là methodology cho building SaaS apps, đặc biệt quan trọng cho cloud-native và containerized applications.
 
-| # | Factor | Mô tả | Áp dụng trong dự án |
-|---|--------|-------|---------------------|
-| 1 | **Codebase** | Một codebase trong VCS, nhiều deploys | ✅ Git repo, deploy dev/staging/prod |
-| 2 | **Dependencies** | Khai báo explicit, isolate | ✅ `pnpm-lock.yaml`, `--frozen-lockfile` |
-| 3 | **Config** | Lưu config trong environment | ✅ `.env`, `docker-compose.yml` env vars |
-| 4 | **Backing Services** | Treat as attached resources | ✅ PostgreSQL, Redis qua `DATABASE_URL`, `REDIS_URL` |
-| 5 | **Build, Release, Run** | Tách biệt 3 stages | ⚠️ Cần CI/CD pipeline (ZZ_80) |
-| 6 | **Processes** | Stateless processes | ✅ NestJS API stateless, session trong Redis |
-| 7 | **Port Binding** | Export services via port | ✅ `EXPOSE 3000` trong Dockerfile |
-| 8 | **Concurrency** | Scale out via process model | ⚠️ Cần Kubernetes/ECS horizontal scaling |
-| 9 | **Disposability** | Fast startup, graceful shutdown | ⚠️ Cần `dumb-init` + graceful shutdown |
-| 10 | **Dev/Prod Parity** | Keep environments similar | ✅ Docker đảm bảo consistency |
-| 11 | **Logs** | Treat logs as event streams | ✅ NestJS Logger → stdout → Docker captures |
-| 12 | **Admin Processes** | Run admin tasks as one-off | ✅ `initialScript/` cho seeding, `prisma migrate` |
+| #   | Factor                  | Mô tả                                 | Áp dụng trong dự án                                  |
+| --- | ----------------------- | ------------------------------------- | ---------------------------------------------------- |
+| 1   | **Codebase**            | Một codebase trong VCS, nhiều deploys | ✅ Git repo, deploy dev/staging/prod                 |
+| 2   | **Dependencies**        | Khai báo explicit, isolate            | ✅ `pnpm-lock.yaml`, `--frozen-lockfile`             |
+| 3   | **Config**              | Lưu config trong environment          | ✅ `.env`, `docker-compose.yml` env vars             |
+| 4   | **Backing Services**    | Treat as attached resources           | ✅ PostgreSQL, Redis qua `DATABASE_URL`, `REDIS_URL` |
+| 5   | **Build, Release, Run** | Tách biệt 3 stages                    | ⚠️ Cần CI/CD pipeline (ZZ_80)                        |
+| 6   | **Processes**           | Stateless processes                   | ✅ NestJS API stateless, session trong Redis         |
+| 7   | **Port Binding**        | Export services via port              | ✅ `EXPOSE 3000` trong Dockerfile                    |
+| 8   | **Concurrency**         | Scale out via process model           | ⚠️ Cần Kubernetes/ECS horizontal scaling             |
+| 9   | **Disposability**       | Fast startup, graceful shutdown       | ⚠️ Cần `dumb-init` + graceful shutdown               |
+| 10  | **Dev/Prod Parity**     | Keep environments similar             | ✅ Docker đảm bảo consistency                        |
+| 11  | **Logs**                | Treat logs as event streams           | ✅ NestJS Logger → stdout → Docker captures          |
+| 12  | **Admin Processes**     | Run admin tasks as one-off            | ✅ `initialScript/` cho seeding, `prisma migrate`    |
 
 **Các factor cần cải thiện:**
+
 - Factor 5: Implement CI/CD pipeline (xem ZZ_80)
 - Factor 8: Setup Kubernetes horizontal pod autoscaler
 - Factor 9: Thêm `dumb-init` vào Dockerfile, implement graceful shutdown
@@ -399,6 +445,7 @@ HTTP Response ← Controller ← Response DTO ← Service ← Repository ← Pri
 ```
 
 **Áp dụng trong dự án:**
+
 - **Entities Layer**: Domain models (`*.model.ts`)
 - **Use Cases Layer**: Services (`*.service.ts`) — business logic
 - **Interface Adapters**: Controllers (`*.controller.ts`), DTOs (`*.dto.ts`), Guards
@@ -410,18 +457,18 @@ HTTP Response ← Controller ← Response DTO ← Service ← Repository ← Pri
 
 > Chi tiết: [ZZ_7](./ZZ_7_NESTJS_INTERVIEW_COMPREHENSIVE_GUIDE.md), [ZZ_25](./ZZ_25_NESTJS_INTERVIEW_COMPLETE_GUIDE.md)
 
-| Pattern | Sử dụng trong dự án | Ví dụ |
-|---------|---------------------|-------|
-| **Dependency Injection** | Toàn bộ project | Constructor injection qua NestJS IoC |
-| **Repository** | Data access layer | `AuthRepository`, `UserRepository`, `ProductRepository` |
-| **Strategy** | Authentication | `BearerStrategy`, `ApiKeyStrategy`, `NoneStrategy` |
-| **Decorator** | Cross-cutting concerns | `@Auth()`, `@ActiveUser()`, `@IsPublic()` |
-| **Observer** | Events & WebSocket | Socket.IO events, BullMQ job events |
-| **Factory** | Dynamic providers | `useFactory` trong module configs |
-| **Singleton** | Service instances | NestJS default scope = singleton |
-| **Chain of Responsibility** | Request pipeline | Middleware → Guard → Interceptor → Pipe → Handler → Filter |
-| **CQRS** | Payment module | Commands (write) vs Queries (read) tách biệt |
-| **Module** | Code organization | Mỗi domain = 1 NestJS module |
+| Pattern                     | Sử dụng trong dự án    | Ví dụ                                                      |
+| --------------------------- | ---------------------- | ---------------------------------------------------------- |
+| **Dependency Injection**    | Toàn bộ project        | Constructor injection qua NestJS IoC                       |
+| **Repository**              | Data access layer      | `AuthRepository`, `UserRepository`, `ProductRepository`    |
+| **Strategy**                | Authentication         | `BearerStrategy`, `ApiKeyStrategy`, `NoneStrategy`         |
+| **Decorator**               | Cross-cutting concerns | `@Auth()`, `@ActiveUser()`, `@IsPublic()`                  |
+| **Observer**                | Events & WebSocket     | Socket.IO events, BullMQ job events                        |
+| **Factory**                 | Dynamic providers      | `useFactory` trong module configs                          |
+| **Singleton**               | Service instances      | NestJS default scope = singleton                           |
+| **Chain of Responsibility** | Request pipeline       | Middleware → Guard → Interceptor → Pipe → Handler → Filter |
+| **CQRS**                    | Payment module         | Commands (write) vs Queries (read) tách biệt               |
+| **Module**                  | Code organization      | Mỗi domain = 1 NestJS module                               |
 
 ---
 
@@ -443,6 +490,7 @@ CQRS Pattern:
 ```
 
 **Khi nào dùng CQRS?**
+
 - Read/Write patterns khác nhau đáng kể
 - Cần optimize read và write riêng biệt
 - Domain phức tạp (Payment, Order)
@@ -475,14 +523,14 @@ Docker Client (CLI)  ──REST API──▶  Docker Daemon (dockerd)
                           (Docker Hub, ECR, GCR, ACR)
 ```
 
-| Thành phần | Vai trò | Tương tự |
-|------------|---------|----------|
-| **Dockerfile** | Recipe để build image | Source code |
-| **Image** | Snapshot read-only của app | Compiled binary |
-| **Container** | Instance đang chạy của image | Running process |
-| **Registry** | Lưu trữ & phân phối images | npm registry |
-| **Volume** | Persistent storage | Mounted disk |
-| **Network** | Kết nối giữa containers | Virtual LAN |
+| Thành phần     | Vai trò                      | Tương tự        |
+| -------------- | ---------------------------- | --------------- |
+| **Dockerfile** | Recipe để build image        | Source code     |
+| **Image**      | Snapshot read-only của app   | Compiled binary |
+| **Container**  | Instance đang chạy của image | Running process |
+| **Registry**   | Lưu trữ & phân phối images   | npm registry    |
+| **Volume**     | Persistent storage           | Mounted disk    |
+| **Network**    | Kết nối giữa containers      | Virtual LAN     |
 
 ### 7.2. Docker vs Virtual Machine
 
@@ -505,6 +553,7 @@ Container:                          Virtual Machine:
 ```
 
 **Tại sao doanh nghiệp chọn Docker?**
+
 - **Consistency**: Dev, staging, production giống hệt nhau → hết "works on my machine"
 - **Speed**: Build 2-3 phút, deploy 5 phút, rollback tức thì
 - **Scalability**: Auto-scaling dễ dàng với K8s
@@ -521,6 +570,7 @@ Layer 1: FROM node:18-alpine                  ← Base image, ít thay đổi
 ```
 
 **Nguyên tắc tối ưu cache:**
+
 - Đặt lệnh ít thay đổi lên trước (FROM, WORKDIR)
 - Copy package files trước, install, rồi mới copy source code
 - Mỗi lệnh RUN, COPY, ADD tạo 1 layer mới
@@ -604,12 +654,12 @@ CMD ["sh", "-c", "npx prisma migrate deploy && node dist/main.js"]
 
 **Lợi ích Multi-Stage:**
 
-| Metric | Single-Stage | Multi-Stage |
-|--------|-------------|-------------|
-| Image size | ~800MB | ~200MB |
-| Attack surface | Lớn (có build tools) | Nhỏ (chỉ runtime) |
-| Build cache | Kém | Tốt (tách deps/build) |
-| Security | devDeps trong image | Chỉ prod deps |
+| Metric         | Single-Stage         | Multi-Stage           |
+| -------------- | -------------------- | --------------------- |
+| Image size     | ~800MB               | ~200MB                |
+| Attack surface | Lớn (có build tools) | Nhỏ (chỉ runtime)     |
+| Build cache    | Kém                  | Tốt (tách deps/build) |
+| Security       | devDeps trong image  | Chỉ prod deps         |
 
 ### 8.3. CMD vs ENTRYPOINT
 
@@ -647,13 +697,13 @@ coverage              # Test artifacts
 
 ### 9.1. Các Loại Network Driver
 
-| Driver | Mô tả | Use case |
-|--------|--------|----------|
-| **bridge** | Default, tạo virtual bridge | Container cùng host giao tiếp |
-| **host** | Dùng network stack của host | Performance-critical (không port mapping) |
-| **overlay** | Multi-host networking | Docker Swarm / multi-node |
-| **macvlan** | Gán MAC address riêng | Container cần IP trên physical network |
-| **none** | Không có network | Isolated containers |
+| Driver      | Mô tả                       | Use case                                  |
+| ----------- | --------------------------- | ----------------------------------------- |
+| **bridge**  | Default, tạo virtual bridge | Container cùng host giao tiếp             |
+| **host**    | Dùng network stack của host | Performance-critical (không port mapping) |
+| **overlay** | Multi-host networking       | Docker Swarm / multi-node                 |
+| **macvlan** | Gán MAC address riêng       | Container cần IP trên physical network    |
+| **none**    | Không có network            | Isolated containers                       |
 
 ### 9.2. Bridge Network — Dự Án Đang Dùng
 
@@ -661,7 +711,7 @@ coverage              # Test artifacts
 # docker-compose.yml
 networks:
   ecom-network:
-    driver: bridge    # ← Dự án dùng bridge network
+    driver: bridge # ← Dự án dùng bridge network
 ```
 
 ```
@@ -679,6 +729,7 @@ networks:
 ```
 
 **Cách containers giao tiếp:**
+
 - Cùng network → gọi nhau bằng **service name** (DNS tự động)
 - `DATABASE_URL: postgresql://...@postgres:5432/ecom_db` — `postgres` là service name
 - `REDIS_HOST: redis` — `redis` là service name
@@ -688,9 +739,9 @@ networks:
 
 ```yaml
 ports:
-  - '3000:3000'    # host_port:container_port
-  - '5432:5432'    # Expose PostgreSQL ra host (dev only!)
-  - '6379:6379'    # Expose Redis ra host (dev only!)
+  - '3000:3000' # host_port:container_port
+  - '5432:5432' # Expose PostgreSQL ra host (dev only!)
+  - '6379:6379' # Expose Redis ra host (dev only!)
 ```
 
 ```
@@ -713,17 +764,17 @@ networks:
     driver: bridge
   backend:
     driver: bridge
-    internal: true    # ← Không có internet access
+    internal: true # ← Không có internet access
 
 services:
   api:
-    networks: [frontend, backend]   # Cầu nối 2 networks
+    networks: [frontend, backend] # Cầu nối 2 networks
   postgres:
-    networks: [backend]             # Chỉ backend, không expose ra ngoài
+    networks: [backend] # Chỉ backend, không expose ra ngoài
   redis:
     networks: [backend]
   nginx:
-    networks: [frontend]            # Chỉ frontend
+    networks: [frontend] # Chỉ frontend
 ```
 
 ---
@@ -734,30 +785,30 @@ services:
 
 ```yaml
 services:
-  postgres:                          # Database
+  postgres: # Database
     image: postgres:17-alpine
     healthcheck:
       test: ['CMD-SHELL', 'pg_isready -U ecom_user -d ecom_db']
     volumes:
       - postgres_data:/var/lib/postgresql/data
 
-  redis:                             # Cache & BullMQ
+  redis: # Cache & BullMQ
     image: redis:7-alpine
     command: redis-server --appendonly yes --maxmemory-policy noeviction
     healthcheck:
       test: ['CMD', 'redis-cli', 'ping']
 
-  api:                               # NestJS Application
+  api: # NestJS Application
     build: .
     depends_on:
       postgres: { condition: service_healthy }
-      redis:    { condition: service_healthy }
+      redis: { condition: service_healthy }
     environment:
       DATABASE_URL: postgresql://ecom_user:ecom_password@postgres:5432/ecom_db
       REDIS_HOST: redis
     volumes:
-      - ./uploads:/app/uploads       # Persist uploaded files
-      - ./prisma:/app/prisma         # Sync Prisma schema
+      - ./uploads:/app/uploads # Persist uploaded files
+      - ./prisma:/app/prisma # Sync Prisma schema
 
 volumes:
   postgres_data:
@@ -787,12 +838,13 @@ healthcheck:
 ```
 
 **Kết hợp với `depends_on`:**
+
 ```yaml
 depends_on:
   postgres:
-    condition: service_healthy    # Chờ DB healthy rồi mới start API
+    condition: service_healthy # Chờ DB healthy rồi mới start API
   redis:
-    condition: service_healthy    # Chờ Redis healthy
+    condition: service_healthy # Chờ Redis healthy
 ```
 
 → Đảm bảo API không start khi DB/Redis chưa sẵn sàng, tránh connection errors.
@@ -802,19 +854,18 @@ depends_on:
 ```yaml
 volumes:
   # Named volumes — Docker quản lý, persist qua restart
-  postgres_data:        # DB data sống sót khi container bị xóa
-  redis_data:           # Redis AOF data
-
-  # Bind mounts — Map thư mục host ↔ container
-  - ./uploads:/app/uploads    # Upload files persist trên host
-  - ./prisma:/app/prisma      # Sync schema giữa host và container
+  postgres_data: # DB data sống sót khi container bị xóa
+  redis_data: # Redis AOF data
+    # Bind mounts — Map thư mục host ↔ container
+    - ./uploads:/app/uploads # Upload files persist trên host
+    - ./prisma:/app/prisma # Sync schema giữa host và container
 ```
 
-| Loại | Syntax | Quản lý bởi | Use case |
-|------|--------|-------------|----------|
-| **Named volume** | `postgres_data:` | Docker | Database, persistent data |
-| **Bind mount** | `./src:/app/src` | Host filesystem | Dev hot-reload, config files |
-| **tmpfs** | `tmpfs: /tmp` | Memory | Temp data, test DB (fast) |
+| Loại             | Syntax           | Quản lý bởi     | Use case                     |
+| ---------------- | ---------------- | --------------- | ---------------------------- |
+| **Named volume** | `postgres_data:` | Docker          | Database, persistent data    |
+| **Bind mount**   | `./src:/app/src` | Host filesystem | Dev hot-reload, config files |
+| **tmpfs**        | `tmpfs: /tmp`    | Memory          | Temp data, test DB (fast)    |
 
 ### 10.4. Environment Variables Strategy
 
@@ -829,12 +880,13 @@ Thứ tự ưu tiên (cao → thấp):
 **Dự án hiện tại**: Hardcode env trong docker-compose.yml (OK cho dev, KHÔNG OK cho production).
 
 **Production pattern:**
+
 ```yaml
 # docker-compose.prod.yml
 services:
   api:
     env_file:
-      - .env.production    # Secrets trong file riêng, KHÔNG commit vào git
+      - .env.production # Secrets trong file riêng, KHÔNG commit vào git
 ```
 
 ### 10.5. Multi-Environment Compose Files
@@ -863,9 +915,9 @@ services:
           cpus: '2'
           memory: 2G
   postgres:
-    ports: []    # Xóa port mapping, không expose DB ra ngoài
+    ports: [] # Xóa port mapping, không expose DB ra ngoài
   redis:
-    ports: []    # Xóa port mapping
+    ports: [] # Xóa port mapping
 ```
 
 ### 10.6. Useful Docker Commands
@@ -928,6 +980,7 @@ CD (Continuous Deployment):
 ```
 
 **Trạng thái hiện tại của dự án:**
+
 - ✅ Có: `.github/workflows/ci.yml` (6 stages), Dockerfile, docker-compose.prod.yml, test scripts, ESLint config
 - ✅ Đã implement: Lint, Test, Build, Security Scan, Deploy staging/production
 - 📋 TODO: Pre-commit hooks, advanced security scanning (Semgrep), coverage enforcement
@@ -1004,7 +1057,7 @@ deploy-staging:
 deploy-production:
   runs-on: ubuntu-latest
   needs: [deploy-staging]
-  environment: production  # Requires manual approval
+  environment: production # Requires manual approval
   steps:
     - Setup SSH key
     - SSH to production server
@@ -1016,6 +1069,7 @@ deploy-production:
 ```
 
 **Key Features:**
+
 - ✅ **Parallel execution**: Lint và Test chạy song song
 - ✅ **Dependency caching**: pnpm cache, Docker layer cache
 - ✅ **Service containers**: PostgreSQL + Redis cho integration tests
@@ -1025,6 +1079,7 @@ deploy-production:
 - ✅ **Traceability**: Image tags với git SHA + version
 
 **Pipeline Duration:**
+
 - Feature branch (lint + test): ~4 phút
 - Master branch (full pipeline): ~15 phút
 - Production deployment (with approval): ~20 phút total
@@ -1099,6 +1154,7 @@ Cost of fixing security issues:
 ```
 
 **Security Best Practices Đã Áp Dụng:**
+
 - ✅ Non-root user trong container (USER node)
 - ✅ Multi-stage build (loại bỏ dev dependencies)
 - ✅ Secrets externalized (không hardcode trong code)
@@ -1112,12 +1168,12 @@ Cost of fixing security issues:
 
 **4 Key Metrics:**
 
-| Metric | Định nghĩa | Elite | High | Medium | Low | Dự án hiện tại |
-|--------|-----------|-------|------|--------|-----|----------------|
-| **Deployment Frequency** | Bao lâu deploy 1 lần? | Nhiều lần/ngày | 1 lần/tuần | 1 lần/tháng | 1 lần/6 tháng | 🎯 **1 lần/tuần** (master merge) |
-| **Lead Time for Changes** | Commit → production? | < 1 giờ | < 1 ngày | < 1 tuần | > 1 tháng | 🎯 **~20 phút** (CI + manual approval) |
-| **Change Failure Rate** | % deploy gây incident? | 0-15% | 16-30% | 31-45% | > 45% | 🎯 **TBD** (cần tracking) |
-| **Mean Time to Recovery** | Thời gian recover? | < 1 giờ | < 1 ngày | < 1 tuần | > 1 tuần | 🎯 **~5 phút** (rollback Docker image) |
+| Metric                    | Định nghĩa             | Elite          | High       | Medium      | Low           | Dự án hiện tại                         |
+| ------------------------- | ---------------------- | -------------- | ---------- | ----------- | ------------- | -------------------------------------- |
+| **Deployment Frequency**  | Bao lâu deploy 1 lần?  | Nhiều lần/ngày | 1 lần/tuần | 1 lần/tháng | 1 lần/6 tháng | 🎯 **1 lần/tuần** (master merge)       |
+| **Lead Time for Changes** | Commit → production?   | < 1 giờ        | < 1 ngày   | < 1 tuần    | > 1 tháng     | 🎯 **~20 phút** (CI + manual approval) |
+| **Change Failure Rate**   | % deploy gây incident? | 0-15%          | 16-30%     | 31-45%      | > 45%         | 🎯 **TBD** (cần tracking)              |
+| **Mean Time to Recovery** | Thời gian recover?     | < 1 giờ        | < 1 ngày   | < 1 tuần    | > 1 tuần      | 🎯 **~5 phút** (rollback Docker image) |
 
 **Cách Đo Metrics Cho Dự Án:**
 
@@ -1181,18 +1237,19 @@ Rolling:
   [Pod1-v2] [Pod2-v2] [Pod3-v2] [Pod4-v2]  ← Done!
 ```
 
-| Tiêu chí | Blue-Green | Canary | Rolling |
-|----------|-----------|--------|---------|
-| Downtime | Zero | Zero | Near-zero |
-| Rollback speed | Instant (giây) | Nhanh (phút) | Chậm (phút) |
-| Extra infra | 2x | +5-10% | Không |
-| Blast radius | 0% hoặc 100% | 1-5% ban đầu | Tăng dần |
-| Complexity | Trung bình | Cao | Thấp |
-| Best for | Critical apps | High-traffic | Standard apps |
+| Tiêu chí       | Blue-Green     | Canary       | Rolling       |
+| -------------- | -------------- | ------------ | ------------- |
+| Downtime       | Zero           | Zero         | Near-zero     |
+| Rollback speed | Instant (giây) | Nhanh (phút) | Chậm (phút)   |
+| Extra infra    | 2x             | +5-10%       | Không         |
+| Blast radius   | 0% hoặc 100%   | 1-5% ban đầu | Tăng dần      |
+| Complexity     | Trung bình     | Cao          | Thấp          |
+| Best for       | Critical apps  | High-traffic | Standard apps |
 
 ### 12.2. Recommendation Cho Dự Án
 
 **Hiện tại (Phase 1 - VPS):**
+
 ```
 Rolling Deployment với Docker Compose:
   docker-compose up -d --no-deps api
@@ -1206,6 +1263,7 @@ Cách hoạt động:
 ```
 
 **Phase 2 (AWS ECS - 1K-10K users):**
+
 ```
 Blue-Green Deployment:
   - ECS Service với 2 target groups (Blue + Green)
@@ -1215,6 +1273,7 @@ Blue-Green Deployment:
 ```
 
 **Phase 3 (AWS EKS - 10K+ users):**
+
 ```
 Canary Deployment với Flagger:
   - Deploy v2 với 5% traffic
@@ -1229,35 +1288,30 @@ Canary Deployment với Flagger:
 
 ```typescript
 // Ví dụ: Rollout payment gateway mới
-import { FeatureFlagService } from '@/shared/services/feature-flag.service';
+import { FeatureFlagService } from '@/shared/services/feature-flag.service'
 
 @Injectable()
 export class PaymentService {
-  constructor(
-    private readonly featureFlags: FeatureFlagService,
-  ) {}
+  constructor(private readonly featureFlags: FeatureFlagService) {}
 
   async processPayment(order: Order) {
     // Check feature flag
-    const useNewGateway = await this.featureFlags.isEnabled(
-      'new-payment-gateway',
-      {
-        userId: order.userId,
-        percentage: 10,  // Chỉ 10% users
-        attributes: {
-          country: order.shippingAddress.country,
-          orderValue: order.totalAmount,
-        },
+    const useNewGateway = await this.featureFlags.isEnabled('new-payment-gateway', {
+      userId: order.userId,
+      percentage: 10, // Chỉ 10% users
+      attributes: {
+        country: order.shippingAddress.country,
+        orderValue: order.totalAmount,
       },
-    );
+    })
 
     if (useNewGateway) {
       // New implementation (deployed nhưng chỉ 10% users dùng)
-      return this.processWithNewGateway(order);
+      return this.processWithNewGateway(order)
     }
 
     // Legacy implementation (90% users vẫn dùng)
-    return this.processWithLegacyGateway(order);
+    return this.processWithLegacyGateway(order)
   }
 }
 
@@ -1266,6 +1320,7 @@ export class PaymentService {
 ```
 
 **Benefits:**
+
 - ✅ Deploy code mới mà không ảnh hưởng users
 - ✅ Rollback instant (tắt flag, không cần redeploy)
 - ✅ A/B testing (compare metrics giữa 2 implementations)
@@ -1273,11 +1328,13 @@ export class PaymentService {
 - ✅ Kill switch (tắt feature nếu có bug)
 
 **Implementation Options:**
+
 - **Simple**: Environment variable + config service
 - **Advanced**: LaunchDarkly, Unleash, Flagsmith
 - **DIY**: Redis-based feature flags
 
 **Progressive Delivery (Ring-based):**
+
 ```
 Ring 0: Internal team (50 users)        → 1-2 ngày
   - Developers, QA team
@@ -1330,6 +1387,7 @@ if (metrics.conversionRate > baseline) {
 ### 12.4. Deployment Checklist Cho Dự Án
 
 **Pre-Deployment:**
+
 - [ ] All tests pass (unit + integration)
 - [ ] Code review approved
 - [ ] Database migrations tested
@@ -1338,6 +1396,7 @@ if (metrics.conversionRate > baseline) {
 - [ ] Monitoring alerts configured
 
 **Deployment:**
+
 - [ ] Run database migrations
 - [ ] Deploy new version
 - [ ] Health check pass
@@ -1345,6 +1404,7 @@ if (metrics.conversionRate > baseline) {
 - [ ] Monitor logs for errors
 
 **Post-Deployment:**
+
 - [ ] Verify key features working
 - [ ] Check error rate (< 1%)
 - [ ] Check response time (< 200ms p95)
@@ -1352,6 +1412,7 @@ if (metrics.conversionRate > baseline) {
 - [ ] Update deployment log
 
 **Rollback Triggers:**
+
 - ❌ Health check fails
 - ❌ Error rate > 5%
 - ❌ Response time > 500ms p95
@@ -1370,14 +1431,14 @@ if (metrics.conversionRate > baseline) {
 
 ### 13.1. Cloud Services Dự Án Đang Dùng
 
-| Service | Provider | Mục đích trong dự án |
-|---------|----------|---------------------|
-| **S3** | AWS | Upload/storage hình ảnh sản phẩm, presigned URLs |
-| **PostgreSQL** | Local/Docker (có thể migrate → RDS) | Database chính |
-| **Redis** | Local/Docker (có thể migrate → ElastiCache) | Caching, BullMQ job queue |
-| **Resend** | Resend.com | Gửi email OTP |
-| **Mux** | Mux.com | Video streaming/processing |
-| **Anthropic** | Anthropic API | AI Assistant |
+| Service        | Provider                                    | Mục đích trong dự án                             |
+| -------------- | ------------------------------------------- | ------------------------------------------------ |
+| **S3**         | AWS                                         | Upload/storage hình ảnh sản phẩm, presigned URLs |
+| **PostgreSQL** | Local/Docker (có thể migrate → RDS)         | Database chính                                   |
+| **Redis**      | Local/Docker (có thể migrate → ElastiCache) | Caching, BullMQ job queue                        |
+| **Resend**     | Resend.com                                  | Gửi email OTP                                    |
+| **Mux**        | Mux.com                                     | Video streaming/processing                       |
+| **Anthropic**  | Anthropic API                               | AI Assistant                                     |
 
 ### 13.2. AWS Services Mapping Cho Dự Án
 
@@ -1413,29 +1474,30 @@ NestJS Ecommerce API — AWS Architecture:
 
 ### 13.3. So Sánh Cloud Providers
 
-| Service | AWS | GCP | Azure |
-|---------|-----|-----|-------|
-| Compute (Container) | ECS / EKS | Cloud Run / GKE | ACI / AKS |
-| Database (PostgreSQL) | RDS | Cloud SQL | Azure DB for PostgreSQL |
-| Cache (Redis) | ElastiCache | Memorystore | Azure Cache for Redis |
-| Object Storage | S3 | Cloud Storage | Blob Storage |
-| Container Registry | ECR | Artifact Registry | ACR |
-| Secret Management | Secrets Manager | Secret Manager | Key Vault |
-| Monitoring | CloudWatch | Cloud Monitoring | Azure Monitor |
-| CI/CD | CodePipeline | Cloud Build | Azure DevOps |
+| Service               | AWS             | GCP               | Azure                   |
+| --------------------- | --------------- | ----------------- | ----------------------- |
+| Compute (Container)   | ECS / EKS       | Cloud Run / GKE   | ACI / AKS               |
+| Database (PostgreSQL) | RDS             | Cloud SQL         | Azure DB for PostgreSQL |
+| Cache (Redis)         | ElastiCache     | Memorystore       | Azure Cache for Redis   |
+| Object Storage        | S3              | Cloud Storage     | Blob Storage            |
+| Container Registry    | ECR             | Artifact Registry | ACR                     |
+| Secret Management     | Secrets Manager | Secret Manager    | Key Vault               |
+| Monitoring            | CloudWatch      | Cloud Monitoring  | Azure Monitor           |
+| CI/CD                 | CodePipeline    | Cloud Build       | Azure DevOps            |
 
 ### 13.4. Managed vs Self-Hosted — Khi Nào Dùng Gì?
 
-| Tiêu chí | Managed (RDS, ElastiCache) | Self-Hosted (Docker) |
-|----------|---------------------------|---------------------|
-| Setup | Vài click/Terraform | Tự cài, tự config |
-| Maintenance | Provider lo | Tự lo patches, upgrades |
-| Backup | Tự động | Tự setup |
-| HA/Failover | Built-in | Tự config replication |
-| Cost | Cao hơn | Thấp hơn (nhưng tốn effort) |
-| Best for | Production | Development, small projects |
+| Tiêu chí    | Managed (RDS, ElastiCache) | Self-Hosted (Docker)        |
+| ----------- | -------------------------- | --------------------------- |
+| Setup       | Vài click/Terraform        | Tự cài, tự config           |
+| Maintenance | Provider lo                | Tự lo patches, upgrades     |
+| Backup      | Tự động                    | Tự setup                    |
+| HA/Failover | Built-in                   | Tự config replication       |
+| Cost        | Cao hơn                    | Thấp hơn (nhưng tốn effort) |
+| Best for    | Production                 | Development, small projects |
 
 **Recommendation cho dự án:**
+
 - **Dev**: Docker Compose (hiện tại) — đủ tốt
 - **Production**: Managed services (RDS + ElastiCache + ECS/EKS + S3)
 
@@ -1446,6 +1508,7 @@ NestJS Ecommerce API — AWS Architecture:
 ### 14.1. Kubernetes Là Gì?
 
 Container orchestration platform — quản lý hàng trăm/nghìn containers tự động:
+
 - **Scheduling**: Quyết định container chạy trên node nào
 - **Scaling**: Tự động tăng/giảm số replicas theo load
 - **Self-healing**: Container crash → tự restart
@@ -1479,16 +1542,16 @@ Container orchestration platform — quản lý hàng trăm/nghìn containers t�
 
 ### 14.3. K8s Objects Cho Dự Án
 
-| Object | Mục đích | Ví dụ trong dự án |
-|--------|---------|-------------------|
-| **Pod** | Đơn vị nhỏ nhất, chứa 1+ containers | 1 pod = 1 NestJS API instance |
-| **Deployment** | Quản lý replicas, rolling updates | 3 replicas API |
-| **Service** | Expose pods ra network, load balancing | ClusterIP cho internal, LoadBalancer cho external |
-| **ConfigMap** | Config không nhạy cảm | APP_NAME, NODE_ENV, CORS origins |
-| **Secret** | Config nhạy cảm (encrypted) | DATABASE_URL, JWT secrets, S3 keys |
-| **Ingress** | HTTP routing, SSL termination | api.example.com → API Service |
-| **HPA** | Horizontal Pod Autoscaler | Scale 3→10 pods khi CPU > 70% |
-| **PVC** | Persistent Volume Claim | Upload storage |
+| Object         | Mục đích                               | Ví dụ trong dự án                                 |
+| -------------- | -------------------------------------- | ------------------------------------------------- |
+| **Pod**        | Đơn vị nhỏ nhất, chứa 1+ containers    | 1 pod = 1 NestJS API instance                     |
+| **Deployment** | Quản lý replicas, rolling updates      | 3 replicas API                                    |
+| **Service**    | Expose pods ra network, load balancing | ClusterIP cho internal, LoadBalancer cho external |
+| **ConfigMap**  | Config không nhạy cảm                  | APP_NAME, NODE_ENV, CORS origins                  |
+| **Secret**     | Config nhạy cảm (encrypted)            | DATABASE_URL, JWT secrets, S3 keys                |
+| **Ingress**    | HTTP routing, SSL termination          | api.example.com → API Service                     |
+| **HPA**        | Horizontal Pod Autoscaler              | Scale 3→10 pods khi CPU > 70%                     |
+| **PVC**        | Persistent Volume Claim                | Upload storage                                    |
 
 ### 14.4. Deployment Manifest Cho Dự Án
 
@@ -1503,8 +1566,8 @@ spec:
   strategy:
     type: RollingUpdate
     rollingUpdate:
-      maxSurge: 1          # Thêm tối đa 1 pod mới
-      maxUnavailable: 0    # Không pod nào down
+      maxSurge: 1 # Thêm tối đa 1 pod mới
+      maxUnavailable: 0 # Không pod nào down
   selector:
     matchLabels:
       app: nestjs-api
@@ -1524,7 +1587,7 @@ spec:
                 secretKeyRef: { name: api-secrets, key: redis-url }
           resources:
             requests: { memory: '256Mi', cpu: '250m' }
-            limits:   { memory: '512Mi', cpu: '500m' }
+            limits: { memory: '512Mi', cpu: '500m' }
           livenessProbe:
             httpGet: { path: /health, port: 3000 }
             initialDelaySeconds: 30
@@ -1576,16 +1639,16 @@ spec:
 
 ### 14.7. Docker Compose vs Kubernetes
 
-| Tiêu chí | Docker Compose | Kubernetes |
-|----------|---------------|------------|
-| Use case | Dev, small projects | Production, enterprise |
-| Scaling | Manual (`replicas:`) | Auto (HPA) |
-| Self-healing | Restart policy only | Full (reschedule, replace) |
-| Rolling updates | Không | Native |
-| Load balancing | Không built-in | Service + Ingress |
-| Secret management | .env files | Encrypted Secrets |
-| Multi-node | Không | Có |
-| Learning curve | Thấp | Cao |
+| Tiêu chí          | Docker Compose       | Kubernetes                 |
+| ----------------- | -------------------- | -------------------------- |
+| Use case          | Dev, small projects  | Production, enterprise     |
+| Scaling           | Manual (`replicas:`) | Auto (HPA)                 |
+| Self-healing      | Restart policy only  | Full (reschedule, replace) |
+| Rolling updates   | Không                | Native                     |
+| Load balancing    | Không built-in       | Service + Ingress          |
+| Secret management | .env files           | Encrypted Secrets          |
+| Multi-node        | Không                | Có                         |
+| Learning curve    | Thấp                 | Cao                        |
 
 ---
 
@@ -1604,6 +1667,7 @@ IaC:
 ```
 
 **Tại sao enterprise BẮT BUỘC dùng IaC?**
+
 1. **Reproducibility**: Tạo lại toàn bộ infra từ code trong vài phút
 2. **Audit trail**: Mọi thay đổi đều có Git history
 3. **Disaster recovery**: Infra bị xóa? `terraform apply` lại
@@ -1642,6 +1706,7 @@ resource "aws_s3_bucket" "media" {
 ```
 
 **Terraform PR Automation (Atlantis):**
+
 ```
 Developer tạo PR thay đổi infra
   → Atlantis bot chạy `terraform plan`
@@ -1663,6 +1728,7 @@ GitOps Flow:
 ```
 
 **Nguyên tắc GitOps:**
+
 - **Declarative**: Mô tả desired state, không phải steps
 - **Versioned**: Mọi thay đổi qua Git (PR, review, history)
 - **Automated**: Agent tự động sync cluster với Git
@@ -1670,12 +1736,12 @@ GitOps Flow:
 
 ### 15.4. ArgoCD vs Flux
 
-| Tiêu chí | ArgoCD | Flux |
-|----------|--------|------|
-| UI | Web UI đẹp, trực quan | CLI only |
-| Learning curve | Dễ hơn (có UI) | Khó hơn |
-| Multi-cluster | Tốt | Rất tốt |
-| Best for | Teams cần visibility | Teams muốn pure GitOps |
+| Tiêu chí       | ArgoCD                | Flux                   |
+| -------------- | --------------------- | ---------------------- |
+| UI             | Web UI đẹp, trực quan | CLI only               |
+| Learning curve | Dễ hơn (có UI)        | Khó hơn                |
+| Multi-cluster  | Tốt                   | Rất tốt                |
+| Best for       | Teams cần visibility  | Teams muốn pure GitOps |
 
 **Recommendation**: ArgoCD cho hầu hết teams (UI giúp debug và onboard nhanh).
 
@@ -1696,13 +1762,13 @@ Phát hiện:
 
 ### 15.6. IaC Tools So Sánh
 
-| Tool | Ngôn ngữ | Provider | Best for |
-|------|---------|----------|----------|
-| **Terraform** | HCL | Multi-cloud | Phổ biến nhất, multi-cloud |
-| **Pulumi** | TypeScript/Python/Go | Multi-cloud | Dev-friendly (dùng ngôn ngữ quen) |
-| **CloudFormation** | YAML/JSON | AWS only | AWS-native, deep integration |
-| **CDK** | TypeScript/Python | AWS (chuyển sang CF) | AWS + type-safe |
-| **Crossplane** | YAML (K8s CRDs) | Multi-cloud | K8s-native IaC |
+| Tool               | Ngôn ngữ             | Provider             | Best for                          |
+| ------------------ | -------------------- | -------------------- | --------------------------------- |
+| **Terraform**      | HCL                  | Multi-cloud          | Phổ biến nhất, multi-cloud        |
+| **Pulumi**         | TypeScript/Python/Go | Multi-cloud          | Dev-friendly (dùng ngôn ngữ quen) |
+| **CloudFormation** | YAML/JSON            | AWS only             | AWS-native, deep integration      |
+| **CDK**            | TypeScript/Python    | AWS (chuyển sang CF) | AWS + type-safe                   |
+| **Crossplane**     | YAML (K8s CRDs)      | Multi-cloud          | K8s-native IaC                    |
 
 ---
 
@@ -1717,6 +1783,7 @@ Phát hiện:
 ### 16.1. Kiến Trúc Hiện Tại
 
 **Tech Stack:**
+
 ```
 Backend:       NestJS (Node.js 20) + TypeScript
 Database:      PostgreSQL 17 (Prisma ORM)
@@ -1728,6 +1795,7 @@ AI:            Anthropic Claude API
 ```
 
 **Deployment Stack:**
+
 ```
 Containerization:  Docker (multi-stage Dockerfile)
 Orchestration:     Docker Compose (dev + production)
@@ -1741,6 +1809,7 @@ Monitoring:        Health endpoint (/health)
 #### Giai Đoạn 1: Startup (0-1,000 users) — HIỆN TẠI ✅
 
 **Infrastructure:**
+
 ```
 VPS/Cloud VM (2 vCPU, 4GB RAM)
   ├── Docker Compose
@@ -1751,6 +1820,7 @@ VPS/Cloud VM (2 vCPU, 4GB RAM)
 ```
 
 **Deployment:**
+
 - SSH-based deployment với GitHub Actions
 - Rolling update thủ công (zero-downtime)
 - Database migrations trước khi deploy
@@ -1759,6 +1829,7 @@ VPS/Cloud VM (2 vCPU, 4GB RAM)
 **Cost:** ~$20-50/tháng (VPS + S3 + Resend + Mux)
 
 **Files đã implement:**
+
 - ✅ `Dockerfile` — Multi-stage build (4 stages)
 - ✅ `docker-compose.prod.yml` — Production config với secrets externalized
 - ✅ `.github/workflows/ci.yml` — CI/CD pipeline 6 stages
@@ -1770,6 +1841,7 @@ VPS/Cloud VM (2 vCPU, 4GB RAM)
 #### Giai Đoạn 2: Growth (1,000-10,000 users) — 10x TRAFFIC
 
 **Infrastructure:**
+
 ```
 AWS ECS (Elastic Container Service)
   ├── Application Load Balancer
@@ -1781,6 +1853,7 @@ AWS ECS (Elastic Container Service)
 ```
 
 **Changes needed:**
+
 ```diff
 + Migrate PostgreSQL → RDS (managed, auto-backup, Multi-AZ)
 + Migrate Redis → ElastiCache (managed, cluster mode)
@@ -1792,6 +1865,7 @@ AWS ECS (Elastic Container Service)
 ```
 
 **Deployment:**
+
 - Blue-Green deployment với ECS
 - Database migrations qua ECS Task (init container pattern)
 - Canary deployment cho critical features
@@ -1800,6 +1874,7 @@ AWS ECS (Elastic Container Service)
 **Cost:** ~$200-500/tháng
 
 **Files cần tạo:**
+
 - `infrastructure/terraform/ecs.tf` — ECS cluster + task definitions
 - `infrastructure/terraform/rds.tf` — RDS PostgreSQL
 - `infrastructure/terraform/elasticache.tf` — Redis cluster
@@ -1811,6 +1886,7 @@ AWS ECS (Elastic Container Service)
 #### Giai Đoạn 3: Scale (10,000-100,000 users) — 100x TRAFFIC
 
 **Infrastructure:**
+
 ```
 AWS EKS (Kubernetes)
   ├── Ingress Controller (NGINX/ALB)
@@ -1823,6 +1899,7 @@ AWS EKS (Kubernetes)
 ```
 
 **Changes needed:**
+
 ```diff
 + Migrate ECS → EKS (Kubernetes)
 + Add Horizontal Pod Autoscaler (HPA)
@@ -1835,6 +1912,7 @@ AWS EKS (Kubernetes)
 ```
 
 **Deployment:**
+
 - GitOps với ArgoCD
 - Canary deployment với Flagger
 - Progressive delivery (ring-based rollout)
@@ -1843,6 +1921,7 @@ AWS EKS (Kubernetes)
 **Cost:** ~$1,000-3,000/tháng
 
 **Files cần tạo:**
+
 - `k8s/deployment.yaml` — Kubernetes deployment manifest
 - `k8s/service.yaml` — Service + Ingress
 - `k8s/hpa.yaml` — Horizontal Pod Autoscaler
@@ -1879,24 +1958,28 @@ AWS EKS (Kubernetes)
 #### 📋 Backlog (Future Phases)
 
 **Security:**
+
 - [ ] Trivy vulnerability scanning trong CI
 - [ ] Secrets scanning với gitleaks
 - [ ] SAST với Semgrep
 - [ ] Container security hardening (read-only filesystem, drop capabilities)
 
 **Monitoring:**
+
 - [ ] Prometheus metrics endpoint
 - [ ] Grafana dashboards
 - [ ] CloudWatch alarms
 - [ ] Error tracking với Sentry
 
 **Performance:**
+
 - [ ] Database query optimization
 - [ ] Redis caching strategy
 - [ ] CDN integration
 - [ ] Image optimization
 
 **Infrastructure:**
+
 - [ ] Terraform IaC cho AWS resources
 - [ ] Kubernetes manifests
 - [ ] ArgoCD GitOps setup
@@ -2029,6 +2112,7 @@ curl http://localhost:3000/health | jq
 #### Common Issues
 
 **Issue 1: Database connection failed**
+
 ```bash
 # Check PostgreSQL container
 docker-compose ps postgres
@@ -2042,6 +2126,7 @@ docker-compose exec postgres psql -U ecom_user -d ecom_db -c "SELECT 1"
 ```
 
 **Issue 2: Redis connection failed**
+
 ```bash
 # Check Redis container
 docker-compose ps redis
@@ -2055,6 +2140,7 @@ docker-compose exec api env | grep REDIS_URL
 ```
 
 **Issue 3: Container won't start**
+
 ```bash
 # Check logs
 docker-compose logs api
@@ -2070,6 +2156,7 @@ docker-compose build --no-cache api
 ```
 
 **Issue 4: CI/CD pipeline failed**
+
 ```bash
 # View GitHub Actions logs
 gh run view <run-id> --log
@@ -2119,7 +2206,7 @@ networks:
 
 # ✅ Only expose necessary ports
 ports:
-  - '3000:3000'  # API only
+  - '3000:3000' # API only
 ```
 
 #### Resource Limits
@@ -2142,24 +2229,24 @@ deploy:
 
 #### Current Performance (Phase 1)
 
-| Metric | Target | Actual | Status |
-|--------|--------|--------|--------|
-| Docker image size | < 500MB | ~350MB | ✅ |
-| Container startup time | < 30s | ~15s | ✅ |
-| Health check response | < 3s | ~50ms | ✅ |
-| CI pipeline duration | < 10min | ~8min | ✅ |
-| API response time (p95) | < 200ms | ~120ms | ✅ |
-| Database query time (p95) | < 100ms | ~60ms | ✅ |
+| Metric                    | Target  | Actual | Status |
+| ------------------------- | ------- | ------ | ------ |
+| Docker image size         | < 500MB | ~350MB | ✅     |
+| Container startup time    | < 30s   | ~15s   | ✅     |
+| Health check response     | < 3s    | ~50ms  | ✅     |
+| CI pipeline duration      | < 10min | ~8min  | ✅     |
+| API response time (p95)   | < 200ms | ~120ms | ✅     |
+| Database query time (p95) | < 100ms | ~60ms  | ✅     |
 
 #### Scaling Targets (Phase 2)
 
-| Metric | Current | Target (10x) |
-|--------|---------|--------------|
-| Concurrent users | 100 | 1,000 |
-| Requests/second | 50 | 500 |
-| Database connections | 10 | 100 |
-| Redis memory | 256MB | 2GB |
-| API replicas | 1 | 3-5 |
+| Metric               | Current | Target (10x) |
+| -------------------- | ------- | ------------ |
+| Concurrent users     | 100     | 1,000        |
+| Requests/second      | 50      | 500          |
+| Database connections | 10      | 100          |
+| Redis memory         | 256MB   | 2GB          |
+| API replicas         | 1       | 3-5          |
 
 ---
 
@@ -2167,55 +2254,60 @@ deploy:
 
 ### 17.1. Implementation Files
 
-| Concept | Implementation | File Path |
-|---------|---------------|-----------|
-| **Multi-stage Docker build** | 4-stage Dockerfile | `Dockerfile:1-69` |
-| **Health monitoring** | NestJS health module | `src/routes/health/health.service.ts` |
-| **CI/CD pipeline** | GitHub Actions workflow | `.github/workflows/ci.yml:1-348` |
-| **Production deployment** | Docker Compose production | `docker-compose.prod.yml:1-213` |
-| **Environment config** | Environment variables | `.env.example` |
-| **Database migrations** | Prisma migrations | `prisma/migrations/` |
-| **Structured logging** | Pino logger | `src/main.ts` (Pino config) |
-| **Redis caching** | BullMQ queues | `src/shared/queues/` |
-| **S3 storage** | S3 service | `src/shared/services/s3.service.ts` |
-| **Authentication** | JWT strategy | `src/shared/guards/jwt-auth.guard.ts` |
+| Concept                      | Implementation            | File Path                             |
+| ---------------------------- | ------------------------- | ------------------------------------- |
+| **Multi-stage Docker build** | 4-stage Dockerfile        | `Dockerfile:1-69`                     |
+| **Health monitoring**        | NestJS health module      | `src/routes/health/health.service.ts` |
+| **CI/CD pipeline**           | GitHub Actions workflow   | `.github/workflows/ci.yml:1-348`      |
+| **Production deployment**    | Docker Compose production | `docker-compose.prod.yml:1-213`       |
+| **Environment config**       | Environment variables     | `.env.example`                        |
+| **Database migrations**      | Prisma migrations         | `prisma/migrations/`                  |
+| **Structured logging**       | Pino logger               | `src/main.ts` (Pino config)           |
+| **Redis caching**            | BullMQ queues             | `src/shared/queues/`                  |
+| **S3 storage**               | S3 service                | `src/shared/services/s3.service.ts`   |
+| **Authentication**           | JWT strategy              | `src/shared/guards/jwt-auth.guard.ts` |
 
 ### 17.2. Architecture Documentation
 
-| Topic | Document | Section |
-|-------|----------|---------|
-| **Clean Architecture** | ZZ_11 | Layers, dependencies |
-| **Design Patterns** | ZZ_11 | Factory, Strategy, Observer |
-| **CQRS & Events** | ZZ_20, ZZ_25 | Command/Query separation |
-| **Docker fundamentals** | ZZ_16, ZZ_75 | Images, containers, volumes |
-| **Docker Compose** | ZZ_76 | Services, networks, volumes |
-| **Docker networking** | ZZ_77 | Bridge, host, overlay |
-| **CI/CD** | ZZ_80 | Pipeline stages, best practices |
-| **This document** | ZZ_84 | Comprehensive overview |
+| Topic                   | Document     | Section                         |
+| ----------------------- | ------------ | ------------------------------- |
+| **Clean Architecture**  | ZZ_11        | Layers, dependencies            |
+| **Design Patterns**     | ZZ_11        | Factory, Strategy, Observer     |
+| **CQRS & Events**       | ZZ_20, ZZ_25 | Command/Query separation        |
+| **Docker fundamentals** | ZZ_16, ZZ_75 | Images, containers, volumes     |
+| **Docker Compose**      | ZZ_76        | Services, networks, volumes     |
+| **Docker networking**   | ZZ_77        | Bridge, host, overlay           |
+| **CI/CD**               | ZZ_80        | Pipeline stages, best practices |
+| **This document**       | ZZ_84        | Comprehensive overview          |
 
 ### 17.3. External Resources
 
 **Docker:**
+
 - [Docker Best Practices](https://docs.docker.com/develop/dev-best-practices/)
 - [Multi-stage builds](https://docs.docker.com/build/building/multi-stage/)
 - [Docker Compose](https://docs.docker.com/compose/)
 
 **Kubernetes:**
+
 - [Kubernetes Documentation](https://kubernetes.io/docs/)
 - [K8s Best Practices](https://kubernetes.io/docs/concepts/configuration/overview/)
 - [Helm Charts](https://helm.sh/docs/)
 
 **CI/CD:**
+
 - [GitHub Actions](https://docs.github.com/en/actions)
 - [GitOps with ArgoCD](https://argo-cd.readthedocs.io/)
 - [Terraform](https://www.terraform.io/docs)
 
 **NestJS:**
+
 - [NestJS Documentation](https://docs.nestjs.com/)
 - [NestJS Health Checks](https://docs.nestjs.com/recipes/terminus)
 - [NestJS Docker](https://docs.nestjs.com/recipes/docker)
 
 **Cloud Providers:**
+
 - [AWS ECS](https://docs.aws.amazon.com/ecs/)
 - [AWS EKS](https://docs.aws.amazon.com/eks/)
 - [AWS RDS](https://docs.aws.amazon.com/rds/)
@@ -2270,12 +2362,14 @@ Dự án **NestJS Ecommerce API** đã implement thành công **Phase 1-4** củ
 ✅ **Security**: Secrets externalized, non-root user, resource limits
 
 **Next Steps:**
+
 1. Complete documentation (DEPLOYMENT.md, MIGRATIONS.md, ROLLBACK.md)
 2. Add security scanning (Trivy, gitleaks, Semgrep)
 3. Implement Prometheus metrics endpoint
 4. Plan migration to AWS ECS (Phase 2)
 
 **Roadmap:**
+
 - **0-1K users**: VPS + Docker Compose (hiện tại) ✅
 - **1K-10K users**: AWS ECS + RDS + ElastiCache (Phase 2)
 - **10K-100K users**: AWS EKS + Kubernetes + GitOps (Phase 3)
