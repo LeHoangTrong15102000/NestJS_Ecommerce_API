@@ -5,6 +5,7 @@
 > **Dự án**: NestJS Ecommerce API | **Ngày tạo**: 2026-03-29
 >
 > **Tham khảo chéo**:
+>
 > - `ZZ_84_1` — SOLID ở class-level
 > - `ZZ_84_2` — SOLID ở module-level
 > - `ZZ_87` — Design Patterns Analysis
@@ -75,18 +76,18 @@ Guards / Interceptors / Pipes → Chain of Responsibility → SRP, OCP
 
 ## 2. Ma Trận: Pattern × SOLID — Ai Phục Vụ Ai?
 
-| Design Pattern | S | O | L | I | D | Nguyên tắc CHÍNH |
-|----------------|---|---|---|---|---|-------------------|
-| **Strategy** | | ★ | ★ | | ★ | OCP — thêm strategy mới không sửa context |
-| **Repository** | ★ | | | | ★ | SRP — tách data access khỏi business |
-| **Decorator (NestJS)** | ★ | ★ | | | | OCP — thêm behavior không sửa class |
-| **Chain of Responsibility** | ★ | ★ | | ★ | | SRP — mỗi handler 1 việc |
-| **Factory** | | ★ | | | ★ | DIP — tạo object qua abstraction |
-| **Observer** | ★ | ★ | | | | OCP — thêm listener không sửa emitter |
-| **DI Container** | ★ | ★ | | | ★ | DIP — core engine |
-| **Module** | ★ | ★ | ★ | ★ | ★ | Toàn bộ SOLID ở module-level |
-| **Facade** | | | | ★ | | ISP — interface đơn giản cho hệ thống phức tạp |
-| **Producer-Consumer** | ★ | ★ | | | | SRP — tách tạo job và xử lý job |
+| Design Pattern              | S   | O   | L   | I   | D   | Nguyên tắc CHÍNH                               |
+| --------------------------- | --- | --- | --- | --- | --- | ---------------------------------------------- |
+| **Strategy**                |     | ★   | ★   |     | ★   | OCP — thêm strategy mới không sửa context      |
+| **Repository**              | ★   |     |     |     | ★   | SRP — tách data access khỏi business           |
+| **Decorator (NestJS)**      | ★   | ★   |     |     |     | OCP — thêm behavior không sửa class            |
+| **Chain of Responsibility** | ★   | ★   |     | ★   |     | SRP — mỗi handler 1 việc                       |
+| **Factory**                 |     | ★   |     |     | ★   | DIP — tạo object qua abstraction               |
+| **Observer**                | ★   | ★   |     |     |     | OCP — thêm listener không sửa emitter          |
+| **DI Container**            | ★   | ★   |     |     | ★   | DIP — core engine                              |
+| **Module**                  | ★   | ★   | ★   | ★   | ★   | Toàn bộ SOLID ở module-level                   |
+| **Facade**                  |     |     |     | ★   |     | ISP — interface đơn giản cho hệ thống phức tạp |
+| **Producer-Consumer**       | ★   | ★   |     |     |     | SRP — tách tạo job và xử lý job                |
 
 ★ = nguyên tắc mà pattern **trực tiếp phục vụ**
 
@@ -126,21 +127,19 @@ export class AuthenticationGuard implements CanActivate {
   private readonly authTypeGuardMap: Record<string, CanActivate>
 
   constructor(
-    private readonly accessTokenGuard: AccessTokenGuard,       // Strategy 1
-    private readonly paymentAPIKeyGuard: PaymentAPIKeyGuard,   // Strategy 2
+    private readonly accessTokenGuard: AccessTokenGuard, // Strategy 1
+    private readonly paymentAPIKeyGuard: PaymentAPIKeyGuard, // Strategy 2
   ) {
     this.authTypeGuardMap = {
-      [AuthType.Bearer]: this.accessTokenGuard,      // ← DIP: inject abstraction
+      [AuthType.Bearer]: this.accessTokenGuard, // ← DIP: inject abstraction
       [AuthType.PaymentAPIKey]: this.paymentAPIKeyGuard,
-      [AuthType.None]: { canActivate: () => true },  // ← LSP: cùng interface
+      [AuthType.None]: { canActivate: () => true }, // ← LSP: cùng interface
     }
   }
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     // Context KHÔNG CẦN BIẾT strategy nào chạy
-    const guards = authTypeValue.authTypes.map(
-      (authType) => this.authTypeGuardMap[authType]
-    )
+    const guards = authTypeValue.authTypes.map((authType) => this.authTypeGuardMap[authType])
     // Chạy guard(s) theo condition (And/Or)
   }
 }
@@ -468,6 +467,7 @@ export class AuthModule {}
 ```
 
 NestJS **tự động**:
+
 1. Scan constructor parameters của `AuthService`
 2. Tìm provider matching cho `HashingService`, `AuthRepository`, `TokenService`...
 3. Tạo instance theo đúng thứ tự dependency
@@ -525,11 +525,11 @@ File: src/websockets/chat.module.ts
 @Module({
   imports: [ConversationModule],
   providers: [
-    ChatRedisService,          // Shared state (Subject)
-    ChatConnectionHandler,     // Observer 1: connection events
-    ChatMessageHandler,        // Observer 2: message events
-    ChatTypingHandler,         // Observer 3: typing events
-    ChatInteractionHandler,    // Observer 4: reaction events
+    ChatRedisService, // Shared state (Subject)
+    ChatConnectionHandler, // Observer 1: connection events
+    ChatMessageHandler, // Observer 2: message events
+    ChatTypingHandler, // Observer 3: typing events
+    ChatInteractionHandler, // Observer 4: reaction events
   ],
 })
 export class ChatModule {}
@@ -633,9 +633,9 @@ DIP: DI là MECHANISM thực thi DIP
 ```typescript
 // Một @Module() duy nhất thể hiện TẤT CẢ 5 nguyên tắc SOLID
 @Module({
-  imports: [VoucherModule],                                    // DIP: phụ thuộc abstraction
-  providers: [OrderService, OrderRepo, OrderProducer],         // SRP: mỗi provider 1 việc
-  controllers: [OrderController],                              // ISP: chỉ expose cần thiết
+  imports: [VoucherModule], // DIP: phụ thuộc abstraction
+  providers: [OrderService, OrderRepo, OrderProducer], // SRP: mỗi provider 1 việc
+  controllers: [OrderController], // ISP: chỉ expose cần thiết
   // exports: []  ← Không export = OCP (module khác không phụ thuộc internal)
 })
 export class OrderModule {}
@@ -655,8 +655,8 @@ Controller trong NestJS đóng vai trò **Facade** — giao diện đơn giản 
 @Controller('auth')
 export class AuthController {
   constructor(
-    private readonly authService: AuthService,       // Phía sau: 7 services
-    private readonly googleService: GoogleService,   // Phía sau: OAuth2 flow
+    private readonly authService: AuthService, // Phía sau: 7 services
+    private readonly googleService: GoogleService, // Phía sau: OAuth2 flow
   ) {}
 
   // Client chỉ thấy API đơn giản
@@ -700,14 +700,12 @@ File: src/routes/payment/payment.module.ts
 
 ```typescript
 @Module({
-  imports: [
-    BullModule.registerQueue({ name: PAYMENT_QUEUE_NAME }),
-  ],
+  imports: [BullModule.registerQueue({ name: PAYMENT_QUEUE_NAME })],
   providers: [
-    PaymentService,     // Business logic
-    PaymentRepo,        // Database
-    PaymentProducer,    // ← Producer: tạo job
-    PaymentGateway,     // WebSocket
+    PaymentService, // Business logic
+    PaymentRepo, // Database
+    PaymentProducer, // ← Producer: tạo job
+    PaymentGateway, // WebSocket
   ],
 })
 export class PaymentModule {}
@@ -719,8 +717,8 @@ File: src/app.module.ts:230-231
 
 ```typescript
 providers: [
-  PaymentConsumer,   // ← Consumer: xử lý job (ở AppModule level)
-  WishlistConsumer,  // ← Consumer khác
+  PaymentConsumer, // ← Consumer: xử lý job (ở AppModule level)
+  WishlistConsumer, // ← Consumer khác
 ]
 ```
 
@@ -810,16 +808,16 @@ OCP ✅  Thêm job type mới?
 
 NestJS đặc biệt vì framework **buộc** bạn dùng Design Patterns:
 
-| NestJS Feature | Design Pattern | SOLID được tuân thủ |
-|---------------|---------------|---------------------|
-| `@Module()` | Module Pattern | S, O, L, I, D (toàn bộ) |
-| `constructor(private service)` | DI Container | D, S, O |
-| `@Injectable()` + providers | Factory | D, O |
-| Guards / Pipes / Interceptors / Filters | Chain of Responsibility | S, O, I |
-| `@Decorator()` trên methods | Decorator Pattern | O, S |
-| Guard map trong AuthenticationGuard | Strategy Pattern | O, D, L |
-| WebSocket handlers | Observer / Command | S, O |
-| BullMQ Producer/Consumer | Producer-Consumer | S, O |
+| NestJS Feature                          | Design Pattern          | SOLID được tuân thủ     |
+| --------------------------------------- | ----------------------- | ----------------------- |
+| `@Module()`                             | Module Pattern          | S, O, L, I, D (toàn bộ) |
+| `constructor(private service)`          | DI Container            | D, S, O                 |
+| `@Injectable()` + providers             | Factory                 | D, O                    |
+| Guards / Pipes / Interceptors / Filters | Chain of Responsibility | S, O, I                 |
+| `@Decorator()` trên methods             | Decorator Pattern       | O, S                    |
+| Guard map trong AuthenticationGuard     | Strategy Pattern        | O, D, L                 |
+| WebSocket handlers                      | Observer / Command      | S, O                    |
+| BullMQ Producer/Consumer                | Producer-Consumer       | S, O                    |
 
 ### Thứ Tự Tư Duy Đúng
 
@@ -843,6 +841,7 @@ CẢ HAI → đi đúng hướng VÀ đi nhanh
 ---
 
 > **Tài liệu tham khảo chéo:**
+>
 > - SOLID ở class-level: `ZZ_84_1` — Mục 1
 > - SOLID ở module-level: `ZZ_84_2` — Toàn bộ
 > - Design Patterns chi tiết: `ZZ_87_DESIGN_PATTERNS_ANALYSIS.md`
