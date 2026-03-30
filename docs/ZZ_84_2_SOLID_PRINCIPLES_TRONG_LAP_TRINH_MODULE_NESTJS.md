@@ -47,6 +47,7 @@ SOLID được Robert C. Martin (Uncle Bob) đề xuất ban đầu cho **Object
 ```
 
 Trong NestJS, **Module** (`@Module()`) là đơn vị tổ chức cốt lõi. Mỗi module quyết định:
+
 - **Providers** nào nó tạo ra (services, repos, guards…)
 - **Exports** nào nó chia sẻ ra ngoài
 - **Imports** nào nó phụ thuộc vào
@@ -56,24 +57,24 @@ Trong NestJS, **Module** (`@Module()`) là đơn vị tổ chức cốt lõi. M�
 
 ### OOP vs Module — Sự Khác Biệt Cốt Lõi
 
-| Khía cạnh | OOP (Class) | Module |
-|-----------|-------------|--------|
-| Đơn vị | Class, Interface | `@Module()` decorator |
-| Kế thừa | `extends`, `implements` | `imports` (module dependency) |
-| Đóng gói | `private`, `protected`, `public` | `providers` (private) vs `exports` (public) |
-| Đa hình | Method override, interface implementation | Module swap (thay thế module implementation) |
-| Composition | Dependency Injection trong class | Module `imports` + `exports` chain |
+| Khía cạnh   | OOP (Class)                               | Module                                       |
+| ----------- | ----------------------------------------- | -------------------------------------------- |
+| Đơn vị      | Class, Interface                          | `@Module()` decorator                        |
+| Kế thừa     | `extends`, `implements`                   | `imports` (module dependency)                |
+| Đóng gói    | `private`, `protected`, `public`          | `providers` (private) vs `exports` (public)  |
+| Đa hình     | Method override, interface implementation | Module swap (thay thế module implementation) |
+| Composition | Dependency Injection trong class          | Module `imports` + `exports` chain           |
 
 ---
 
 ## 2. SOLID Ở Class-Level vs Module-Level — Bảng So Sánh
 
-| Nguyên tắc | Class-Level (OOP truyền thống) | Module-Level (NestJS) |
-|------------|-------------------------------|----------------------|
-| **S** — SRP | Mỗi **class** có 1 lý do thay đổi | Mỗi **module** đại diện cho 1 domain/feature |
-| **O** — OCP | **Class** mở rộng qua inheritance/composition | **Module** mở rộng bằng cách thêm module mới, không sửa module cũ |
-| **L** — LSP | **Subclass** thay thế parent class | **Module** có thể swap mà không phá vỡ module consumer |
-| **I** — ISP | **Interface** nhỏ, chuyên biệt | Module chỉ **export** những gì consumer thực sự cần |
+| Nguyên tắc  | Class-Level (OOP truyền thống)                      | Module-Level (NestJS)                                                                            |
+| ----------- | --------------------------------------------------- | ------------------------------------------------------------------------------------------------ |
+| **S** — SRP | Mỗi **class** có 1 lý do thay đổi                   | Mỗi **module** đại diện cho 1 domain/feature                                                     |
+| **O** — OCP | **Class** mở rộng qua inheritance/composition       | **Module** mở rộng bằng cách thêm module mới, không sửa module cũ                                |
+| **L** — LSP | **Subclass** thay thế parent class                  | **Module** có thể swap mà không phá vỡ module consumer                                           |
+| **I** — ISP | **Interface** nhỏ, chuyên biệt                      | Module chỉ **export** những gì consumer thực sự cần                                              |
 | **D** — DIP | Class phụ thuộc vào **abstraction**, không concrete | Module phụ thuộc vào **module interface** (exports), không phụ thuộc vào internal implementation |
 
 ---
@@ -145,6 +146,7 @@ export class AuthModule {}
 ```
 
 **Tại sao đây là SRP module-level?**
+
 - `CartModule` chỉ thay đổi khi logic giỏ hàng thay đổi
 - `AuthModule` chỉ thay đổi khi logic đăng nhập/đăng ký thay đổi
 - Thêm tính năng wishlist? → Tạo `WishlistModule` mới, **không sửa** CartModule hay ProductModule
@@ -156,22 +158,33 @@ export class AuthModule {}
 @Module({
   providers: [
     // Authentication
-    AuthService, AuthRepository, GoogleService,
+    AuthService,
+    AuthRepository,
+    GoogleService,
     // Products
-    ProductService, ProductRepo,
+    ProductService,
+    ProductRepo,
     // Cart
-    CartService, CartRepo,
+    CartService,
+    CartRepo,
     // Orders
-    OrderService, OrderRepo,
+    OrderService,
+    OrderRepo,
     // Payments
-    PaymentService, PaymentRepo,
+    PaymentService,
+    PaymentRepo,
     // Reviews
-    ReviewService, ReviewRepo,
+    ReviewService,
+    ReviewRepo,
     // ... 20 services khác
   ],
   controllers: [
-    AuthController, ProductController, CartController,
-    OrderController, PaymentController, ReviewController,
+    AuthController,
+    ProductController,
+    CartController,
+    OrderController,
+    PaymentController,
+    ReviewController,
     // ... 10 controllers khác
   ],
 })
@@ -190,17 +203,19 @@ export class EverythingModule {}
 @Global()
 @Module({
   providers: [
-    PrismaService,         // Database access
-    HashingService,        // Password hashing
-    TokenService,          // JWT management
-    EmailService,          // Email sending
-    S3Service,             // File storage
-    TwoFactorService,      // 2FA
-    SharedUserRepository,  // Cross-module user queries
-    SharedRoleRepository,  // Cross-module role queries
+    PrismaService, // Database access
+    HashingService, // Password hashing
+    TokenService, // JWT management
+    EmailService, // Email sending
+    S3Service, // File storage
+    TwoFactorService, // 2FA
+    SharedUserRepository, // Cross-module user queries
+    SharedRoleRepository, // Cross-module role queries
     // ...guards
   ],
-  exports: [/* tất cả shared services */],
+  exports: [
+    /* tất cả shared services */
+  ],
 })
 export class SharedModule {}
 ```
@@ -247,10 +262,10 @@ Khi dự án cần thêm tính năng mới (Wishlist, AI Assistant, Voucher), c�
     PaymentModule,
 
     // ─── Modules MỚI (CHỈ CẦN THÊM VÀO ĐÂY) ───
-    VoucherModule,        // ✅ Thêm voucher — không sửa OrderModule
-    WishlistModule,       // ✅ Thêm wishlist — không sửa ProductModule
-    AIAssistantModule,    // ✅ Thêm AI — không sửa module nào khác
-    ReviewModule,         // ✅ Thêm reviews — không sửa ProductModule
+    VoucherModule, // ✅ Thêm voucher — không sửa OrderModule
+    WishlistModule, // ✅ Thêm wishlist — không sửa ProductModule
+    AIAssistantModule, // ✅ Thêm AI — không sửa module nào khác
+    ReviewModule, // ✅ Thêm reviews — không sửa ProductModule
   ],
 })
 export class AppModule {}
@@ -313,16 +328,23 @@ Muốn thêm auth strategy mới (ví dụ: OAuth2, API Key v2)?
 
 // Bước 1: Tạo guard mới
 @Injectable()
-export class OAuth2Guard implements CanActivate { /* ... */ }
+export class OAuth2Guard implements CanActivate {
+  /* ... */
+}
 
 // Bước 2: Thêm vào enum
-enum AuthType { Bearer, PaymentAPIKey, None, OAuth2 }  // ← thêm OAuth2
+enum AuthType {
+  Bearer,
+  PaymentAPIKey,
+  None,
+  OAuth2,
+} // ← thêm OAuth2
 
 // Bước 3: Đăng ký vào map
 this.authTypeGuardMap = {
   [AuthType.Bearer]: this.accessTokenGuard,
   [AuthType.PaymentAPIKey]: this.paymentAPIKeyGuard,
-  [AuthType.OAuth2]: this.oauth2Guard,        // ← chỉ thêm dòng này
+  [AuthType.OAuth2]: this.oauth2Guard, // ← chỉ thêm dòng này
   [AuthType.None]: { canActivate: () => true },
 }
 ```
@@ -336,9 +358,9 @@ this.authTypeGuardMap = {
     ProductService,
     ProductRepo,
     // Mỗi lần thêm feature mới, phải nhét vào đây
-    WishlistService,     // ← Sửa ProductModule để thêm wishlist
-    ReviewService,       // ← Sửa ProductModule để thêm review
-    ComparisonService,   // ← Sửa ProductModule để thêm comparison
+    WishlistService, // ← Sửa ProductModule để thêm wishlist
+    ReviewService, // ← Sửa ProductModule để thêm review
+    ComparisonService, // ← Sửa ProductModule để thêm comparison
   ],
 })
 export class ProductModule {}
@@ -365,9 +387,7 @@ Giả sử dự án muốn chuyển từ `EmailService` (gửi email qua SMTP) s
 // === TRƯỚC: SharedModule dùng SMTP ===
 @Global()
 @Module({
-  providers: [
-    { provide: EmailService, useClass: SmtpEmailService },
-  ],
+  providers: [{ provide: EmailService, useClass: SmtpEmailService }],
   exports: [EmailService],
 })
 export class SharedModule {}
@@ -375,9 +395,7 @@ export class SharedModule {}
 // === SAU: SharedModule dùng SendGrid ===
 @Global()
 @Module({
-  providers: [
-    { provide: EmailService, useClass: SendGridEmailService },
-  ],
+  providers: [{ provide: EmailService, useClass: SendGridEmailService }],
   exports: [EmailService],
 })
 export class SharedModule {}
@@ -391,6 +409,7 @@ export class AuthService {
 ```
 
 **Tại sao đây là LSP?** Vì `SendGridEmailService` thay thế `SmtpEmailService`:
+
 - Cùng public interface (`send()`, `sendBulk()`, v.v.)
 - Cùng input/output contract (nhận `to, subject, body` → trả `Promise<void>`)
 - Consumer (`AuthService`) **không biết** và **không cần biết** backend thay đổi
@@ -454,14 +473,14 @@ Checklist:
 @Module({
   controllers: [VoucherController],
   providers: [VoucherService, VoucherRepository],
-  exports: [VoucherService, VoucherRepository],  // ← Chỉ export service + repo
+  exports: [VoucherService, VoucherRepository], // ← Chỉ export service + repo
   // KHÔNG export VoucherController (consumer không cần controller của module khác)
 })
 export class VoucherModule {}
 
 // OrderModule import VoucherModule, chỉ dùng VoucherService
 @Module({
-  imports: [VoucherModule],  // ← Chỉ thấy VoucherService + VoucherRepository
+  imports: [VoucherModule], // ← Chỉ thấy VoucherService + VoucherRepository
   providers: [OrderService, OrderRepo, OrderProducer],
   controllers: [OrderController],
 })
@@ -520,7 +539,7 @@ export class ProductModule {}
 // ✅ TUÂN THỦ ISP — Tách thành sub-modules
 @Module({
   providers: [ProductService, ProductRepo],
-  exports: [ProductService],  // ← Chỉ export cái cần thiết
+  exports: [ProductService], // ← Chỉ export cái cần thiết
 })
 export class ProductCoreModule {}
 
@@ -609,13 +628,15 @@ Ví dụ:
 @Global()
 @Module({
   providers: [
-    PrismaService,       // Abstraction cho database
-    HashingService,      // Abstraction cho hashing
-    TokenService,        // Abstraction cho JWT
-    EmailService,        // Abstraction cho email
-    S3Service,           // Abstraction cho file storage
+    PrismaService, // Abstraction cho database
+    HashingService, // Abstraction cho hashing
+    TokenService, // Abstraction cho JWT
+    EmailService, // Abstraction cho email
+    S3Service, // Abstraction cho file storage
   ],
-  exports: [/* tất cả */],
+  exports: [
+    /* tất cả */
+  ],
 })
 export class SharedModule {}
 
@@ -653,10 +674,10 @@ import { PrismaClient } from '@prisma/client'
 
 @Injectable()
 export class AuthService {
-  private prisma = new PrismaClient()  // ← Hardcode Prisma
+  private prisma = new PrismaClient() // ← Hardcode Prisma
 
   async register(dto: RegisterDto) {
-    const hash = await bcrypt.hash(dto.password, 10)  // ← Hardcode bcrypt
+    const hash = await bcrypt.hash(dto.password, 10) // ← Hardcode bcrypt
     return this.prisma.user.create({ data: { ...dto, password: hash } })
   }
 }
@@ -670,8 +691,8 @@ export class AuthService {
 @Injectable()
 export class AuthService {
   constructor(
-    private readonly hashingService: HashingService,  // ← Abstraction
-    private readonly authRepo: AuthRepository,        // ← Abstraction
+    private readonly hashingService: HashingService, // ← Abstraction
+    private readonly authRepo: AuthRepository, // ← Abstraction
   ) {}
 
   async register(dto: RegisterDto) {
@@ -747,13 +768,13 @@ D: Feature modules → SharedModule (abstraction) → Infrastructure (concrete)
 
 ## 9. SOLID Module Cheat Sheet
 
-| Nguyên tắc | Câu hỏi kiểm tra | ✅ Đúng | ❌ Sai |
-|------------|------------------|---------|-------|
-| **S** — SRP | "Module này thay đổi khi nào?" | "Khi logic cart thay đổi" (1 lý do) | "Khi cart, product, HOẶC order thay đổi" (3 lý do) |
-| **O** — OCP | "Thêm feature mới, sửa module cũ không?" | Tạo module mới, import vào AppModule | Nhét service mới vào module cũ |
-| **L** — LSP | "Swap module có hỏng consumer không?" | Swap SmtpEmail → SendGridEmail: consumer không biết | Swap VoucherModule → VoucherV2Module: throw lỗi mới |
-| **I** — ISP | "Module export thừa không?" | Export 2 services mà consumer thật sự dùng | Export 10 services, consumer chỉ dùng 1 |
-| **D** — DIP | "Business module biết infrastructure không?" | AuthService inject HashingService (abstraction) | AuthService import bcrypt trực tiếp (concrete) |
+| Nguyên tắc  | Câu hỏi kiểm tra                             | ✅ Đúng                                             | ❌ Sai                                              |
+| ----------- | -------------------------------------------- | --------------------------------------------------- | --------------------------------------------------- |
+| **S** — SRP | "Module này thay đổi khi nào?"               | "Khi logic cart thay đổi" (1 lý do)                 | "Khi cart, product, HOẶC order thay đổi" (3 lý do)  |
+| **O** — OCP | "Thêm feature mới, sửa module cũ không?"     | Tạo module mới, import vào AppModule                | Nhét service mới vào module cũ                      |
+| **L** — LSP | "Swap module có hỏng consumer không?"        | Swap SmtpEmail → SendGridEmail: consumer không biết | Swap VoucherModule → VoucherV2Module: throw lỗi mới |
+| **I** — ISP | "Module export thừa không?"                  | Export 2 services mà consumer thật sự dùng          | Export 10 services, consumer chỉ dùng 1             |
+| **D** — DIP | "Business module biết infrastructure không?" | AuthService inject HashingService (abstraction)     | AuthService import bcrypt trực tiếp (concrete)      |
 
 ---
 
@@ -816,35 +837,36 @@ Fix: Abstract thành base module/service, hoặc dùng module composition
 │                                                                     │
 │  OOP (Class-level):                                                 │
 │  "Thiết kế CLASS tốt để code dễ maintain"                           │
-│  → Mỗi class 1 việc, kế thừa đúng cách, interface nhỏ,            │
+│  → Mỗi class 1 việc, kế thừa đúng cách, interface nhỏ,              │
 │    inject abstraction                                               │
 │                                                                     │
 │  Module-level:                                                      │
-│  "Thiết kế MODULE tốt để KIẾN TRÚC dễ maintain"                    │
-│  → Mỗi module 1 domain, thêm module không sửa module cũ,           │
+│  "Thiết kế MODULE tốt để KIẾN TRÚC dễ maintain"                     │
+│  → Mỗi module 1 domain, thêm module không sửa module cũ,            │
 │    swap module không hỏng consumer, export tối thiểu,               │
 │    business không biết infrastructure                               │
 │                                                                     │
-│  Cùng 5 nguyên tắc, khác CẤP ĐỘ ÁP DỤNG.                         │
+│  Cùng 5 nguyên tắc, khác CẤP ĐỘ ÁP DỤNG.                            │
 │  Class-level sai → 1 file khó maintain.                             │
-│  Module-level sai → CẢ HỆ THỐNG khó maintain.                      │
+│  Module-level sai → CẢ HỆ THỐNG khó maintain.                       │
 │                                                                     │
 └─────────────────────────────────────────────────────────────────────┘
 ```
 
 ### Trong Dự Án NestJS Ecommerce API
 
-| Nguyên tắc | Áp dụng thực tế |
-|------------|-----------------|
-| **SRP** | 19 feature modules, mỗi module 1 domain. SharedModule riêng cho infrastructure. |
-| **OCP** | Thêm feature (Wishlist, AI, Voucher) = thêm module mới, modules cũ không sửa. |
-| **LSP** | SharedModule có thể swap PrismaService, EmailService mà business modules không biết. |
-| **ISP** | VoucherModule exports 2 (Service + Repo). CartModule exports 2. Không "export hết". |
-| **DIP** | Business modules inject shared services (abstraction). Không import bcrypt, prisma trực tiếp. |
+| Nguyên tắc | Áp dụng thực tế                                                                               |
+| ---------- | --------------------------------------------------------------------------------------------- |
+| **SRP**    | 19 feature modules, mỗi module 1 domain. SharedModule riêng cho infrastructure.               |
+| **OCP**    | Thêm feature (Wishlist, AI, Voucher) = thêm module mới, modules cũ không sửa.                 |
+| **LSP**    | SharedModule có thể swap PrismaService, EmailService mà business modules không biết.          |
+| **ISP**    | VoucherModule exports 2 (Service + Repo). CartModule exports 2. Không "export hết".           |
+| **DIP**    | Business modules inject shared services (abstraction). Không import bcrypt, prisma trực tiếp. |
 
 ---
 
 > **Tài liệu tham khảo chéo:**
+>
 > - SOLID ở class-level: `ZZ_84_1` — Mục 1 (SOLID Principles Chuyên Sâu)
 > - Clean Architecture: `ZZ_11_CLEAN_ARCHITECTURE_TRONG_NESTJS.md`
 > - Design Patterns: `ZZ_87_DESIGN_PATTERNS_ANALYSIS.md`
