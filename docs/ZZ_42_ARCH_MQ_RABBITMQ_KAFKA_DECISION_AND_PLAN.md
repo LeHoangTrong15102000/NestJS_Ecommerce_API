@@ -183,7 +183,96 @@ export class EventBusService {
 
 ---
 
-## 10) Kết luận
+## 10) BullMQ (Redis-based) vs RabbitMQ — Khi nào dùng cái nào?
+
+Dự án đã có Redis. BullMQ là một lựa chọn hợp lý cho job nền nhỏ mà **không cần thêm hạ tầng mới**. Tuy nhiên, khi nghiệp vụ phức tạp hơn, RabbitMQ là bước tiếp theo tự nhiên. Phần này giúp quyết định rõ: dùng BullMQ hay RabbitMQ cho từng loại bài toán, và khi nào nên migrate.
+
+### So sánh trực tiếp
+
+| Tiêu chí | BullMQ (Redis) | RabbitMQ (AMQP) |
+|---|---|---|
+| **Hạ tầng** | Dùng Redis đã có — không cần thêm service | Cần thêm RabbitMQ service riêng |
+| **Độ phức tạp vận hành** | Thấp — Redis đã quen | Trung bình — cần cấu hình exchange/queue/DLX |
+| **Throughput** | Tốt cho job nhỏ–trung bình (~10k jobs/s) | Tốt cho message routing phức tạp (~50k msg/s) |
+| **Routing** | Không có — queue đơn giản | Linh hoạt: direct, topic, fanout, headers |
+| **Retry tự động** | Có (built-in, configurable) | Có (TTL + DLX) |
+| **Dead Letter Queue** | Có (failed jobs) | Có (DLX → DLQ) |
+| **Persistence** | Redis AOF/RDB — có thể mất nếu Redis crash | Durable queue — persist trên disk |
+| **Multi-consumer** | Có (worker concurrency) | Có (competing consumers + fanout) |
+| **Fanout / pub-sub** | Không hỗ trợ tốt | Hỗ trợ tốt (fanout exchange) |
+| **Cross-service messaging** | Khó — cùng Redis instance | Dễ — nhiều service kết nối độc lập |
+| **UI quản lý** | Bull Board (cần cài thêm) | RabbitMQ Management UI (built-in) |
+| **NestJS integration** | `@nestjs/bull` / `@nestjs/bullmq` | `@nestjs/microservices` Transport.RMQ |
+| **Phù hợp với Outbox pattern** | Không lý tưởng (Redis không transactional với Postgres) | Lý tưởng (Outbox ghi Postgres → worker publish RabbitMQ) |
+
+### Khi nào dùng BullMQ
+
+BullMQ phù hợp khi:
+
+- Job nền **nội bộ trong một service** (không cần cross-service): resize ảnh, gửi email đơn lẻ, export CSV.
+- Cần **delay job** hoặc **cron job** đơn giản (BullMQ hỗ trợ tốt hơn RabbitMQ).
+- **Chưa muốn thêm hạ tầng** — Redis đã có, chỉ cần `npm install @nestjs/bullmq`.
+- Job có thể **mất được** nếu Redis restart (ví dụ: refresh cache, pre-warm data).
+- Cần **rate limiting** tích hợp sẵn (BullMQ có limiter built-in).
+
+```ts
+// Ví dụ BullMQ — gửi email sau khi user đăng ký
+@Processor('email')
+export class EmailProcessor {
+  @Process('welcome')
+  async sendWelcome(job: Job<{ userId: string }>) {
+    await this.emailService.sendWelcome(job.data.userId)
+  }
+}
+```
+
+### Khi nào dùng RabbitMQ
+
+RabbitMQ phù hợp khi:
+
+- Event cần **đảm bảo giao hàng tuyệt đối** — `payment.succeeded`, `order.created`, `sku.stock_reserved`.
+- Cần **Outbox pattern** với Postgres (transactional consistency).
+- **Nhiều service khác nhau** cần nhận cùng một event (fanout).
+- Cần **routing phức tạp**: chỉ gửi event `order.cancelled` đến Inventory và Notification, không gửi đến Analytics.
+- Hệ thống **multi-service thực sự** — các service chạy trên container/pod riêng biệt.
+- Cần **DLQ + alert** khi message xử lý thất bại liên tục.
+
+### Khi nào nên migrate từ BullMQ sang RabbitMQ
+
+Migrate khi gặp **một trong các dấu hiệu** sau:
+
+| Dấu hiệu | Lý do migrate |
+|---|---|
+| Job nền bắt đầu liên quan đến nhiều service | BullMQ không phù hợp cho cross-service messaging |
+| Cần Outbox pattern (Postgres + MQ trong cùng transaction) | Redis không tham gia Postgres transaction |
+| Cần fanout — một event → nhiều consumer khác nhau | BullMQ không có fanout exchange |
+| Redis bị quá tải vì vừa cache vừa queue | Tách Redis (cache) và RabbitMQ (messaging) |
+| Cần audit trail / replay message | RabbitMQ với shovel plugin hoặc chuyển sang Kafka |
+| Team cần visibility tốt hơn vào queue state | RabbitMQ Management UI tốt hơn Bull Board |
+
+### Chiến lược cho dự án này
+
+```
+Hiện tại (Phase 0):
+  BullMQ (nếu đã dùng) → giữ cho job nhỏ nội bộ
+  Ví dụ: resize thumbnail, gửi email đơn lẻ, export report
+
+Phase 1 (trước launch):
+  Thêm RabbitMQ cho nghiệp vụ giao dịch quan trọng
+  BullMQ và RabbitMQ có thể chạy song song:
+    - BullMQ: job nền nhỏ, delay job, cron
+    - RabbitMQ: order/payment/inventory events với Outbox
+
+Phase 1.5 (khi ổn định):
+  Đánh giá lại — nếu BullMQ jobs không còn cần thiết riêng,
+  có thể migrate toàn bộ sang RabbitMQ để đơn giản hóa stack.
+```
+
+> **Nguyên tắc**: Không cần chọn một. BullMQ và RabbitMQ giải quyết bài toán khác nhau và có thể dùng song song. Chỉ migrate khi BullMQ trở thành điểm nghẽn hoặc không đáp ứng được yêu cầu cross-service.
+
+---
+
+## 11) Kết luận
 
 - Ở giai đoạn hiện tại, **nên áp dụng RabbitMQ** để đảm bảo tính ổn định cho các nghiệp vụ giao dịch, xử lý nền, giảm coupling và hỗ trợ retry/đảm bảo giao hàng.
 - **Kafka** chỉ nên thêm khi xuất hiện nhu cầu rõ ràng về analytics/stream dữ liệu lớn (livestream metrics, video views, recommendation).
