@@ -40,13 +40,13 @@ CR7 (Writer)                          M10 (Reader)
 
 **Diễn giải:**
 
-| Bước | Hành động | Actor | Mục đích |
-|---|---|---|---|
-| 1 | `set db (CR7)` | CR7 → MySQL | Ghi dữ liệu mới vào DB |
-| 2 | `del cache` | CR7 → Redis | Xóa cache cũ (invalidate) |
-| 3 | `miss cache` | M10 → Redis | M10 đọc cache → không có (vì CR7 vừa xóa) |
-| 4 | `read db` | M10 → MySQL | Đọc DB để lấy dữ liệu mới nhất |
-| 5 | `set cache (CR7)` | M10 → Redis | Cache lại dữ liệu mới đọc được |
+| Bước | Hành động         | Actor       | Mục đích                                  |
+| ---- | ----------------- | ----------- | ----------------------------------------- |
+| 1    | `set db (CR7)`    | CR7 → MySQL | Ghi dữ liệu mới vào DB                    |
+| 2    | `del cache`       | CR7 → Redis | Xóa cache cũ (invalidate)                 |
+| 3    | `miss cache`      | M10 → Redis | M10 đọc cache → không có (vì CR7 vừa xóa) |
+| 4    | `read db`         | M10 → MySQL | Đọc DB để lấy dữ liệu mới nhất            |
+| 5    | `set cache (CR7)` | M10 → Redis | Cache lại dữ liệu mới đọc được            |
 
 Nhưng flow trên là **lý tưởng**. Thực tế ở hệ thống lớn, nó sẽ gặp rất nhiều race condition.
 
@@ -95,13 +95,13 @@ T7  Old reader: SET Redis key "user:7" → "Ronaldo" ← !!!SAI!!!
 
 ### Vấn đề lớn hơn trong hệ thống phân tán
 
-| Vấn đề | Mô tả |
-|---|---|
-| **Nhiều instance** cùng ghi | 3 pod của Order Service cùng update DB, mỗi pod del cache riêng → race condition |
-| **Cross-service** | Payment Service update trạng thái → Order Service cần invalidate cache Order → không biết khi nào |
-| **Network latency** | Del cache thất bại (Redis timeout) nhưng DB đã commit → cache stale vĩnh viễn |
-| **Retry gây duplicate** | Del cache retry → del nhầm cache mới vừa được set bởi reader khác |
-| **Không có ordering** | Không đảm bảo thứ tự del cache giữa các writer → cache cuối cùng có thể chứa data cũ |
+| Vấn đề                      | Mô tả                                                                                             |
+| --------------------------- | ------------------------------------------------------------------------------------------------- |
+| **Nhiều instance** cùng ghi | 3 pod của Order Service cùng update DB, mỗi pod del cache riêng → race condition                  |
+| **Cross-service**           | Payment Service update trạng thái → Order Service cần invalidate cache Order → không biết khi nào |
+| **Network latency**         | Del cache thất bại (Redis timeout) nhưng DB đã commit → cache stale vĩnh viễn                     |
+| **Retry gây duplicate**     | Del cache retry → del nhầm cache mới vừa được set bởi reader khác                                 |
+| **Không có ordering**       | Không đảm bảo thứ tự del cache giữa các writer → cache cuối cùng có thể chứa data cũ              |
 
 ---
 
@@ -113,59 +113,59 @@ T7  Old reader: SET Redis key "user:7" → "Ronaldo" ← !!!SAI!!!
 
 ```
 ┌──────────────────────────────────────────────────────────────────┐
-│                         Application Services                      │
-│   (Order, Payment, Inventory, Product, ...)                       │
-│                                                                   │
-│   Khi write DB:                                                   │
-│   1. BEGIN TRANSACTION                                            │
-│   2. UPDATE table SET ...                                         │
+│                         Application Services                     │
+│   (Order, Payment, Inventory, Product, ...)                      │
+│                                                                  │
+│   Khi write DB:                                                  │
+│   1. BEGIN TRANSACTION                                           │
+│   2. UPDATE table SET ...                                        │
 │   3. INSERT INTO Outbox (event)        ← ghi event cùng TX       │
-│   4. COMMIT                                                       │
-│                                                                   │
-│   KHÔNG trực tiếp del/set Redis cache                             │
-└────────────────────────────┬──────────────────────────────────────┘
+│   4. COMMIT                                                      │
+│                                                                  │
+│   KHÔNG trực tiếp del/set Redis cache                            │
+└────────────────────────────┬─────────────────────────────────────┘
                              │
                              ▼
 ┌────────────────────────────────────────────────────────────────────┐
 │                        Message Queue                               │
-│                  (RabbitMQ / Kafka / NATS)                          │
+│                  (RabbitMQ / Kafka / NATS)                         │
 │                                                                    │
 │   Queue/Topic: cache.invalidation                                  │
-│   Message: { entity: "user", id: "7", action: "update", v: 42 }   │
+│   Message: { entity: "user", id: "7", action: "update", v: 42 }    │
 │                                                                    │
-│   Đảm bảo:                                                        │
+│   Đảm bảo:                                                         │
 │   ✓ Ordering (FIFO per partition/queue)                            │
-│   ✓ At-least-once delivery                                        │
+│   ✓ At-least-once delivery                                         │
 │   ✓ Persistence (không mất message)                                │
-│   ✓ Retry nếu consumer fail                                       │
+│   ✓ Retry nếu consumer fail                                        │
 └────────────────────────────┬───────────────────────────────────────┘
                              │
                              ▼
 ┌────────────────────────────────────────────────────────────────────┐
 │                      Cache Worker (Consumer)                       │
 │                                                                    │
-│   Nhận message → xử lý cache:                                     │
+│   Nhận message → xử lý cache:                                      │
 │                                                                    │
-│   Option A: DEL Redis key (invalidate — let reader re-fill)       │
-│   Option B: READ DB → SET Redis key (refresh — proactive fill)    │
-│   Option C: DEL + SET with version check (idempotent refresh)     │
+│   Option A: DEL Redis key (invalidate — let reader re-fill)        │
+│   Option B: READ DB → SET Redis key (refresh — proactive fill)     │
+│   Option C: DEL + SET with version check (idempotent refresh)      │
 │                                                                    │
-│   Đảm bảo:                                                        │
-│   ✓ Xử lý tuần tự theo entity (tránh race)                       │
-│   ✓ Idempotent (cùng message xử lý 2 lần không sai)              │
-│   ✓ Version check (chỉ update cache nếu version >= current)       │
+│   Đảm bảo:                                                         │
+│   ✓ Xử lý tuần tự theo entity (tránh race)                         │
+│   ✓ Idempotent (cùng message xử lý 2 lần không sai)                │
+│   ✓ Version check (chỉ update cache nếu version >= current)        │
 └────────────────────────────────────────────────────────────────────┘
 ```
 
 ### Tại sao pattern này giải quyết được vấn đề?
 
-| Vấn đề | Giải pháp qua MQ |
-|---|---|
-| Race condition giữa nhiều writer | MQ đảm bảo **ordering** — message xử lý tuần tự theo entity |
-| Cross-service invalidation | Service A publish event → Cache Worker invalidate → tất cả service hưởng cache mới |
-| Del cache thất bại | MQ có **retry** — message không mất, sẽ được xử lý lại |
-| Duplicate del | **Idempotent consumer** — dùng version/timestamp, del 2 lần không sao |
-| Không biết cache nào cần invalidate | Event mang đầy đủ thông tin: entity, id, action → Cache Worker biết chính xác |
+| Vấn đề                              | Giải pháp qua MQ                                                                   |
+| ----------------------------------- | ---------------------------------------------------------------------------------- |
+| Race condition giữa nhiều writer    | MQ đảm bảo **ordering** — message xử lý tuần tự theo entity                        |
+| Cross-service invalidation          | Service A publish event → Cache Worker invalidate → tất cả service hưởng cache mới |
+| Del cache thất bại                  | MQ có **retry** — message không mất, sẽ được xử lý lại                             |
+| Duplicate del                       | **Idempotent consumer** — dùng version/timestamp, del 2 lần không sao              |
+| Không biết cache nào cần invalidate | Event mang đầy đủ thông tin: entity, id, action → Cache Worker biết chính xác      |
 
 ---
 
@@ -211,13 +211,13 @@ Cache Worker: Nhận event →
 
 ### So sánh 3 chiến lược
 
-| Tiêu chí | A: Delete-only | B: Refresh-through | C: Versioned Refresh |
-|---|---|---|---|
-| Độ phức tạp | Thấp | Trung bình | Cao |
-| Cache hit rate sau write | Thấp (miss lần đầu) | Cao (luôn hit) | Cao (luôn hit) |
-| Race condition safe | Không hoàn toàn | Có thể race | An toàn hoàn toàn |
-| Idempotent | Có (del idempotent) | Không (có thể set data cũ) | Có (version check) |
-| Phù hợp cho | Data ít đọc | Data hot đọc nhiều | Data critical + hot |
+| Tiêu chí                 | A: Delete-only      | B: Refresh-through         | C: Versioned Refresh |
+| ------------------------ | ------------------- | -------------------------- | -------------------- |
+| Độ phức tạp              | Thấp                | Trung bình                 | Cao                  |
+| Cache hit rate sau write | Thấp (miss lần đầu) | Cao (luôn hit)             | Cao (luôn hit)       |
+| Race condition safe      | Không hoàn toàn     | Có thể race                | An toàn hoàn toàn    |
+| Idempotent               | Có (del idempotent) | Không (có thể set data cũ) | Có (version check)   |
+| Phù hợp cho              | Data ít đọc         | Data hot đọc nhiều         | Data critical + hot  |
 
 ---
 
@@ -225,16 +225,16 @@ Cache Worker: Nhận event →
 
 ### Mapping chiến lược theo domain
 
-| Domain | Data pattern | Chiến lược | Lý do |
-|---|---|---|---|
-| **Product detail** | Đọc cực nhiều, ghi ít | B: Refresh-through | Hot data — proactive rebuild giữ cache luôn warm |
-| **SKU stock** | Đọc nhiều, ghi nhiều (concurrent) | C: Versioned Refresh | Race condition cao khi flash sale — cần version check |
-| **Order status** | Đọc nhiều, state machine | C: Versioned Refresh | State thay đổi qua nhiều bước — cần ordering + version |
-| **User profile** | Đọc nhiều, ghi ít | A: Delete-only | Ít ghi, chấp nhận 1 miss sau update |
-| **Cart** | Đọc/ghi cân bằng, per-user | A: Delete-only | Dữ liệu per-user, ít concurrent write |
-| **Category/Brand** | Gần như static | A: Delete-only | Hiếm khi thay đổi |
-| **Review rating** | Aggregated, eventual OK | B: Refresh-through | Rebuild aggregate score, chấp nhận delay nhỏ |
-| **Flash sale price** | Đọc cực nhiều, timing critical | C: Versioned Refresh | Consistency quan trọng — giá sai = thiệt hại tiền |
+| Domain               | Data pattern                      | Chiến lược           | Lý do                                                  |
+| -------------------- | --------------------------------- | -------------------- | ------------------------------------------------------ |
+| **Product detail**   | Đọc cực nhiều, ghi ít             | B: Refresh-through   | Hot data — proactive rebuild giữ cache luôn warm       |
+| **SKU stock**        | Đọc nhiều, ghi nhiều (concurrent) | C: Versioned Refresh | Race condition cao khi flash sale — cần version check  |
+| **Order status**     | Đọc nhiều, state machine          | C: Versioned Refresh | State thay đổi qua nhiều bước — cần ordering + version |
+| **User profile**     | Đọc nhiều, ghi ít                 | A: Delete-only       | Ít ghi, chấp nhận 1 miss sau update                    |
+| **Cart**             | Đọc/ghi cân bằng, per-user        | A: Delete-only       | Dữ liệu per-user, ít concurrent write                  |
+| **Category/Brand**   | Gần như static                    | A: Delete-only       | Hiếm khi thay đổi                                      |
+| **Review rating**    | Aggregated, eventual OK           | B: Refresh-through   | Rebuild aggregate score, chấp nhận delay nhỏ           |
+| **Flash sale price** | Đọc cực nhiều, timing critical    | C: Versioned Refresh | Consistency quan trọng — giá sai = thiệt hại tiền      |
 
 ### Flow cụ thể: SKU Stock trong Flash Sale
 
@@ -323,11 +323,7 @@ export class OutboxWorker {
 @Controller()
 export class CacheInvalidationConsumer {
   @EventPattern('sku.stock_changed')
-  async handleStockChanged(payload: {
-    skuId: string
-    stock: number
-    version: number
-  }) {
+  async handleStockChanged(payload: { skuId: string; stock: number; version: number }) {
     const cacheKey = `sku:${payload.skuId}`
     const cached = await this.redis.get(cacheKey)
 
@@ -342,12 +338,7 @@ export class CacheInvalidationConsumer {
       where: { id: payload.skuId },
     })
 
-    await this.redis.set(
-      cacheKey,
-      JSON.stringify({ ...fresh, version: fresh.version }),
-      'EX',
-      3600,
-    )
+    await this.redis.set(cacheKey, JSON.stringify({ ...fresh, version: fresh.version }), 'EX', 3600)
   }
 }
 ```
@@ -356,14 +347,14 @@ export class CacheInvalidationConsumer {
 
 ## 6) So sánh: MQ nào phù hợp cho cache invalidation?
 
-| MQ | Phù hợp? | Lý do |
-|---|---|---|
-| **RabbitMQ** | Tốt cho Phase 1 | Ordering per queue, DLQ, dễ setup, đủ cho cache invalidation |
-| **Kafka** | Tốt cho Phase 2+ | Ordering per partition (key = entity_id), replay, nhiều consumer group |
-| **NATS** | Có thể dùng | Nhẹ, nhanh, nhưng ít durability hơn — phù hợp nếu chấp nhận eventual |
-| **Redis Streams** | Cẩn thận | Dùng Redis để invalidate chính Redis → single point of failure |
-| **AWS SQS** | Có thể dùng | FIFO queue đảm bảo ordering, nhưng vendor lock-in |
-| **BullMQ** | Không lý tưởng | Không có fanout, khó cross-service, dùng chung Redis instance |
+| MQ                | Phù hợp?         | Lý do                                                                  |
+| ----------------- | ---------------- | ---------------------------------------------------------------------- |
+| **RabbitMQ**      | Tốt cho Phase 1  | Ordering per queue, DLQ, dễ setup, đủ cho cache invalidation           |
+| **Kafka**         | Tốt cho Phase 2+ | Ordering per partition (key = entity_id), replay, nhiều consumer group |
+| **NATS**          | Có thể dùng      | Nhẹ, nhanh, nhưng ít durability hơn — phù hợp nếu chấp nhận eventual   |
+| **Redis Streams** | Cẩn thận         | Dùng Redis để invalidate chính Redis → single point of failure         |
+| **AWS SQS**       | Có thể dùng      | FIFO queue đảm bảo ordering, nhưng vendor lock-in                      |
+| **BullMQ**        | Không lý tưởng   | Không có fanout, khó cross-service, dùng chung Redis instance          |
 
 **Khuyến nghị cho dự án này**: Dùng **RabbitMQ** (đã quyết định ở Phase 1) với queue `cache.invalidation` riêng. Nếu sau này lên Kafka, chuyển sang topic `cache-invalidation` với partition key = `entity_type:entity_id`.
 
@@ -373,14 +364,14 @@ export class CacheInvalidationConsumer {
 
 Nhiều người hỏi: Redis đã có Pub/Sub, tại sao không dùng luôn?
 
-| Tiêu chí | Redis Pub/Sub | MQ (RabbitMQ/Kafka) |
-|---|---|---|
-| **Persistence** | Không — message mất nếu subscriber offline | Có — message persist trên disk |
-| **Retry** | Không — fire-and-forget | Có — requeue nếu consumer fail |
-| **Ordering** | Không đảm bảo khi scale | Đảm bảo (per queue/partition) |
-| **At-least-once** | Không — nếu subscriber miss thì mất luôn | Có — message giữ cho đến khi ACK |
-| **DLQ** | Không có | Có — message thất bại chuyển DLQ |
-| **Backpressure** | Không — subscriber chậm thì mất message | Có — message queue lên, consumer xử lý theo tốc |
+| Tiêu chí          | Redis Pub/Sub                              | MQ (RabbitMQ/Kafka)                             |
+| ----------------- | ------------------------------------------ | ----------------------------------------------- |
+| **Persistence**   | Không — message mất nếu subscriber offline | Có — message persist trên disk                  |
+| **Retry**         | Không — fire-and-forget                    | Có — requeue nếu consumer fail                  |
+| **Ordering**      | Không đảm bảo khi scale                    | Đảm bảo (per queue/partition)                   |
+| **At-least-once** | Không — nếu subscriber miss thì mất luôn   | Có — message giữ cho đến khi ACK                |
+| **DLQ**           | Không có                                   | Có — message thất bại chuyển DLQ                |
+| **Backpressure**  | Không — subscriber chậm thì mất message    | Có — message queue lên, consumer xử lý theo tốc |
 
 **Kết luận**: Redis Pub/Sub phù hợp cho real-time notification (chat, presence), **KHÔNG phù hợp** cho cache invalidation vì **không đảm bảo delivery**. Nếu message invalidation bị mất → cache stale vĩnh viễn cho đến khi TTL expire.
 
