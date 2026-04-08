@@ -1,6 +1,6 @@
 # Deep Dive: Message Broker và Giao tiếp Bất đồng bộ giữa các Services
 
-> Tài liệu này giải thích chi tiết 6 chủ đề nâng cao liên quan đến Message Broker, giao tiếp bất đồng bộ giữa các services trong kiến trúc microservices — sử dụng code thực tế từ project NestJS Ecommerce API.
+> Tài liệu này giải thích chi tiết 7 chủ đề nâng cao liên quan đến Message Broker, giao tiếp bất đồng bộ giữa các services trong kiến trúc microservices — sử dụng code thực tế từ project NestJS Ecommerce API.
 
 ---
 
@@ -12,6 +12,7 @@
 4. [Event-driven vs Command-driven](#4-event-driven-vs-command-driven)
 5. [Backpressure & Rate Limiting](#5-backpressure--rate-limiting)
 6. [So sánh BullMQ (Redis) vs Kafka vs RabbitMQ vs SQS](#6-so-sánh-bullmq-redis-vs-kafka-vs-rabbitmq-vs-sqs)
+7. [Topic Exchange trong RabbitMQ — Giải thích toàn diện](#7-topic-exchange-trong-rabbitmq--giải-thích-toàn-diện)
 
 ---
 
@@ -942,6 +943,395 @@ Nếu deploy trên AWS:
 
 ---
 
+## 7. Topic Exchange trong RabbitMQ — Giải thích toàn diện
+
+> **Tại sao cần hiểu sâu về Topic Exchange?**
+> Lead của bạn đúng khi nói "chỉ cần hiểu Topic là đủ" — vì Topic Exchange là loại Exchange mạnh nhất, có thể **giả lập hoàn toàn** cả Direct lẫn Fanout Exchange. Hiểu Topic = hiểu hết toàn bộ routing trong RabbitMQ.
+
+### 7.1. Bức tranh toàn cảnh: 4 loại Exchange
+
+RabbitMQ có 4 loại Exchange. Mỗi loại quyết định **cách message được route vào queue**:
+
+```
+Producer → Exchange → [routing logic] → Queue(s) → Consumer(s)
+
+4 loại Exchange:
+┌──────────────┬──────────────────────────────────────────────────────────────┐
+│ Direct       │ Exact match: routing key phải = binding key (không wildcard) │
+│ Fanout       │ Broadcast: gửi cho TẤT CẢ queues đang bind (ignore key)     │
+│ Topic        │ Pattern match: dùng wildcard (* và #) — LINH HOẠT NHẤT      │
+│ Headers      │ Match theo message headers thay vì routing key (ít dùng)    │
+└──────────────┴──────────────────────────────────────────────────────────────┘
+
+Topic Exchange là SUPERSET của Direct và Fanout:
+  Direct Exchange  =  Topic với binding key không có wildcard (exact match)
+  Fanout Exchange  =  Topic với binding key = '#' (match tất cả)
+  → Trong production, senior dev thường mặc định dùng Topic cho mọi trường hợp
+```
+
+### 7.2. Hai khái niệm cốt lõi: Routing Key vs Binding Key
+
+Đây là điểm nhiều người hay nhầm lẫn nhất:
+
+```
+┌─────────────────┬────────────────────────────────────────────────────────────┐
+│ Routing Key     │ Producer gán vào message khi publish                        │
+│                 │ Ví dụ: 'order.created', 'payment.failed'                    │
+│                 │ Là "địa chỉ gửi" của message                               │
+├─────────────────┼────────────────────────────────────────────────────────────┤
+│ Binding Key     │ Queue "đăng ký" với Exchange — dùng wildcard pattern        │
+│                 │ Ví dụ: 'order.*', 'payment.#', '#'                         │
+│                 │ Là "điều kiện nhận" của queue                               │
+└─────────────────┴────────────────────────────────────────────────────────────┘
+
+Flow:
+  Producer publish('order.created')
+       │
+       ▼
+  Exchange 'ecom.events' (topic)
+       │
+       ├─ Queue order_events_q   (binding: 'order.*')   → MATCH ✅
+       ├─ Queue payment_events_q (binding: 'payment.*') → NO MATCH ❌
+       └─ Queue audit_q          (binding: '#')          → MATCH ✅
+```
+
+### 7.3. Routing Key — Format chuẩn
+
+Topic Exchange yêu cầu routing key theo format **dot-separated** (phân cách bằng dấu chấm):
+
+```
+Format: word.word.word   (tối đa 255 bytes)
+
+Trong project này (rabbitmq.constant.ts):
+  'order.created'          ← 2 levels
+  'order.status_changed'
+  'order.cancelled'
+  'order.expired'
+
+  'payment.created'
+  'payment.succeeded'
+  'payment.failed'
+
+  'sku.stock_reserved'     ← domain.action
+  'sku.stock_released'
+  'sku.stock_low'
+
+  'notification.send_email'
+  'cache.invalidate'
+
+Mở rộng khi cần (3 levels):
+  'order.payment.failed'   ← chi tiết hơn: domain.sub-entity.action
+  'user.profile.updated'
+  'sku.inventory.threshold_breached'
+```
+
+### 7.4. Binding Key — Wildcard Pattern (cốt lõi nhất)
+
+Chỉ có 2 wildcard ký tự, nhưng kết hợp tạo ra vô số khả năng:
+
+```
+*  (star) = khớp ĐÚNG 1 word (1 segment giữa hai dấu chấm)
+#  (hash) = khớp 0 hoặc NHIỀU words liên tiếp
+```
+
+**Bảng so sánh chi tiết — phải nắm vững:**
+
+```
+┌─────────────────┬────────────────────────────────────────────────────────────┐
+│ Binding Pattern │ Routing keys nào khớp?                                     │
+├─────────────────┼────────────────────────────────────────────────────────────┤
+│ order.*         │ ✅ order.created, order.cancelled, order.expired           │
+│                 │ ❌ order.payment.failed    (3 words — * chỉ match 1)       │
+│                 │ ❌ order                   (thiếu word sau dấu chấm)       │
+├─────────────────┼────────────────────────────────────────────────────────────┤
+│ order.#         │ ✅ order.created, order.cancelled                          │
+│                 │ ✅ order.payment.failed    (# match nhiều words)            │
+│                 │ ✅ order.a.b.c.d           (# match bao nhiêu cũng được)   │
+│                 │ ✅ order                   (# match 0 words)               │
+├─────────────────┼────────────────────────────────────────────────────────────┤
+│ *.created       │ ✅ order.created, payment.created, user.created            │
+│                 │ ❌ order.user.created      (* chỉ match 1 word)            │
+│                 │ ❌ created                 (thiếu word trước dấu chấm)     │
+├─────────────────┼────────────────────────────────────────────────────────────┤
+│ #.failed        │ ✅ payment.failed                                          │
+│                 │ ✅ order.payment.failed    (# match 'order.payment')       │
+│                 │ ✅ a.b.c.d.failed          (# match nhiều words)           │
+│                 │ ❌ failed                  (# match 0 words, nhưng cần     │
+│                 │                             dấu chấm phân cách)            │
+├─────────────────┼────────────────────────────────────────────────────────────┤
+│ #               │ ✅ TẤT CẢ routing keys (giống Fanout Exchange)             │
+│                 │    order.created, payment.failed, a.b.c — match hết       │
+├─────────────────┼────────────────────────────────────────────────────────────┤
+│ order.created   │ ✅ Chỉ đúng 'order.created' (giống Direct Exchange)        │
+│ (không wildcard)│ ❌ order.cancelled, order.created.v2 — không match        │
+├─────────────────┼────────────────────────────────────────────────────────────┤
+│ *.*.failed      │ ✅ order.payment.failed, user.auth.failed                  │
+│                 │ ❌ payment.failed      (chỉ 2 words, pattern cần 3)        │
+│                 │ ❌ a.b.c.d.failed      (quá nhiều words)                   │
+└─────────────────┴────────────────────────────────────────────────────────────┘
+```
+
+### 7.5. Tại sao Topic > Direct > Fanout (trong microservices)
+
+**Direct Exchange — quá cứng nhắc:**
+
+```
+Vấn đề: Binding key phải match CHÍNH XÁC routing key
+
+Queue 'order_q' bind với key 'order.created'
+  → Chỉ nhận 'order.created'
+  → 'order.cancelled' → KHÔNG nhận được ❌
+  → Phải tạo thêm binding key 'order.cancelled', 'order.expired'... cho từng event
+
+→ Với 10 event types → 10 binding keys → quản lý phức tạp
+→ Topic giải quyết bằng 'order.*' → 1 binding cho tất cả order events
+```
+
+**Fanout Exchange — quá rộng:**
+
+```
+Vấn đề: Broadcast cho TẤT CẢ queues, không filter được
+
+Nếu dùng Fanout:
+  order.created → gửi vào payment_q, inventory_q, notification_q, audit_q, ...
+  payment.failed → CŨNG gửi vào tất cả các queue trên
+
+→ Consumer inventory phải nhận cả payment.failed rồi tự filter
+→ Lãng phí, coupling tăng, consumer phức tạp hơn
+
+→ Topic giải quyết: inventory_q chỉ bind 'sku.*', payment_q chỉ bind 'payment.*'
+```
+
+**Topic Exchange — điểm mạnh (excellent points):**
+
+```
+✅ 1. SELECTIVE ROUTING: Mỗi queue chỉ nhận đúng events nó cần
+      inventory_q  → bind 'sku.*'           → chỉ SKU events
+      payment_q    → bind 'payment.*'       → chỉ payment events
+      audit_q      → bind '#'               → nhận hết (cho compliance)
+
+✅ 2. ZERO PRODUCER COUPLING: Producer chỉ cần biết routing key, không biết
+      queue nào đang lắng nghe, bao nhiêu consumers
+
+✅ 3. OPEN/CLOSED PRINCIPLE: Thêm consumer mới (queue mới, binding mới)
+      mà KHÔNG cần sửa bất kỳ dòng code producer nào
+
+✅ 4. HIERARCHICAL NAMESPACE: Routing key 2-3 levels tạo ra namespace rõ ràng
+      Rất dễ đọc, trace log, monitoring
+
+✅ 5. FLEXIBLE FANOUT khi cần: Nhiều queues cùng bind 'order.created'
+      → tất cả đều nhận cùng 1 event (pub/sub pattern)
+
+✅ 6. GIẢ LẬP DIRECT: Binding key không có wildcard → hoạt động y hệt Direct
+      → 1 Exchange type dùng cho mọi trường hợp
+```
+
+### 7.6. Cơ chế trong project NestJS này
+
+Trong `rabbitmq.module.ts` và `main.ts` của codebase:
+
+```typescript
+// Cấu hình Exchange
+exchange: 'ecom.events',     // Tên exchange dùng chung toàn dự án
+exchangeType: 'topic',       // Loại Topic
+wildcards: true,             // ← BẮT BUỘC với NestJS — không có dòng này,
+                             //   NestJS không tạo exchange, routing im lặng thất bại
+
+// Routing keys được dùng (rabbitmq.constant.ts):
+'order.created'              // Producer publish với key này
+'order.status_changed'
+'order.cancelled'
+'payment.succeeded'
+'payment.failed'
+'sku.stock_reserved'
+'cache.invalidate'
+```
+
+**Luồng routing từ đầu đến cuối:**
+
+```
+1. Order service tạo order thành công
+   └─ Ghi Outbox { eventType: 'order.created', ... } vào DB (trong $transaction)
+
+2. OutboxWorker (mỗi 1 giây)
+   └─ eventBusService.publish({ eventType: 'order.created', ... })
+   └─ client.emit('order.created', data)   ← routing key = 'order.created'
+
+3. Exchange 'ecom.events' (topic) nhận message
+   └─ So sánh routing key 'order.created' với binding keys của các queues
+
+4. Kết quả routing:
+   ├─ order_events_q        (binding: 'order.*')   → MATCH → message vào queue này
+   ├─ payment_events_q      (binding: 'payment.*') → NO MATCH
+   ├─ inventory_events_q    (binding: 'sku.*')     → NO MATCH
+   └─ audit_q               (binding: '#')         → MATCH → message vào queue này
+
+5. Consumers nhận message:
+   @EventPattern('order.created')        ← exact pattern
+   async handleOrderCreated(event) { ... }
+
+   // Hoặc dùng wildcard khi wildcards: true:
+   @EventPattern('order.*')              ← match tất cả order events
+   async handleAllOrderEvents(event) { ... }
+```
+
+### 7.7. Patterns các lập trình viên senior áp dụng
+
+**Pattern 1: Domain Namespace Hierarchy (phổ biến nhất)**
+
+```
+Cấu trúc: {domain}.{entity}.{action}
+          hoặc {domain}.{action} (khi domain = entity)
+
+Ví dụ trong ecommerce:
+  order.created, order.cancelled, order.expired
+  payment.succeeded, payment.failed
+  inventory.stock_reserved, inventory.stock_low
+  user.registered, user.profile_updated
+
+Ví dụ trong fintech:
+  account.deposit.completed
+  account.withdrawal.failed
+  card.transaction.declined
+  loan.application.approved
+
+→ Nhìn vào routing key biết ngay: domain gì, xảy ra gì
+→ Queue binding theo domain: 'order.*', 'payment.*', 'account.*'
+```
+
+**Pattern 2: Multi-consumer cho cùng 1 event (Pub/Sub)**
+
+```
+Event: 'payment.succeeded'
+  │
+  ├── order_events_q    (binding: 'payment.*') → Cập nhật order status
+  ├── notification_q    (binding: 'payment.*') → Gửi email receipt cho user
+  ├── loyalty_q         (binding: 'payment.*') → Cộng điểm thưởng
+  └── audit_q           (binding: '#')         → Log cho compliance
+
+→ 1 producer emit 1 event → 4 consumers xử lý song song
+→ Thêm consumer mới (ví dụ analytics_q) → KHÔNG đụng vào 1 dòng code cũ
+```
+
+**Pattern 3: Audit Queue nhận tất cả**
+
+```typescript
+// 1 queue bind '#' → nhận 100% events từ exchange
+// Không cần sửa bất kỳ producer hay consumer nào khác
+
+app.connectMicroservice({
+  options: {
+    queue: 'audit_all_events_q',
+    exchange: 'ecom.events',
+    exchangeType: 'topic',
+    wildcards: true,
+    // binding key '#' → được cấu hình phía RabbitMQ khi declare binding
+  }
+})
+
+// Consumer:
+@EventPattern('#')   // hoặc từng pattern cụ thể
+async auditAllEvents(event: DomainEvent) {
+  await this.auditLog.record(event)
+}
+```
+
+**Pattern 4: Event Versioning khi migration**
+
+```
+Bài toán: Cần thay đổi format của event 'order.created' (breaking change)
+
+Giải pháp:
+  v1: publish routing key 'v1.order.created'
+  v2: publish routing key 'v2.order.created'
+
+  Consumer cũ: bind 'v1.order.*'  → nhận v1 events
+  Consumer mới: bind 'v2.order.*' → nhận v2 events
+
+  Migration period: publish cả v1 lẫn v2 song song
+  Sau khi tất cả consumer migrate xong → bỏ publish v1
+
+→ Zero downtime migration, không cần flag hay if/else trong code
+```
+
+**Pattern 5: Environment/Tenant routing**
+
+```
+Multi-tenant SaaS:
+  tenant_A.order.created   → bind 'tenant_a.*.*' → Queue của tenant A
+  tenant_B.order.created   → bind 'tenant_b.*.*' → Queue của tenant B
+
+Environment separation (1 RabbitMQ cho nhiều môi trường):
+  prod.order.created    → prod consumers: bind 'prod.#'
+  staging.order.created → staging consumers: bind 'staging.#'
+  dev.order.created     → dev consumers: bind 'dev.#'
+```
+
+### 7.8. Điểm "excellent" của Topic Exchange — tổng hợp
+
+```
+┌──────────────────────────────┬────────────────────────────────────────────────┐
+│ Điểm mạnh (Excellent Points) │ Giải thích                                     │
+├──────────────────────────────┼────────────────────────────────────────────────┤
+│ Superset của tất cả          │ Giả lập được Direct (no wildcard) và           │
+│                              │ Fanout (binding '#') — 1 loại dùng cho tất cả  │
+├──────────────────────────────┼────────────────────────────────────────────────┤
+│ Selective routing            │ Queue chỉ nhận đúng events nó quan tâm,        │
+│                              │ không phải xử lý rồi bỏ qua                   │
+├──────────────────────────────┼────────────────────────────────────────────────┤
+│ Zero coupling                │ Producer không biết ai đang lắng nghe,         │
+│                              │ chỉ publish vào exchange + routing key         │
+├──────────────────────────────┼────────────────────────────────────────────────┤
+│ Open/Closed Principle        │ Thêm consumer mới = thêm queue + binding key   │
+│                              │ KHÔNG sửa producer, KHÔNG sửa consumer cũ     │
+├──────────────────────────────┼────────────────────────────────────────────────┤
+│ Hierarchical namespace       │ Routing key 'order.payment.failed' tự mô tả   │
+│                              │ domain → entity → action, rất readable         │
+├──────────────────────────────┼────────────────────────────────────────────────┤
+│ Flexible fan-out             │ Nhiều queues cùng bind 1 pattern → pub/sub     │
+│                              │ 'payment.succeeded' → N consumers song song   │
+├──────────────────────────────┼────────────────────────────────────────────────┤
+│ Backward-compatible          │ Versioning events (v1.*, v2.*) không cần       │
+│ versioning                   │ downtime hay code flag                         │
+├──────────────────────────────┼────────────────────────────────────────────────┤
+│ Operations-friendly          │ Nhìn vào routing key trên RabbitMQ Management  │
+│                              │ UI biết ngay event này thuộc domain nào        │
+└──────────────────────────────┴────────────────────────────────────────────────┘
+```
+
+### 7.9. Lưu ý quan trọng khi dùng với NestJS
+
+```typescript
+// ⚠️ wildcards: true là BẮT BUỘC — nếu bỏ:
+//   - NestJS KHÔNG tạo exchange
+//   - Message đi vào default exchange (direct)
+//   - Routing theo pattern KHÔNG hoạt động
+//   - Không có lỗi, không có warning — im lặng hoàn toàn
+
+// ✅ ĐÚNG:
+ClientsModule.register([{
+  transport: Transport.RMQ,
+  options: {
+    wildcards: true,           // ← không được thiếu
+    exchange: 'ecom.events',
+    exchangeType: 'topic',
+    // ...
+  }
+}])
+
+// ❌ SAI — exchange và exchangeType bị IGNORE hoàn toàn:
+ClientsModule.register([{
+  transport: Transport.RMQ,
+  options: {
+    // wildcards: true  ← thiếu dòng này
+    exchange: 'ecom.events',   // ← bị ignore
+    exchangeType: 'topic',     // ← bị ignore
+  }
+}])
+```
+
+---
+
 ## Tổng kết
 
 ```
@@ -951,4 +1341,6 @@ Nếu deploy trên AWS:
 4. Event vs Command → Event: "đã xảy ra" (pub/sub) | Command: "hãy làm" (point-to-point)
 5. Backpressure     → Kiểm soát tốc độ producer/consumer để tránh overwhelm
 6. Broker comparison→ BullMQ (đơn giản) → RabbitMQ (linh hoạt) → Kafka (scale lớn) → SQS (managed)
+7. Topic Exchange   → Superset của Direct + Fanout: routing key (producer) + binding key wildcard
+                      (* = 1 word, # = 0..N words) → selective, decoupled, extensible
 ```
