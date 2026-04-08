@@ -15,12 +15,13 @@
 7. [Event Bus Service — Producer](#7-event-bus-service--producer)
 8. [Outbox Worker — đảm bảo transactional consistency](#8-outbox-worker--đảm-bảo-transactional-consistency)
 9. [Event Consumers — xử lý message](#9-event-consumers--xử-lý-message)
-10. [Tích hợp vào domain — Order flow ví dụ](#10-tích-hợp-vào-domain--order-flow-ví-dụ)
-11. [Dead Letter Queue + Retry](#11-dead-letter-queue--retry)
-12. [Health Check](#12-health-check)
-13. [Testing](#13-testing)
-14. [Phân biệt rõ: BullMQ làm gì, RabbitMQ làm gì](#14-phân-biệt-rõ-bullmq-làm-gì-rabbitmq-làm-gì)
-15. [Checklist triển khai](#15-checklist-triển-khai)
+10. [⚠️ QUAN TRỌNG: Hybrid Application trong main.ts](#10-️-quan-trọng-hybrid-application-trong-maints)
+11. [Tích hợp vào domain — Order flow ví dụ](#11-tích-hợp-vào-domain--order-flow-ví-dụ)
+12. [Dead Letter Queue + Retry](#12-dead-letter-queue--retry)
+13. [Health Check](#13-health-check)
+14. [Testing](#14-testing)
+15. [Phân biệt rõ: BullMQ làm gì, RabbitMQ làm gì](#15-phân-biệt-rõ-bullmq-làm-gì-rabbitmq-làm-gì)
+16. [Checklist triển khai](#16-checklist-triển-khai)
 
 ---
 
@@ -375,6 +376,10 @@ export const RABBITMQ_CLIENT = 'RABBITMQ_CLIENT'
 
 ### src/shared/rabbitmq/rabbitmq.module.ts
 
+`ClientsModule.register()` tạo **ClientProxy** — dùng để **publish** message (producer side).
+
+> **Lưu ý quan trọng**: Theo [NestJS docs](https://docs.nestjs.com/microservices/rabbitmq), `exchange` và `exchangeType` chỉ hoạt động khi `wildcards: true` được bật. Không có `wildcards`, NestJS sẽ KHÔNG tạo exchange.
+
 ```ts
 import { Module } from '@nestjs/common'
 import { ClientsModule, Transport } from '@nestjs/microservices'
@@ -394,16 +399,11 @@ import { OutboxWorker } from './outbox.worker'
           queue: ORDER_EVENTS_QUEUE,
           queueOptions: {
             durable: true,
-            arguments: {
-              'x-dead-letter-exchange': `${ECOM_EXCHANGE}.dlx`,
-              'x-dead-letter-routing-key': 'dlq',
-              'x-message-ttl': 30000, // 30s TTL cho retry
-            },
           },
+          wildcards: true,
           exchange: ECOM_EXCHANGE,
           exchangeType: 'topic',
-          noAck: false,
-          prefetchCount: 10,
+          persistent: true,
           socketOptions: {
             heartbeatIntervalInSeconds: 30,
           },
@@ -416,6 +416,18 @@ import { OutboxWorker } from './outbox.worker'
 })
 export class RabbitmqModule {}
 ```
+
+**Giải thích options:**
+
+| Option | Giá trị | Tại sao |
+|---|---|---|
+| `wildcards` | `true` | **Bắt buộc** để `exchange` và `exchangeType` hoạt động |
+| `exchange` | `'ecom.events'` | Tên exchange — NestJS tự tạo nếu chưa có |
+| `exchangeType` | `'topic'` | Cho phép routing theo pattern (`order.*`, `payment.*`) |
+| `persistent` | `true` | Message survive broker restart |
+| `queueOptions.durable` | `true` | Queue survive broker restart |
+
+> **KHÔNG đặt `x-message-ttl` trên queue chính.** TTL trên queue nghĩa là MỌI message (kể cả message bình thường đang chờ xử lý) sẽ bị dead-letter sau thời gian đó. Khi consumer chịu tải nặng → message chờ lâu → bị dead-letter → mất data. TTL chỉ nên dùng cho retry queue riêng (xem Section 12).
 
 ### Đăng ký trong AppModule
 
@@ -619,17 +631,22 @@ Với throughput hiện tại (chưa cần hàng triệu event/s), poll 1 giây 
 ### src/queues/order-event.consumer.ts
 
 ```ts
-import { Controller, Logger } from '@nestjs/common'
+import { Controller, Logger, Inject } from '@nestjs/common'
 import { EventPattern, Payload, Ctx, RmqContext } from '@nestjs/microservices'
 import { OrderEvents, PaymentEvents } from 'src/shared/constants/rabbitmq.constant'
-import { PrismaService } from 'src/shared/services/prisma.service'
 import { DomainEvent } from 'src/shared/rabbitmq/event-bus.service'
+import Redis from 'ioredis'
 
 @Controller()
 export class OrderEventConsumer {
   private readonly logger = new Logger(OrderEventConsumer.name)
+  private readonly redisClient: Redis
 
-  constructor(private readonly prismaService: PrismaService) {}
+  constructor() {
+    // Dùng ioredis trực tiếp (dự án đã có ioredis trong dependencies)
+    // Hoặc inject qua provider nếu đã có Redis provider trong SharedModule
+    this.redisClient = new Redis(process.env.REDIS_URL || 'redis://localhost:6379')
+  }
 
   @EventPattern(OrderEvents.CREATED)
   async handleOrderCreated(@Payload() event: DomainEvent, @Ctx() context: RmqContext) {
@@ -637,14 +654,15 @@ export class OrderEventConsumer {
     const originalMsg = context.getMessage()
 
     try {
-      this.logger.log(`Processing ${event.eventType}: order ${event.aggregateId}`)
+      const eventId = event.metadata?.eventId
+      this.logger.log(`Processing ${event.eventType}: order ${event.aggregateId} [eventId: ${eventId}]`)
 
-      // Idempotency check
-      const correlationId = event.metadata?.correlationId
-      if (correlationId) {
-        const alreadyProcessed = await this.checkProcessed(correlationId)
+      // Idempotency check — dùng Redis SET, KHÔNG dùng Outbox publishedAt
+      // (publishedAt = "đã publish lên RabbitMQ" ≠ "đã được consumer xử lý")
+      if (eventId) {
+        const alreadyProcessed = await this.checkProcessed(eventId)
         if (alreadyProcessed) {
-          this.logger.warn(`Event ${correlationId} already processed, skipping`)
+          this.logger.warn(`Event ${eventId} already processed, skipping`)
           channel.ack(originalMsg)
           return
         }
@@ -653,7 +671,8 @@ export class OrderEventConsumer {
       // Business logic: thông báo cho inventory, payment, etc.
       // (sẽ được mở rộng tùy nghiệp vụ)
 
-      await this.markProcessed(correlationId)
+      // Đánh dấu đã xử lý TRƯỚC khi ACK — đảm bảo idempotent
+      if (eventId) await this.markProcessed(eventId)
       channel.ack(originalMsg)
 
       this.logger.log(`Processed ${event.eventType}: order ${event.aggregateId}`)
@@ -662,9 +681,9 @@ export class OrderEventConsumer {
         `Failed to process ${event.eventType}: ${error instanceof Error ? error.message : 'Unknown error'}`,
         error instanceof Error ? error.stack : undefined,
       )
-      // Nack + requeue: message quay lại queue để retry
-      // Nếu retry quá nhiều lần → RabbitMQ chuyển sang DLQ (qua TTL + DLX)
-      channel.nack(originalMsg, false, true)
+      // KHÔNG dùng nack(msg, false, true) — sẽ tạo vòng lặp vô hạn
+      // Xem Section 12 để hiểu retry strategy đúng
+      channel.nack(originalMsg, false, false)
     }
   }
 
@@ -681,22 +700,32 @@ export class OrderEventConsumer {
       channel.ack(originalMsg)
     } catch (error) {
       this.logger.error(`Failed to process ${event.eventType}`, error instanceof Error ? error.stack : undefined)
-      channel.nack(originalMsg, false, true)
+      channel.nack(originalMsg, false, false)
     }
   }
 
-  private async checkProcessed(correlationId: string): Promise<boolean> {
-    // Kiểm tra trong bảng processed_events hoặc dùng Redis
-    // Đơn giản: check Outbox đã publishedAt chưa
-    const outbox = await this.prismaService.outbox.findUnique({
-      where: { id: correlationId },
-    })
-    return outbox?.publishedAt !== null && outbox?.publishedAt !== undefined
+  // ─── Idempotency: dùng Redis SET với TTL ─────────────────────────────────
+  //
+  // Tại sao KHÔNG dùng Outbox.publishedAt?
+  //   publishedAt !== null nghĩa là "event đã publish lên RabbitMQ"
+  //   KHÔNG phải "consumer đã xử lý xong"
+  //   → Mọi event tới consumer ĐỀU đã published → check luôn = true → skip hết
+  //
+  // Tại sao dùng Redis?
+  //   - Nhanh (O(1) SET/GET)
+  //   - TTL tự cleanup (không cần cron xóa)
+  //   - Shared giữa nhiều consumer instances
+  // ─────────────────────────────────────────────────────────────────────────
+
+  private async checkProcessed(eventId: string): Promise<boolean> {
+    const key = `processed_event:${eventId}`
+    const exists = await this.redisClient.get(key)
+    return exists !== null
   }
 
-  private async markProcessed(correlationId: string | undefined): Promise<void> {
-    // Có thể implement bảng processed_events riêng nếu cần
-    // Hoặc dùng Redis SET với TTL
+  private async markProcessed(eventId: string): Promise<void> {
+    const key = `processed_event:${eventId}`
+    await this.redisClient.set(key, '1', 'EX', 86400) // TTL 24 giờ
   }
 }
 ```
@@ -730,7 +759,241 @@ export class AppModule {}
 
 ---
 
-## 10) Tích hợp vào domain — Order flow ví dụ
+## 10) ⚠️ QUAN TRỌNG: Hybrid Application trong main.ts
+
+> Đây là bước **bắt buộc** mà nếu bỏ qua, toàn bộ RabbitMQ consumer (`@EventPattern`) sẽ **không bao giờ nhận được message** — không có lỗi, không có warning, chỉ là im lặng hoàn toàn.
+
+### Vấn đề: HTTP App thuần không lắng nghe RabbitMQ
+
+`main.ts` hiện tại tạo một HTTP app thuần:
+
+```ts
+// Hiện tại — chỉ có HTTP
+const app = await NestFactory.create<NestExpressApplication>(AppModule)
+await app.listen(3000)
+// → Chỉ nhận HTTP requests
+// → @EventPattern('order.created') bị IGNORE hoàn toàn ❌
+```
+
+Khi dùng `@EventPattern` trong consumer, NestJS cần một **microservice transport** đang chạy để lắng nghe AMQP connection. Không có nó, các decorator này không làm gì cả.
+
+### Giải pháp: Hybrid Application (HTTP + Microservice cùng process)
+
+NestJS hỗ trợ **Hybrid App** — một process duy nhất vừa serve HTTP vừa lắng nghe message broker:
+
+```
+Hybrid App:
+  NestFactory.create() → HTTP server (Express) ← HTTP clients
+  app.connectMicroservice(RMQ transport) → AMQP consumer ← RabbitMQ
+  app.startAllMicroservices() → bắt đầu lắng nghe RabbitMQ
+  app.listen(3000) → bắt đầu nhận HTTP
+```
+
+### Cập nhật src/main.ts
+
+```ts
+import { Logger } from '@nestjs/common'
+import { NestFactory } from '@nestjs/core'
+import { MicroserviceOptions, Transport } from '@nestjs/microservices'  // ← import thêm
+import { NestExpressApplication } from '@nestjs/platform-express'
+import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger'
+import helmet from 'helmet'
+import { Logger as PinoLogger } from 'nestjs-pino'
+import { cleanupOpenApiDoc } from 'nestjs-zod'
+import { WebsocketAdapter } from 'src/websockets/websocket.adapter'
+import envConfig from 'src/shared/config'  // ← import thêm
+import {
+  ECOM_EXCHANGE,
+  ORDER_EVENTS_QUEUE,
+  ORDER_EVENTS_DLQ,
+  PAYMENT_EVENTS_QUEUE,
+  NOTIFICATION_EVENTS_QUEUE,
+  INVENTORY_EVENTS_QUEUE,
+} from 'src/shared/constants/rabbitmq.constant'  // ← import thêm
+import { AppModule } from './app.module'
+
+async function bootstrap() {
+  const app = await NestFactory.create<NestExpressApplication>(AppModule, {
+    bufferLogs: true,
+  })
+  app.useLogger(app.get(PinoLogger))
+
+  // ─── BƯỚC MỚI: Kết nối RabbitMQ microservice transports ─────────────────
+
+  // Transport 1: Main queue — nhận events từ domain (order.created, payment.succeeded, ...)
+  app.connectMicroservice<MicroserviceOptions>({
+    transport: Transport.RMQ,
+    options: {
+      urls: [envConfig.RABBITMQ_URL],
+      queue: ORDER_EVENTS_QUEUE,
+      queueOptions: {
+        durable: true,
+        // KHÔNG đặt x-message-ttl ở đây — sẽ dead-letter message bình thường khi consumer chậm
+      },
+      wildcards: true,
+      exchange: ECOM_EXCHANGE,
+      exchangeType: 'topic',
+      noAck: false,        // Manual ACK — phải ACK/NACK tường minh
+      prefetchCount: 10,   // Tối đa 10 messages đang xử lý đồng thời
+      socketOptions: {
+        heartbeatIntervalInSeconds: 30,
+      },
+    },
+  })
+
+  // Transport 2: DLQ — nhận dead-lettered messages để log/alert/manual review
+  // DLQ consumer cần transport riêng vì message giữ pattern gốc ('order.created'),
+  // không match với @EventPattern('dlq') nếu dùng chung transport.
+  app.connectMicroservice<MicroserviceOptions>({
+    transport: Transport.RMQ,
+    options: {
+      urls: [envConfig.RABBITMQ_URL],
+      queue: ORDER_EVENTS_DLQ,
+      queueOptions: { durable: true },
+      noAck: false,
+      prefetchCount: 5,
+    },
+  })
+  // ──────────────────────────────────────────────────────────────────────────
+
+  // CORS (giữ nguyên)
+  const allowedOrigins = process.env.ALLOWED_ORIGINS?.split(',').filter(Boolean) || []
+  if (process.env.NODE_ENV === 'development') {
+    allowedOrigins.push('http://localhost:3000', 'http://localhost:3300', 'http://localhost:5173')
+  }
+  if (process.env.NODE_ENV === 'production' && allowedOrigins.length === 0) {
+    throw new Error('ALLOWED_ORIGINS environment variable must be set in production')
+  }
+  app.enableCors({
+    origin: allowedOrigins.length > 0 ? allowedOrigins : false,
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'Accept-Language'],
+    maxAge: 86400,
+  })
+
+  // Helmet (giữ nguyên)
+  app.use(
+    helmet({
+      contentSecurityPolicy:
+        process.env.NODE_ENV === 'production'
+          ? {
+              directives: {
+                defaultSrc: ["'self'"],
+                scriptSrc: ["'self'", "'unsafe-inline'"],
+                styleSrc: ["'self'", "'unsafe-inline'"],
+                imgSrc: ["'self'", 'data:', 'https:'],
+                connectSrc: ["'self'"],
+              },
+            }
+          : false,
+      crossOriginEmbedderPolicy: false,
+    }),
+  )
+
+  app.set('trust proxy', process.env.NODE_ENV === 'production' ? 1 : 'loopback')
+
+  // Swagger (giữ nguyên)
+  const documentBuilder = new DocumentBuilder()
+    .setTitle('Ecommerce API')
+    .setDescription('The API for the ecommerce application')
+    .setVersion('1.0')
+    .addServer(`http://localhost:${process.env.PORT ?? 3000}`, 'Local Development')
+
+  if (process.env.NODE_ENV === 'production' && process.env.API_URL) {
+    documentBuilder.addServer(process.env.API_URL, 'Production')
+  }
+
+  const config = documentBuilder
+    .addBearerAuth()
+    .addApiKey({ name: 'authorization', type: 'apiKey' }, 'payment-api-key')
+    .build()
+
+  const document = SwaggerModule.createDocument(app, config, {
+    operationIdFactory: (controllerKey: string, methodKey: string) => methodKey,
+  })
+  const cleanedDocument = cleanupOpenApiDoc(document)
+  SwaggerModule.setup('api', app, cleanedDocument, {
+    swaggerOptions: { persistAuthorization: true },
+  })
+
+  // WebSocket adapter (giữ nguyên)
+  try {
+    const websocketAdapter = new WebsocketAdapter(app)
+    await websocketAdapter.connectToRedis()
+    app.useWebSocketAdapter(websocketAdapter)
+  } catch (error) {
+    const logger = new Logger('Bootstrap')
+    logger.error('Failed to initialize WebSocket adapter with Redis', error instanceof Error ? error.stack : error)
+    if (process.env.NODE_ENV === 'production') throw error
+    logger.warn('WebSocket disabled in development due to Redis connection failure')
+  }
+
+  // ─── BƯỚC MỚI: Start microservices TRƯỚC khi listen HTTP ─────────────────
+  await app.startAllMicroservices()
+  const logger = new Logger('Bootstrap')
+  logger.log('RabbitMQ microservice transport started — listening for events')
+  // ──────────────────────────────────────────────────────────────────────────
+
+  await app.listen(process.env.PORT ?? 3000)
+
+  app.enableShutdownHooks()
+
+  const signals: NodeJS.Signals[] = ['SIGTERM', 'SIGINT']
+  for (const signal of signals) {
+    process.on(signal, async () => {
+      const logger = new Logger('Bootstrap')
+      logger.log(`Received ${signal}, starting graceful shutdown...`)
+      await app.close()  // Đóng cả HTTP + microservice transports
+      logger.log('Application shut down gracefully')
+      process.exit(0)
+    })
+  }
+}
+
+bootstrap()
+```
+
+### Các điểm thay đổi so với main.ts hiện tại
+
+| Thay đổi | Lý do |
+|---|---|
+| `import { MicroserviceOptions, Transport }` | Cần cho `connectMicroservice()` |
+| `import envConfig` | Dùng `RABBITMQ_URL` từ Zod config (không đọc `process.env` thô) |
+| `app.connectMicroservice(...)` | Đăng ký RabbitMQ transport — consumer bắt đầu hoạt động |
+| `await app.startAllMicroservices()` | **Bắt buộc** — khởi động tất cả transports đã register |
+| Thứ tự: `startAllMicroservices` TRƯỚC `listen` | MQ ready trước HTTP — tránh race condition startup |
+| `app.close()` xử lý cả HTTP + MQ | Graceful shutdown: drain queue + close connections |
+
+### Mở rộng: thêm queue cho domain khác
+
+Khi cần thêm queue riêng cho domain khác (ví dụ notification cần prefetchCount cao hơn):
+
+```ts
+// Queue 3: Notification events
+app.connectMicroservice<MicroserviceOptions>({
+  transport: Transport.RMQ,
+  options: {
+    urls: [envConfig.RABBITMQ_URL],
+    queue: NOTIFICATION_EVENTS_QUEUE,
+    queueOptions: { durable: true },
+    wildcards: true,
+    exchange: ECOM_EXCHANGE,
+    exchangeType: 'topic',
+    noAck: false,
+    prefetchCount: 50,
+  },
+})
+
+// startAllMicroservices() start TẤT CẢ transports đã register
+await app.startAllMicroservices()
+```
+
+> **Lưu ý thực tế**: Với dự án hiện tại (monolith đang chuyển sang event-driven), bắt đầu với **2 transport** (main queue + DLQ) là đủ. Thêm queue sau khi có nhu cầu cụ thể.
+
+---
+
+## 11) Tích hợp vào domain — Order flow ví dụ
 
 ### Cách sử dụng trong service: ghi DB + Outbox cùng transaction
 
@@ -821,61 +1084,235 @@ Hai hệ thống chạy độc lập, mỗi cái giải quyết bài toán khác
 
 ---
 
-## 11) Dead Letter Queue + Retry
+## 12) Dead Letter Queue + Retry
 
-### Cấu hình DLQ cho RabbitMQ
+### Tại sao `nack + requeue` đơn giản KHÔNG hoạt động cho retry?
 
-DLQ được cấu hình qua `x-dead-letter-exchange` và `x-dead-letter-routing-key` trong queue options (đã set trong `rabbitmq.module.ts`).
+```
+❌ SAI — nack(msg, false, true) tạo vòng lặp vô hạn:
 
-Khi message bị nack hoặc TTL expire → message chuyển sang DLQ.
+  Consumer nhận message → fail → nack(requeue=true)
+     ↑                                    │
+     └────── message quay lại đầu queue ──┘
+     (lặp lại NGAY LẬP TỨC, không delay, không đếm retry)
+     → CPU 100%, log spam, không bao giờ dừng
+```
 
-### src/queues/dead-letter.consumer.ts
+RabbitMQ **không đếm retry**. Không có `x-retry-count` tự động. Cần tự implement.
+
+### Chiến lược retry đúng: Header-based retry counting
+
+Cách đơn giản và hiệu quả nhất cho dự án hiện tại — đếm retry qua custom header trong message:
+
+```
+Consumer nhận message → fail →
+  1. Đọc header x-retry-count (mặc định 0)
+  2. Nếu count < MAX_RETRIES:
+     → nack(msg, false, false)  ← requeue = FALSE (quan trọng!)
+     → Publish lại message MỚI với x-retry-count + 1 và delay
+  3. Nếu count >= MAX_RETRIES:
+     → nack(msg, false, false)  ← message bị drop khỏi queue
+     → Log error + alert team
+     → Lưu vào DB để manual review
+```
+
+### Cập nhật consumer với retry logic
 
 ```ts
+// src/shared/rabbitmq/retry.helper.ts
+import { RmqContext } from '@nestjs/microservices'
+import { Logger } from '@nestjs/common'
+
+const MAX_RETRIES = 3
+const RETRY_HEADER = 'x-retry-count'
+
+export interface RetryResult {
+  shouldProcess: boolean
+  retryCount: number
+}
+
+export function getRetryCount(context: RmqContext): number {
+  const originalMsg = context.getMessage()
+  const headers = originalMsg.properties?.headers || {}
+  return parseInt(headers[RETRY_HEADER] || '0', 10)
+}
+
+export function rejectWithRetry(
+  context: RmqContext,
+  logger: Logger,
+  eventType: string,
+): 'retry' | 'dead-letter' {
+  const channel = context.getChannelRef()
+  const originalMsg = context.getMessage()
+  const retryCount = getRetryCount(context)
+
+  // KHÔNG requeue — message bị drop khỏi queue hiện tại
+  channel.nack(originalMsg, false, false)
+
+  if (retryCount < MAX_RETRIES) {
+    logger.warn(
+      `Event ${eventType} failed, retry ${retryCount + 1}/${MAX_RETRIES}`,
+    )
+    return 'retry'
+  }
+
+  logger.error(
+    `Event ${eventType} exceeded max retries (${MAX_RETRIES}), sending to DLQ`,
+  )
+  return 'dead-letter'
+}
+```
+
+### Cập nhật consumer sử dụng retry helper
+
+```ts
+// src/queues/order-event.consumer.ts (cập nhật)
 import { Controller, Logger } from '@nestjs/common'
 import { EventPattern, Payload, Ctx, RmqContext } from '@nestjs/microservices'
-import { PrismaService } from 'src/shared/services/prisma.service'
+import { OrderEvents } from 'src/shared/constants/rabbitmq.constant'
+import { DomainEvent } from 'src/shared/rabbitmq/event-bus.service'
+import { EventBusService } from 'src/shared/rabbitmq/event-bus.service'
+import { getRetryCount, rejectWithRetry } from 'src/shared/rabbitmq/retry.helper'
+import { RmqRecordBuilder } from '@nestjs/microservices'
+
+@Controller()
+export class OrderEventConsumer {
+  private readonly logger = new Logger(OrderEventConsumer.name)
+
+  constructor(
+    private readonly eventBusService: EventBusService,
+  ) {}
+
+  @EventPattern(OrderEvents.CREATED)
+  async handleOrderCreated(@Payload() event: DomainEvent, @Ctx() context: RmqContext) {
+    const channel = context.getChannelRef()
+    const originalMsg = context.getMessage()
+    const retryCount = getRetryCount(context)
+
+    try {
+      this.logger.log(
+        `Processing ${event.eventType} [retry: ${retryCount}]: order ${event.aggregateId}`,
+      )
+
+      // ... business logic ...
+
+      channel.ack(originalMsg)
+    } catch (error) {
+      this.logger.error(
+        `Failed to process ${event.eventType}: ${error instanceof Error ? error.message : 'Unknown'}`,
+      )
+
+      const result = rejectWithRetry(context, this.logger, event.eventType)
+
+      if (result === 'retry') {
+        // Publish lại message với retry count + 1
+        // Sử dụng RmqRecordBuilder để set custom headers
+        const record = new RmqRecordBuilder(event)
+          .setOptions({
+            headers: { 'x-retry-count': String(retryCount + 1) },
+          })
+          .build()
+        // Re-emit sau delay (exponential backoff)
+        const delay = Math.min(1000 * Math.pow(2, retryCount), 30000)
+        setTimeout(() => {
+          this.eventBusService.publish(event).catch((err) => {
+            this.logger.error(`Failed to re-publish for retry: ${err.message}`)
+          })
+        }, delay)
+      }
+      // Nếu 'dead-letter' → message đã bị nack(requeue=false) → cần xử lý manual
+    }
+  }
+}
+```
+
+### DLQ Consumer — xử lý message thất bại vĩnh viễn
+
+DLQ consumer chạy trên **transport riêng** (đã cấu hình ở Section 10 — `connectMicroservice` thứ 2 trên `ORDER_EVENTS_DLQ` queue).
+
+Vì dead-lettered message **giữ nguyên pattern gốc** (`order.created`, `payment.succeeded`, ...) trong body, consumer cần match pattern đó — **không phải `'dlq'`**.
+
+```ts
+// src/queues/dead-letter.consumer.ts
+import { Controller, Logger } from '@nestjs/common'
+import { EventPattern, Payload, Ctx, RmqContext } from '@nestjs/microservices'
+import { OrderEvents, PaymentEvents } from 'src/shared/constants/rabbitmq.constant'
 
 @Controller()
 export class DeadLetterConsumer {
   private readonly logger = new Logger(DeadLetterConsumer.name)
 
-  constructor(private readonly prismaService: PrismaService) {}
+  // Phải khai báo @EventPattern cho MỖI event type có thể bị dead-letter
+  // Vì message giữ pattern gốc trong body
 
-  @EventPattern('dlq')
-  async handleDeadLetter(@Payload() message: any, @Ctx() context: RmqContext) {
+  @EventPattern(OrderEvents.CREATED)
+  async handleDeadOrderCreated(@Payload() message: any, @Ctx() context: RmqContext) {
+    await this.handleDeadLetter(message, context)
+  }
+
+  @EventPattern(OrderEvents.CANCELLED)
+  async handleDeadOrderCancelled(@Payload() message: any, @Ctx() context: RmqContext) {
+    await this.handleDeadLetter(message, context)
+  }
+
+  @EventPattern(PaymentEvents.SUCCEEDED)
+  async handleDeadPaymentSucceeded(@Payload() message: any, @Ctx() context: RmqContext) {
+    await this.handleDeadLetter(message, context)
+  }
+
+  @EventPattern(PaymentEvents.FAILED)
+  async handleDeadPaymentFailed(@Payload() message: any, @Ctx() context: RmqContext) {
+    await this.handleDeadLetter(message, context)
+  }
+
+  private async handleDeadLetter(message: any, context: RmqContext) {
     const channel = context.getChannelRef()
     const originalMsg = context.getMessage()
 
-    this.logger.error(`Dead letter received`, {
+    this.logger.error(`☠️ Dead letter received — manual review needed`, {
       eventType: message.eventType,
       aggregateType: message.aggregateType,
       aggregateId: message.aggregateId,
       correlationId: message.metadata?.correlationId,
+      retryCount: originalMsg.properties?.headers?.['x-retry-count'] || 'unknown',
     })
 
-    // Lưu vào DB để manual review
-    // Có thể tạo bảng FailedEvent riêng hoặc dùng alert
-    // Tạm thời log error + ack để DLQ không bị đầy
+    // TODO: Lưu vào bảng FailedEvent hoặc gửi alert Slack/email
+    // await this.prismaService.failedEvent.create({ ... })
 
     channel.ack(originalMsg)
   }
 }
 ```
 
-### Retry strategy
+### Retry flow hoàn chỉnh
 
 ```
-Message fail lần 1 → nack + requeue → quay lại queue
-Message fail lần 2 → nack + requeue → quay lại queue
-Message fail lần 3 → TTL expire → DLX → DLQ
-                                        → Alert team
-                                        → Manual review + replay
+Message vào queue chính (order_events_q)
+    │
+    ▼
+Consumer nhận message → xử lý thành công → ACK ✅
+    │
+    │ (nếu fail)
+    ▼
+Check header x-retry-count
+    │
+    ├── count < 3 (MAX_RETRIES):
+    │     nack(requeue=false) → message bị drop
+    │     setTimeout(delay) → re-publish message mới với count+1
+    │     delay = 1s, 2s, 4s (exponential backoff)
+    │
+    └── count >= 3:
+          nack(requeue=false) → message bị drop
+          Log error + alert team
+          (Manual review: xem logs, fix bug, replay từ Outbox nếu cần)
 ```
+
+> **Tại sao re-publish thay vì dùng DLX?** Với NestJS RMQ transport, việc setup DLX → retry queue → binding ngược lại queue chính đòi hỏi cấu hình AMQP thủ công ngoài NestJS. Re-publish qua `EventBusService` đơn giản hơn và tận dụng được infrastructure đã có. Khi scale lên, có thể chuyển sang delayed retry queue pattern với AMQP plugin.
 
 ---
 
-## 12) Health Check
+## 13) Health Check
 
 ### Thêm RabbitMQ health check
 
@@ -916,7 +1353,7 @@ export class HealthController {
 
 ---
 
-## 13) Testing
+## 14) Testing
 
 ### Unit test cho EventBusService
 
@@ -1056,7 +1493,7 @@ describe('OutboxWorker', () => {
 
 ---
 
-## 14) Phân biệt rõ: BullMQ làm gì, RabbitMQ làm gì
+## 15) Phân biệt rõ: BullMQ làm gì, RabbitMQ làm gì
 
 ### Bảng phân chia trách nhiệm trong dự án
 
@@ -1095,7 +1532,7 @@ Dùng RabbitMQ khi:
 
 ---
 
-## 15) Checklist triển khai
+## 16) Checklist triển khai
 
 ### Phase 1a — Infrastructure (làm trước)
 
@@ -1112,6 +1549,7 @@ Dùng RabbitMQ khi:
 - [ ] Tạo `src/shared/rabbitmq/event-bus.service.ts` (producer)
 - [ ] Tạo `src/shared/rabbitmq/outbox.worker.ts` (poll Outbox → publish → mark)
 - [ ] Đăng ký `RabbitmqModule` trong `app.module.ts`
+- [ ] **⚠️ Cập nhật `src/main.ts`**: thêm `app.connectMicroservice(RMQ options)` + `await app.startAllMicroservices()` TRƯỚC `app.listen()` — **bước này bắt buộc để consumer hoạt động**
 
 ### Phase 1c — Domain integration (nghiệp vụ)
 
