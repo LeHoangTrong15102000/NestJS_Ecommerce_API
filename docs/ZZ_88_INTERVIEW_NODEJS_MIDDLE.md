@@ -33,6 +33,7 @@
 NodeJS là runtime environment cho JavaScript chạy phía server, được xây dựng trên V8 engine của Chrome. NodeJS sử dụng kiến trúc **event-driven, non-blocking I/O** cho phép xử lý nhiều request đồng thời mà không cần tạo nhiều thread.
 
 Điểm quan trọng cần nhấn mạnh:
+
 - Single-threaded nhưng non-blocking nhờ **libuv** và **Event Loop**
 - Phù hợp với I/O-intensive tasks (API, chat, streaming)
 - Không phù hợp với CPU-intensive tasks (video encoding, complex calculations)
@@ -45,6 +46,7 @@ NodeJS là runtime environment cho JavaScript chạy phía server, được xây
 Event Loop là cơ chế cho phép NodeJS thực hiện non-blocking I/O mặc dù JavaScript là single-threaded.
 
 **6 Phase của Event Loop:**
+
 ```
 ┌──────────────────────────────┐
 │           timers             │  ← setTimeout, setInterval callbacks
@@ -57,18 +59,19 @@ Event Loop là cơ chế cho phép NodeJS thực hiện non-blocking I/O mặc d
 ```
 
 **Thứ tự ưu tiên:**
+
 1. `process.nextTick()` — chạy TRƯỚC khi event loop tiếp tục (microtask queue)
 2. `Promise.then()` — microtask queue
 3. `setImmediate()` — phase Check
 4. `setTimeout(fn, 0)` — phase Timers
 
 ```javascript
-console.log('1');
-setTimeout(() => console.log('setTimeout'), 0);
-setImmediate(() => console.log('setImmediate'));
-process.nextTick(() => console.log('nextTick'));
-Promise.resolve().then(() => console.log('Promise'));
-console.log('2');
+console.log('1')
+setTimeout(() => console.log('setTimeout'), 0)
+setImmediate(() => console.log('setImmediate'))
+process.nextTick(() => console.log('nextTick'))
+Promise.resolve().then(() => console.log('Promise'))
+console.log('2')
 
 // Output: 1 → 2 → nextTick → Promise → setTimeout → setImmediate
 ```
@@ -81,22 +84,23 @@ console.log('2');
 NodeJS có **1 main thread** nhưng libuv có **thread pool** (mặc định 4 threads) xử lý các blocking operations (file I/O, crypto, DNS lookup).
 
 Các cách scale NodeJS:
+
 1. **cluster module**: fork nhiều process, mỗi process = 1 CPU core
 2. **worker_threads**: dùng cho CPU-intensive tasks trong cùng process
 3. **PM2 cluster mode**: process manager tự động fork
 
 ```javascript
 // cluster module example
-const cluster = require('cluster');
-const os = require('os');
+const cluster = require('cluster')
+const os = require('os')
 
 if (cluster.isMaster) {
-  const numCPUs = os.cpus().length;
+  const numCPUs = os.cpus().length
   for (let i = 0; i < numCPUs; i++) {
-    cluster.fork();
+    cluster.fork()
   }
 } else {
-  require('./app'); // worker chạy app
+  require('./app') // worker chạy app
 }
 ```
 
@@ -106,13 +110,13 @@ if (cluster.isMaster) {
 
 **Trả lời:**
 
-| Tiêu chí | `require()` (CommonJS) | `import` (ES Modules) |
-|---|---|---|
-| Loading | Synchronous | Asynchronous |
-| Tree shaking | Không hỗ trợ | Hỗ trợ |
-| Dynamic import | `require(variable)` | `import()` (dynamic) |
-| Top-level await | Không | Có |
-| File extension | `.js` (default) | `.mjs` hoặc `"type": "module"` |
+| Tiêu chí        | `require()` (CommonJS) | `import` (ES Modules)          |
+| --------------- | ---------------------- | ------------------------------ |
+| Loading         | Synchronous            | Asynchronous                   |
+| Tree shaking    | Không hỗ trợ           | Hỗ trợ                         |
+| Dynamic import  | `require(variable)`    | `import()` (dynamic)           |
+| Top-level await | Không                  | Có                             |
+| File extension  | `.js` (default)        | `.mjs` hoặc `"type": "module"` |
 
 ---
 
@@ -122,6 +126,7 @@ if (cluster.isMaster) {
 Memory leak xảy ra khi bộ nhớ được cấp phát nhưng không được garbage collected.
 
 **Nguyên nhân phổ biến:**
+
 - Global variables không cần thiết
 - Event listeners không được remove
 - Closures giữ reference đến objects lớn
@@ -129,6 +134,7 @@ Memory leak xảy ra khi bộ nhớ được cấp phát nhưng không được 
 - setInterval không được clearInterval
 
 **Cách phát hiện:**
+
 ```bash
 # Profile với --inspect
 node --inspect app.js
@@ -136,16 +142,17 @@ node --inspect app.js
 ```
 
 **Fix ví dụ:**
+
 ```javascript
 // ❌ Sai - listener không được remove
-emitter.on('data', handler);
+emitter.on('data', handler)
 
 // ✅ Đúng - remove khi không cần
-emitter.on('data', handler);
+emitter.on('data', handler)
 // khi xong:
-emitter.off('data', handler);
+emitter.off('data', handler)
 // hoặc dùng once:
-emitter.once('data', handler);
+emitter.once('data', handler)
 ```
 
 ---
@@ -164,28 +171,28 @@ getData(id, (err, user) => {
     getProducts(orders[0].id, (err, product) => {
       saveLog(product, (err, result) => {
         // ... sâu hơn nữa
-      });
-    });
-  });
-});
+      })
+    })
+  })
+})
 
 // ✅ Giải pháp 1: Promises
 getData(id)
-  .then(user => getOrders(user.id))
-  .then(orders => getProducts(orders[0].id))
-  .then(product => saveLog(product))
-  .catch(err => console.error(err));
+  .then((user) => getOrders(user.id))
+  .then((orders) => getProducts(orders[0].id))
+  .then((product) => saveLog(product))
+  .catch((err) => console.error(err))
 
 // ✅ Giải pháp 2: async/await (tốt nhất)
 async function process(id) {
   try {
-    const user = await getData(id);
-    const orders = await getOrders(user.id);
-    const product = await getProducts(orders[0].id);
-    const result = await saveLog(product);
-    return result;
+    const user = await getData(id)
+    const orders = await getOrders(user.id)
+    const product = await getProducts(orders[0].id)
+    const result = await saveLog(product)
+    return result
   } catch (err) {
-    console.error(err);
+    console.error(err)
   }
 }
 ```
@@ -198,33 +205,20 @@ async function process(id) {
 
 ```javascript
 // Promise.all — chờ TẤT CẢ resolve, 1 reject là fail hết
-const [user, orders, products] = await Promise.all([
-  getUser(id),
-  getOrders(id),
-  getProducts()
-]);
+const [user, orders, products] = await Promise.all([getUser(id), getOrders(id), getProducts()])
 
 // Promise.allSettled — chờ TẤT CẢ hoàn thành, kể cả reject
-const results = await Promise.allSettled([
-  getUser(id),
-  getOrders(id)
-]);
-results.forEach(result => {
-  if (result.status === 'fulfilled') console.log(result.value);
-  else console.error(result.reason);
-});
+const results = await Promise.allSettled([getUser(id), getOrders(id)])
+results.forEach((result) => {
+  if (result.status === 'fulfilled') console.log(result.value)
+  else console.error(result.reason)
+})
 
 // Promise.race — lấy kết quả của promise NHANH NHẤT
-const fastest = await Promise.race([
-  fetchFromServer1(),
-  fetchFromServer2()
-]);
+const fastest = await Promise.race([fetchFromServer1(), fetchFromServer2()])
 
 // Promise.any — lấy kết quả THÀNH CÔNG đầu tiên (khác race)
-const first = await Promise.any([
-  fetchFromPrimary(),
-  fetchFromFallback()
-]);
+const first = await Promise.any([fetchFromPrimary(), fetchFromFallback()])
 ```
 
 ---
@@ -235,6 +229,7 @@ const first = await Promise.any([
 Streams xử lý dữ liệu theo từng chunk thay vì load toàn bộ vào memory — cực kỳ hiệu quả cho file lớn, video streaming, real-time data.
 
 **4 loại Stream:**
+
 - `Readable`: đọc dữ liệu (fs.createReadStream)
 - `Writable`: ghi dữ liệu (fs.createWriteStream)
 - `Duplex`: đọc và ghi (TCP socket)
@@ -242,18 +237,18 @@ Streams xử lý dữ liệu theo từng chunk thay vì load toàn bộ vào mem
 
 ```javascript
 // ❌ Không dùng Stream — load toàn bộ file vào RAM
-const data = fs.readFileSync('largefile.csv'); // có thể OOM
+const data = fs.readFileSync('largefile.csv') // có thể OOM
 
 // ✅ Dùng Stream — xử lý từng chunk
-const readable = fs.createReadStream('largefile.csv');
-const writable = fs.createWriteStream('output.csv');
+const readable = fs.createReadStream('largefile.csv')
+const writable = fs.createWriteStream('output.csv')
 
 readable
   .pipe(transform) // transform từng chunk
-  .pipe(writable);
+  .pipe(writable)
 
 // Biết khi nào xong
-writable.on('finish', () => console.log('Done'));
+writable.on('finish', () => console.log('Done'))
 ```
 
 ---
@@ -266,6 +261,7 @@ writable.on('finish', () => console.log('Done'));
 Middleware là functions có access vào `req`, `res`, `next` — có thể thực thi code, modify request/response, kết thúc cycle, hoặc chuyển sang middleware tiếp theo.
 
 **Middleware pipeline:**
+
 ```
 Request → [Logger MW] → [Auth MW] → [Validate MW] → [Route Handler] → Response
                ↓(next)        ↓(next)        ↓(next)
@@ -274,19 +270,19 @@ Request → [Logger MW] → [Auth MW] → [Validate MW] → [Route Handler] → 
 ```javascript
 // Custom middleware
 const logger = (req, res, next) => {
-  console.log(`${req.method} ${req.url} - ${Date.now()}`);
-  next(); // QUAN TRỌNG: phải gọi next() hoặc kết thúc request
-};
+  console.log(`${req.method} ${req.url} - ${Date.now()}`)
+  next() // QUAN TRỌNG: phải gọi next() hoặc kết thúc request
+}
 
 // Error-handling middleware (4 arguments)
 const errorHandler = (err, req, res, next) => {
-  console.error(err.stack);
-  res.status(500).json({ error: err.message });
-};
+  console.error(err.stack)
+  res.status(500).json({ error: err.message })
+}
 
-app.use(logger);
-app.use('/api', router);
-app.use(errorHandler); // phải đặt CUỐI CÙNG
+app.use(logger)
+app.use('/api', router)
+app.use(errorHandler) // phải đặt CUỐI CÙNG
 ```
 
 ---
@@ -295,17 +291,18 @@ app.use(errorHandler); // phải đặt CUỐI CÙNG
 
 **Trả lời:**
 
-| Tiêu chí | ExpressJS | KOA |
-|---|---|---|
-| Tác giả | TJ Holowaychuk | TJ Holowaychuk (rebuild) |
-| Async support | Callback-based (có thể dùng async/await) | Native async/await từ đầu |
-| Middleware | Cơ chế linear | Cơ chế "onion" (cascade) |
-| Built-in Router | Có | Không (cần koa-router) |
-| Bundle size | Nặng hơn | Nhỏ hơn, modular |
-| Error handling | try/catch trong mỗi route | Centralized trong middleware |
-| Ecosystem | Lớn hơn, nhiều package | Nhỏ hơn |
+| Tiêu chí        | ExpressJS                                | KOA                          |
+| --------------- | ---------------------------------------- | ---------------------------- |
+| Tác giả         | TJ Holowaychuk                           | TJ Holowaychuk (rebuild)     |
+| Async support   | Callback-based (có thể dùng async/await) | Native async/await từ đầu    |
+| Middleware      | Cơ chế linear                            | Cơ chế "onion" (cascade)     |
+| Built-in Router | Có                                       | Không (cần koa-router)       |
+| Bundle size     | Nặng hơn                                 | Nhỏ hơn, modular             |
+| Error handling  | try/catch trong mỗi route                | Centralized trong middleware |
+| Ecosystem       | Lớn hơn, nhiều package                   | Nhỏ hơn                      |
 
 **Chọn KOA khi:**
+
 - Project mới cần clean async/await
 - Muốn kiến trúc modular, tự chọn components
 - Cần cascade middleware behavior
@@ -313,16 +310,16 @@ app.use(errorHandler); // phải đặt CUỐI CÙNG
 ```javascript
 // KOA middleware (onion model)
 app.use(async (ctx, next) => {
-  console.log('1 → trước');
-  await next();              // gọi middleware tiếp theo
-  console.log('1 ← sau');   // chạy SAU KHI middleware con xong
-});
+  console.log('1 → trước')
+  await next() // gọi middleware tiếp theo
+  console.log('1 ← sau') // chạy SAU KHI middleware con xong
+})
 
 app.use(async (ctx, next) => {
-  console.log('2 → trước');
-  await next();
-  console.log('2 ← sau');
-});
+  console.log('2 → trước')
+  await next()
+  console.log('2 ← sau')
+})
 
 // Output: 1→ 2→ 2← 1←   (onion layers)
 ```
@@ -336,33 +333,36 @@ app.use(async (ctx, next) => {
 ```javascript
 // Wrapper cho async routes (tránh viết try/catch ở mỗi route)
 const asyncHandler = (fn) => (req, res, next) => {
-  Promise.resolve(fn(req, res, next)).catch(next);
-};
+  Promise.resolve(fn(req, res, next)).catch(next)
+}
 
 // Custom Error class
 class AppError extends Error {
   constructor(message, statusCode) {
-    super(message);
-    this.statusCode = statusCode;
-    this.isOperational = true;
+    super(message)
+    this.statusCode = statusCode
+    this.isOperational = true
   }
 }
 
 // Routes
-router.get('/user/:id', asyncHandler(async (req, res) => {
-  const user = await User.findById(req.params.id);
-  if (!user) throw new AppError('User not found', 404);
-  res.json(user);
-}));
+router.get(
+  '/user/:id',
+  asyncHandler(async (req, res) => {
+    const user = await User.findById(req.params.id)
+    if (!user) throw new AppError('User not found', 404)
+    res.json(user)
+  }),
+)
 
 // Global error handler
 app.use((err, req, res, next) => {
-  const statusCode = err.statusCode || 500;
+  const statusCode = err.statusCode || 500
   res.status(statusCode).json({
     status: 'error',
-    message: err.isOperational ? err.message : 'Something went wrong'
-  });
-});
+    message: err.isOperational ? err.message : 'Something went wrong',
+  })
+})
 ```
 
 ---
@@ -375,6 +375,7 @@ app.use((err, req, res, next) => {
 Message Queue là middleware cho phép các service giao tiếp bất đồng bộ. Producer gửi message vào queue, Consumer xử lý theo tốc độ của nó.
 
 **Use cases cần Queue:**
+
 - Gửi email/SMS sau khi đặt hàng (không cần block response)
 - Xử lý ảnh/video upload (time-consuming)
 - Distributed systems — service A giao việc cho service B
@@ -382,6 +383,7 @@ Message Queue là middleware cho phép các service giao tiếp bất đồng b�
 - Retry logic khi external service down
 
 **Các Queue systems phổ biến:**
+
 - **BullMQ** (Redis-based, phổ biến với NodeJS)
 - **RabbitMQ** (AMQP protocol)
 - **Apache Kafka** (high-throughput event streaming)
@@ -389,29 +391,37 @@ Message Queue là middleware cho phép các service giao tiếp bất đồng b�
 
 ```javascript
 // BullMQ example với Redis
-import { Queue, Worker } from 'bullmq';
-import IORedis from 'ioredis';
+import { Queue, Worker } from 'bullmq'
+import IORedis from 'ioredis'
 
-const connection = new IORedis();
+const connection = new IORedis()
 
 // Producer — thêm job vào queue
-const emailQueue = new Queue('email', { connection });
+const emailQueue = new Queue('email', { connection })
 
-await emailQueue.add('sendWelcome', {
-  to: 'user@example.com',
-  subject: 'Welcome!'
-}, {
-  attempts: 3,         // retry 3 lần nếu fail
-  backoff: { type: 'exponential', delay: 1000 }
-});
+await emailQueue.add(
+  'sendWelcome',
+  {
+    to: 'user@example.com',
+    subject: 'Welcome!',
+  },
+  {
+    attempts: 3, // retry 3 lần nếu fail
+    backoff: { type: 'exponential', delay: 1000 },
+  },
+)
 
 // Consumer/Worker — xử lý job
-const worker = new Worker('email', async (job) => {
-  await sendEmail(job.data.to, job.data.subject);
-}, { connection, concurrency: 5 });
+const worker = new Worker(
+  'email',
+  async (job) => {
+    await sendEmail(job.data.to, job.data.subject)
+  },
+  { connection, concurrency: 5 },
+)
 
-worker.on('completed', job => console.log(`Job ${job.id} done`));
-worker.on('failed', (job, err) => console.error(`Job ${job.id} failed: ${err.message}`));
+worker.on('completed', (job) => console.log(`Job ${job.id} done`))
+worker.on('failed', (job, err) => console.error(`Job ${job.id} failed: ${err.message}`))
 ```
 
 ---
@@ -420,28 +430,28 @@ worker.on('failed', (job, err) => console.error(`Job ${job.id} failed: ${err.mes
 
 **Trả lời:**
 
-| Tiêu chí | `cluster` | `worker_threads` |
-|---|---|---|
-| Mục đích | Scale theo số CPU cores | CPU-intensive tasks |
-| Bộ nhớ | Mỗi process có memory riêng | Shared memory (SharedArrayBuffer) |
-| Communication | IPC (inter-process) | MessageChannel, SharedArrayBuffer |
-| Overhead | Cao hơn (tạo process) | Thấp hơn (tạo thread) |
-| Use case | HTTP server scaling | Image processing, crypto, data processing |
+| Tiêu chí      | `cluster`                   | `worker_threads`                          |
+| ------------- | --------------------------- | ----------------------------------------- |
+| Mục đích      | Scale theo số CPU cores     | CPU-intensive tasks                       |
+| Bộ nhớ        | Mỗi process có memory riêng | Shared memory (SharedArrayBuffer)         |
+| Communication | IPC (inter-process)         | MessageChannel, SharedArrayBuffer         |
+| Overhead      | Cao hơn (tạo process)       | Thấp hơn (tạo thread)                     |
+| Use case      | HTTP server scaling         | Image processing, crypto, data processing |
 
 ```javascript
 // worker_threads cho CPU-intensive task
-const { Worker, isMainThread, parentPort, workerData } = require('worker_threads');
+const { Worker, isMainThread, parentPort, workerData } = require('worker_threads')
 
 if (isMainThread) {
   // Main thread — gửi task cho worker
   const worker = new Worker(__filename, {
-    workerData: { array: [1, 2, 3, 4, 5, ...largeArray] }
-  });
-  worker.on('message', result => console.log('Result:', result));
+    workerData: { array: [1, 2, 3, 4, 5, ...largeArray] },
+  })
+  worker.on('message', (result) => console.log('Result:', result))
 } else {
   // Worker thread — xử lý CPU-heavy task
-  const result = workerData.array.reduce((sum, n) => sum + n, 0);
-  parentPort.postMessage(result);
+  const result = workerData.array.reduce((sum, n) => sum + n, 0)
+  parentPort.postMessage(result)
 }
 ```
 
@@ -454,30 +464,30 @@ if (isMainThread) {
 ```javascript
 // Ví dụ: process 1000 items nhưng chỉ 10 tại một lúc
 async function processWithConcurrencyLimit(items, limit, processor) {
-  const results = [];
-  const executing = [];
+  const results = []
+  const executing = []
 
   for (const item of items) {
-    const promise = processor(item).then(result => {
-      executing.splice(executing.indexOf(promise), 1);
-      return result;
-    });
+    const promise = processor(item).then((result) => {
+      executing.splice(executing.indexOf(promise), 1)
+      return result
+    })
 
-    results.push(promise);
-    executing.push(promise);
+    results.push(promise)
+    executing.push(promise)
 
     if (executing.length >= limit) {
-      await Promise.race(executing); // chờ 1 trong số đang chạy xong
+      await Promise.race(executing) // chờ 1 trong số đang chạy xong
     }
   }
 
-  return Promise.all(results);
+  return Promise.all(results)
 }
 
 // Sử dụng
 await processWithConcurrencyLimit(userIds, 10, async (id) => {
-  return await sendNotification(id);
-});
+  return await sendNotification(id)
+})
 ```
 
 ---
@@ -489,18 +499,21 @@ await processWithConcurrencyLimit(userIds, 10, async (id) => {
 **Trả lời:**
 
 **Chọn SQL (PostgreSQL) khi:**
+
 - Dữ liệu có cấu trúc rõ ràng, relationships phức tạp
 - Cần ACID transactions (banking, e-commerce orders)
 - Cần complex queries với JOINs
 - Data integrity quan trọng
 
 **Chọn NoSQL (MongoDB) khi:**
+
 - Schema flexible, hay thay đổi
 - Horizontal scaling dễ dàng
 - Document-based data (blog posts, product catalogs)
 - High write throughput
 
 **Ví dụ thực tế (e-commerce):**
+
 - `users`, `orders`, `payments` → PostgreSQL (ACID, relationships)
 - `product_catalog`, `user_sessions`, `logs` → MongoDB (flexible schema)
 - `cart`, `real-time stock` → Redis (fast, in-memory)
@@ -514,25 +527,25 @@ N+1 problem: query 1 lần lấy N records, rồi query thêm N lần để lấ
 
 ```javascript
 // ❌ N+1 problem
-const orders = await Order.find({}); // 1 query → 100 orders
+const orders = await Order.find({}) // 1 query → 100 orders
 for (const order of orders) {
-  order.user = await User.findById(order.userId); // 100 queries!
+  order.user = await User.findById(order.userId) // 100 queries!
 }
 // Total: 101 queries
 
 // ✅ Fix với populate (MongoDB/Mongoose)
-const orders = await Order.find({}).populate('userId'); // 2 queries
+const orders = await Order.find({}).populate('userId') // 2 queries
 
 // ✅ Fix với JOIN (SQL/TypeORM)
 const orders = await orderRepo.find({
-  relations: ['user'] // 1 query với JOIN
-});
+  relations: ['user'], // 1 query với JOIN
+})
 
 // ✅ Fix với DataLoader (GraphQL)
 const userLoader = new DataLoader(async (userIds) => {
-  const users = await User.find({ _id: { $in: userIds } }); // 1 batch query
-  return userIds.map(id => users.find(u => u.id === id));
-});
+  const users = await User.find({ _id: { $in: userIds } }) // 1 batch query
+  return userIds.map((id) => users.find((u) => u.id === id))
+})
 ```
 
 ---
@@ -545,10 +558,12 @@ const userLoader = new DataLoader(async (userIds) => {
 Index là cấu trúc dữ liệu phụ (B-tree mặc định) giúp tăng tốc queries.
 
 **Nên tạo index khi:**
+
 - Cột thường xuyên xuất hiện trong WHERE, JOIN, ORDER BY
 - Cột có high cardinality (nhiều giá trị unique)
 
 **Không nên tạo index khi:**
+
 - Bảng nhỏ
 - Cột thường xuyên UPDATE/INSERT (index làm chậm write)
 - Low cardinality columns (boolean, status với ít giá trị)
@@ -575,6 +590,7 @@ EXPLAIN ANALYZE SELECT * FROM users WHERE email = 'test@test.com';
 Transaction là nhóm operations được thực thi như một đơn vị — tất cả thành công hoặc tất cả rollback.
 
 **ACID:**
+
 - **A**tomicity: Tất cả hoặc không có gì
 - **C**onsistency: DB luôn ở trạng thái hợp lệ
 - **I**solation: Transactions không ảnh hưởng lẫn nhau
@@ -582,25 +598,19 @@ Transaction là nhóm operations được thực thi như một đơn vị — t
 
 ```javascript
 // Transaction với node-postgres
-const client = await pool.connect();
+const client = await pool.connect()
 try {
-  await client.query('BEGIN');
+  await client.query('BEGIN')
 
-  await client.query(
-    'UPDATE accounts SET balance = balance - $1 WHERE id = $2',
-    [amount, fromAccountId]
-  );
-  await client.query(
-    'UPDATE accounts SET balance = balance + $1 WHERE id = $2',
-    [amount, toAccountId]
-  );
+  await client.query('UPDATE accounts SET balance = balance - $1 WHERE id = $2', [amount, fromAccountId])
+  await client.query('UPDATE accounts SET balance = balance + $1 WHERE id = $2', [amount, toAccountId])
 
-  await client.query('COMMIT');
+  await client.query('COMMIT')
 } catch (err) {
-  await client.query('ROLLBACK');
-  throw err;
+  await client.query('ROLLBACK')
+  throw err
 } finally {
-  client.release();
+  client.release()
 }
 ```
 
@@ -617,29 +627,35 @@ Aggregation pipeline xử lý documents qua nhiều stages, mỗi stage transfor
 // Tính tổng doanh thu theo tháng
 const revenue = await Order.aggregate([
   // Stage 1: Filter
-  { $match: {
-    status: 'completed',
-    createdAt: { $gte: new Date('2024-01-01') }
-  }},
+  {
+    $match: {
+      status: 'completed',
+      createdAt: { $gte: new Date('2024-01-01') },
+    },
+  },
 
   // Stage 2: Group
-  { $group: {
-    _id: { $month: '$createdAt' },
-    totalRevenue: { $sum: '$totalAmount' },
-    orderCount: { $count: {} }
-  }},
+  {
+    $group: {
+      _id: { $month: '$createdAt' },
+      totalRevenue: { $sum: '$totalAmount' },
+      orderCount: { $count: {} },
+    },
+  },
 
   // Stage 3: Sort
   { $sort: { _id: 1 } },
 
   // Stage 4: Project (chọn fields output)
-  { $project: {
-    month: '$_id',
-    totalRevenue: 1,
-    orderCount: 1,
-    _id: 0
-  }}
-]);
+  {
+    $project: {
+      month: '$_id',
+      totalRevenue: 1,
+      orderCount: 1,
+      _id: 0,
+    },
+  },
+])
 ```
 
 ---
@@ -650,22 +666,22 @@ const revenue = await Order.aggregate([
 
 ```javascript
 // Single field index
-db.users.createIndex({ email: 1 }); // 1 = ascending
+db.users.createIndex({ email: 1 }) // 1 = ascending
 
 // Compound index
-db.orders.createIndex({ userId: 1, createdAt: -1 });
+db.orders.createIndex({ userId: 1, createdAt: -1 })
 
 // Text index (full-text search)
-db.products.createIndex({ name: 'text', description: 'text' });
+db.products.createIndex({ name: 'text', description: 'text' })
 
 // TTL index (auto-delete sau N giây)
-db.sessions.createIndex({ createdAt: 1 }, { expireAfterSeconds: 3600 });
+db.sessions.createIndex({ createdAt: 1 }, { expireAfterSeconds: 3600 })
 
 // Wildcard index
-db.products.createIndex({ 'metadata.$**': 1 });
+db.products.createIndex({ 'metadata.$**': 1 })
 
 // Explain để check index
-db.orders.find({ userId: '123' }).explain('executionStats');
+db.orders.find({ userId: '123' }).explain('executionStats')
 ```
 
 ---
@@ -678,6 +694,7 @@ db.orders.find({ userId: '123' }).explain('executionStats');
 Redis là in-memory data store, sử dụng như cache, session store, message broker, rate limiter.
 
 **Use cases:**
+
 1. **Caching** — giảm load DB
 2. **Session storage** — lưu user sessions
 3. **Rate limiting** — giới hạn API calls
@@ -686,34 +703,34 @@ Redis là in-memory data store, sử dụng như cache, session store, message b
 6. **Distributed locks** — tránh race conditions
 
 ```javascript
-import { createClient } from 'redis';
+import { createClient } from 'redis'
 
-const redis = createClient({ url: process.env.REDIS_URL });
-await redis.connect();
+const redis = createClient({ url: process.env.REDIS_URL })
+await redis.connect()
 
 // Cache-aside pattern
 async function getUserWithCache(userId) {
-  const cacheKey = `user:${userId}`;
+  const cacheKey = `user:${userId}`
 
   // 1. Check cache
-  const cached = await redis.get(cacheKey);
-  if (cached) return JSON.parse(cached);
+  const cached = await redis.get(cacheKey)
+  if (cached) return JSON.parse(cached)
 
   // 2. Cache miss → query DB
-  const user = await User.findById(userId);
+  const user = await User.findById(userId)
 
   // 3. Save to cache (TTL = 1 giờ)
-  await redis.setEx(cacheKey, 3600, JSON.stringify(user));
+  await redis.setEx(cacheKey, 3600, JSON.stringify(user))
 
-  return user;
+  return user
 }
 
 // Rate limiter với sliding window
 async function rateLimit(userId, limit = 100, windowSeconds = 60) {
-  const key = `rate:${userId}`;
-  const count = await redis.incr(key);
-  if (count === 1) await redis.expire(key, windowSeconds);
-  return count <= limit;
+  const key = `rate:${userId}`
+  const count = await redis.incr(key)
+  if (count === 1) await redis.expire(key, windowSeconds)
+  return count <= limit
 }
 ```
 
@@ -726,24 +743,27 @@ Pub/Sub là pattern messaging: Publisher gửi message vào channel, Subscriber 
 
 ```javascript
 // Publisher (ví dụ: khi có order mới)
-const publisher = createClient();
-await publisher.connect();
+const publisher = createClient()
+await publisher.connect()
 
-await publisher.publish('order:created', JSON.stringify({
-  orderId: '123',
-  userId: 'user456',
-  total: 150000
-}));
+await publisher.publish(
+  'order:created',
+  JSON.stringify({
+    orderId: '123',
+    userId: 'user456',
+    total: 150000,
+  }),
+)
 
 // Subscriber (ví dụ: notification service)
-const subscriber = createClient();
-await subscriber.connect();
+const subscriber = createClient()
+await subscriber.connect()
 
 await subscriber.subscribe('order:created', (message) => {
-  const order = JSON.parse(message);
-  sendOrderConfirmationEmail(order);
-  sendSMS(order);
-});
+  const order = JSON.parse(message)
+  sendOrderConfirmationEmail(order)
+  sendSMS(order)
+})
 ```
 
 ---
@@ -754,34 +774,35 @@ await subscriber.subscribe('order:created', (message) => {
 
 **Trả lời:**
 
-| Tiêu chí | Realtime Database | Firestore |
-|---|---|---|
-| Data model | JSON tree | Document/Collection |
-| Queries | Hạn chế | Phong phú hơn |
-| Offline support | Có | Có |
-| Scalability | Hạn chế | Tốt hơn |
-| Pricing | Data transfer | Read/Write/Delete ops |
-| Use case | Simple real-time, chat | Complex queries, large scale |
+| Tiêu chí        | Realtime Database      | Firestore                    |
+| --------------- | ---------------------- | ---------------------------- |
+| Data model      | JSON tree              | Document/Collection          |
+| Queries         | Hạn chế                | Phong phú hơn                |
+| Offline support | Có                     | Có                           |
+| Scalability     | Hạn chế                | Tốt hơn                      |
+| Pricing         | Data transfer          | Read/Write/Delete ops        |
+| Use case        | Simple real-time, chat | Complex queries, large scale |
 
 ```javascript
 // Firestore với NodeJS Admin SDK
-import { initializeApp } from 'firebase-admin/app';
-import { getFirestore } from 'firebase-admin/firestore';
+import { initializeApp } from 'firebase-admin/app'
+import { getFirestore } from 'firebase-admin/firestore'
 
-const app = initializeApp();
-const db = getFirestore();
+const app = initializeApp()
+const db = getFirestore()
 
 // Real-time listener
-const unsubscribe = db.collection('orders')
+const unsubscribe = db
+  .collection('orders')
   .where('status', '==', 'pending')
   .onSnapshot((snapshot) => {
-    snapshot.docChanges().forEach(change => {
+    snapshot.docChanges().forEach((change) => {
       if (change.type === 'added') {
-        console.log('New order:', change.doc.data());
-        processNewOrder(change.doc.data());
+        console.log('New order:', change.doc.data())
+        processNewOrder(change.doc.data())
       }
-    });
-  });
+    })
+  })
 ```
 
 ---
@@ -792,6 +813,7 @@ const unsubscribe = db.collection('orders')
 
 **Trả lời:**
 **REST (Representational State Transfer)** — 6 nguyên tắc:
+
 1. **Client-Server**: tách biệt UI và data storage
 2. **Stateless**: mỗi request chứa đủ thông tin, server không lưu state
 3. **Cacheable**: responses nên có cache headers
@@ -812,6 +834,7 @@ Body: { "email": "newemail@test.com" }
 ```
 
 **HTTP Status Codes cần biết:**
+
 - `200 OK` — thành công
 - `201 Created` — tạo resource mới
 - `204 No Content` — thành công nhưng không có body (DELETE)
@@ -832,6 +855,7 @@ Body: { "email": "newemail@test.com" }
 SSL/TLS tạo **encrypted tunnel** giữa client và server.
 
 **TLS Handshake process:**
+
 ```
 Client                          Server
   |                               |
@@ -851,18 +875,19 @@ Client                          Server
 ```
 
 **NodeJS HTTPS server:**
+
 ```javascript
-import https from 'https';
-import fs from 'fs';
+import https from 'https'
+import fs from 'fs'
 
 const options = {
   key: fs.readFileSync('private-key.pem'),
-  cert: fs.readFileSync('certificate.pem')
-};
+  cert: fs.readFileSync('certificate.pem'),
+}
 
 https.createServer(options, app).listen(443, () => {
-  console.log('HTTPS server running on port 443');
-});
+  console.log('HTTPS server running on port 443')
+})
 ```
 
 ---
@@ -873,41 +898,41 @@ https.createServer(options, app).listen(443, () => {
 JWT (JSON Web Token) gồm 3 phần: `header.payload.signature`, được base64 encoded.
 
 ```javascript
-import jwt from 'jsonwebtoken';
+import jwt from 'jsonwebtoken'
 
 // Tạo token khi login
 const generateTokens = (userId) => {
   const accessToken = jwt.sign(
     { userId, type: 'access' },
     process.env.JWT_SECRET,
-    { expiresIn: '15m' }   // access token ngắn
-  );
+    { expiresIn: '15m' }, // access token ngắn
+  )
 
   const refreshToken = jwt.sign(
     { userId, type: 'refresh' },
     process.env.JWT_REFRESH_SECRET,
-    { expiresIn: '7d' }    // refresh token dài hơn
-  );
+    { expiresIn: '7d' }, // refresh token dài hơn
+  )
 
-  return { accessToken, refreshToken };
-};
+  return { accessToken, refreshToken }
+}
 
 // Middleware verify token
 const authenticate = async (req, res, next) => {
-  const token = req.headers.authorization?.split(' ')[1]; // "Bearer <token>"
-  if (!token) return res.status(401).json({ error: 'No token' });
+  const token = req.headers.authorization?.split(' ')[1] // "Bearer <token>"
+  if (!token) return res.status(401).json({ error: 'No token' })
 
   try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    req.user = decoded;
-    next();
+    const decoded = jwt.verify(token, process.env.JWT_SECRET)
+    req.user = decoded
+    next()
   } catch (err) {
     if (err.name === 'TokenExpiredError') {
-      return res.status(401).json({ error: 'Token expired' });
+      return res.status(401).json({ error: 'Token expired' })
     }
-    return res.status(401).json({ error: 'Invalid token' });
+    return res.status(401).json({ error: 'Invalid token' })
   }
-};
+}
 ```
 
 ---
@@ -917,10 +942,12 @@ const authenticate = async (req, res, next) => {
 ### Q27: Docker là gì? Image vs Container?
 
 **Trả lời:**
+
 - **Image**: Blueprint read-only, chứa OS + dependencies + app code
 - **Container**: Instance đang chạy của image, isolated
 
 **Viết Dockerfile tốt cho NodeJS:**
+
 ```dockerfile
 # Multi-stage build để giảm image size
 FROM node:20-alpine AS builder
@@ -959,7 +986,7 @@ services:
   app:
     build: .
     ports:
-      - "3000:3000"
+      - '3000:3000'
     environment:
       - NODE_ENV=production
       - DATABASE_URL=postgresql://postgres:password@db:5432/myapp
@@ -979,7 +1006,7 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      test: ['CMD-SHELL', 'pg_isready -U postgres']
       interval: 10s
       timeout: 5s
       retries: 5
@@ -1000,31 +1027,32 @@ volumes:
 
 **Trả lời:**
 Các strategies:
+
 1. **Rolling update**: thay dần containers mới, giữ một số containers cũ
 2. **Blue-Green**: chạy 2 environments, switch traffic ngay lập tức
 3. **Canary**: route một phần nhỏ traffic đến version mới
 
 ```javascript
 // Graceful shutdown trong NodeJS — QUAN TRỌNG cho zero-downtime
-const server = app.listen(3000);
+const server = app.listen(3000)
 
 process.on('SIGTERM', async () => {
-  console.log('SIGTERM received, shutting down gracefully...');
+  console.log('SIGTERM received, shutting down gracefully...')
 
   // 1. Stop accepting new connections
   server.close(async () => {
     // 2. Finish current requests
     // 3. Close DB connections
-    await db.close();
-    await redis.quit();
+    await db.close()
+    await redis.quit()
 
-    console.log('Shutdown complete');
-    process.exit(0);
-  });
+    console.log('Shutdown complete')
+    process.exit(0)
+  })
 
   // Force exit after 30s
-  setTimeout(() => process.exit(1), 30000);
-});
+  setTimeout(() => process.exit(1), 30000)
+})
 ```
 
 ---
@@ -1037,6 +1065,7 @@ process.on('SIGTERM', async () => {
 Đây là câu hỏi system design — cần thảo luận trade-offs.
 
 **PostgreSQL tables:**
+
 ```sql
 -- Users
 CREATE TABLE users (
@@ -1075,6 +1104,7 @@ CREATE TABLE order_items (
 ```
 
 **Redis usage:**
+
 ```
 user:session:{token}    → session data (TTL: 24h)
 cart:{userId}           → shopping cart (Hash)
@@ -1092,47 +1122,41 @@ rate:api:{userId}       → rate limiting (INCR + TTL)
 ```javascript
 // ❌ Sai — race condition
 async function buyProduct(productId, userId) {
-  const product = await Product.findById(productId);
+  const product = await Product.findById(productId)
   if (product.stock > 0) {
-    await Product.update({ stock: product.stock - 1 }); // 2 users có thể pass check!
-    await Order.create({ productId, userId });
+    await Product.update({ stock: product.stock - 1 }) // 2 users có thể pass check!
+    await Order.create({ productId, userId })
   }
 }
 
 // ✅ Fix 1: Pessimistic locking (SQL)
 async function buyProduct(productId, userId) {
-  const client = await pool.connect();
+  const client = await pool.connect()
   try {
-    await client.query('BEGIN');
+    await client.query('BEGIN')
     // SELECT FOR UPDATE — lock row, chặn concurrent reads
-    const { rows } = await client.query(
-      'SELECT * FROM products WHERE id = $1 FOR UPDATE',
-      [productId]
-    );
-    const product = rows[0];
-    if (product.stock <= 0) throw new Error('Out of stock');
-    await client.query(
-      'UPDATE products SET stock = stock - 1 WHERE id = $1',
-      [productId]
-    );
-    await client.query('COMMIT');
+    const { rows } = await client.query('SELECT * FROM products WHERE id = $1 FOR UPDATE', [productId])
+    const product = rows[0]
+    if (product.stock <= 0) throw new Error('Out of stock')
+    await client.query('UPDATE products SET stock = stock - 1 WHERE id = $1', [productId])
+    await client.query('COMMIT')
   } catch (err) {
-    await client.query('ROLLBACK');
-    throw err;
+    await client.query('ROLLBACK')
+    throw err
   }
 }
 
 // ✅ Fix 2: Optimistic locking với version
 await Product.update(
   { stock: sequelize.literal('stock - 1'), version: product.version + 1 },
-  { where: { id: productId, version: product.version, stock: { $gt: 0 } } }
-);
+  { where: { id: productId, version: product.version, stock: { $gt: 0 } } },
+)
 
 // ✅ Fix 3: Redis atomic operation
-const stock = await redis.decr(`product:stock:${productId}`);
+const stock = await redis.decr(`product:stock:${productId}`)
 if (stock < 0) {
-  await redis.incr(`product:stock:${productId}`); // rollback
-  throw new Error('Out of stock');
+  await redis.incr(`product:stock:${productId}`) // rollback
+  throw new Error('Out of stock')
 }
 ```
 
@@ -1146,6 +1170,7 @@ if (stock < 0) {
 Blockchain là chuỗi các blocks, mỗi block chứa data + hash của block trước → immutable, transparent, decentralized.
 
 **Key concepts:**
+
 - **Hash**: SHA-256 digest, bất kỳ thay đổi nhỏ nào đều tạo hash khác
 - **Block**: gồm index + timestamp + transactions + previousHash + hash
 - **Chain**: mỗi block link với block trước qua previousHash
@@ -1154,22 +1179,22 @@ Blockchain là chuỗi các blocks, mỗi block chứa data + hash của block t
 
 ```javascript
 // Đơn giản hóa cách block hoạt động
-import crypto from 'crypto';
+import crypto from 'crypto'
 
 class Block {
   constructor(index, data, previousHash) {
-    this.index = index;
-    this.timestamp = Date.now();
-    this.data = data;
-    this.previousHash = previousHash;
-    this.hash = this.calculateHash();
+    this.index = index
+    this.timestamp = Date.now()
+    this.data = data
+    this.previousHash = previousHash
+    this.hash = this.calculateHash()
   }
 
   calculateHash() {
     return crypto
       .createHash('sha256')
       .update(this.index + this.timestamp + JSON.stringify(this.data) + this.previousHash)
-      .digest('hex');
+      .digest('hex')
   }
 }
 
@@ -1184,33 +1209,33 @@ class Block {
 
 ```javascript
 // Sử dụng Web3.js cho Ethereum
-import Web3 from 'web3';
+import Web3 from 'web3'
 
-const web3 = new Web3(process.env.INFURA_URL);
+const web3 = new Web3(process.env.INFURA_URL)
 
 // Kiểm tra transaction đã được confirm chưa
 async function verifyPayment(txHash, expectedAmount) {
-  const tx = await web3.eth.getTransaction(txHash);
-  const receipt = await web3.eth.getTransactionReceipt(txHash);
+  const tx = await web3.eth.getTransaction(txHash)
+  const receipt = await web3.eth.getTransactionReceipt(txHash)
 
   // Kiểm tra: đúng địa chỉ nhận, đủ số tiền, đã confirm
   const isValid =
     receipt.status &&
     tx.to.toLowerCase() === WALLET_ADDRESS.toLowerCase() &&
-    BigInt(tx.value) >= BigInt(web3.utils.toWei(expectedAmount, 'ether'));
+    BigInt(tx.value) >= BigInt(web3.utils.toWei(expectedAmount, 'ether'))
 
-  return isValid;
+  return isValid
 }
 
 // Bitcoin với bitcoinjs-lib
-import * as bitcoin from 'bitcoinjs-lib';
+import * as bitcoin from 'bitcoinjs-lib'
 
 function generateBitcoinAddress() {
-  const keyPair = bitcoin.ECPair.makeRandom();
+  const keyPair = bitcoin.ECPair.makeRandom()
   const { address } = bitcoin.payments.p2pkh({
-    pubkey: keyPair.publicKey
-  });
-  return { address, privateKey: keyPair.toWIF() };
+    pubkey: keyPair.publicKey,
+  })
+  return { address, privateKey: keyPair.toWIF() }
 }
 ```
 
@@ -1223,46 +1248,51 @@ function generateBitcoinAddress() {
 **Trả lời:**
 
 **1. SQL Injection:**
+
 ```javascript
 // ❌ Sai
-const query = `SELECT * FROM users WHERE email = '${email}'`;
+const query = `SELECT * FROM users WHERE email = '${email}'`
 
 // ✅ Đúng — parameterized query
-const query = 'SELECT * FROM users WHERE email = $1';
-await db.query(query, [email]);
+const query = 'SELECT * FROM users WHERE email = $1'
+await db.query(query, [email])
 ```
 
 **2. NoSQL Injection (MongoDB):**
+
 ```javascript
 // ❌ Sai
-const user = await User.findOne({ email: req.body.email });
+const user = await User.findOne({ email: req.body.email })
 // Attacker gửi: { "email": { "$gt": "" } } → bypass!
 
 // ✅ Đúng — validate input
-import { isEmail } from 'validator';
-if (!isEmail(req.body.email)) throw new Error('Invalid email');
+import { isEmail } from 'validator'
+if (!isEmail(req.body.email)) throw new Error('Invalid email')
 ```
 
 **3. XSS Prevention:**
+
 ```javascript
-import helmet from 'helmet';
-app.use(helmet()); // sets security headers bao gồm CSP
+import helmet from 'helmet'
+app.use(helmet()) // sets security headers bao gồm CSP
 ```
 
 **4. Rate Limiting:**
+
 ```javascript
-import rateLimit from 'express-rate-limit';
+import rateLimit from 'express-rate-limit'
 
 const loginLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 phút
   max: 5, // 5 attempts
-  message: 'Too many login attempts'
-});
+  message: 'Too many login attempts',
+})
 
-app.post('/auth/login', loginLimiter, loginController);
+app.post('/auth/login', loginLimiter, loginController)
 ```
 
 **5. Environment variables:**
+
 ```javascript
 // KHÔNG bao giờ hardcode secrets
 // ❌ const SECRET = 'my-super-secret-key';
@@ -1277,6 +1307,7 @@ app.post('/auth/login', loginLimiter, loginController);
 
 **Trả lời:**
 **Gitflow workflow** (phổ biến):
+
 ```
 main (production)
   └── develop (staging)
@@ -1286,6 +1317,7 @@ main (production)
 ```
 
 **GitHub Flow** (đơn giản hơn, CI/CD friendly):
+
 ```
 main
   ├── feature/add-search
@@ -1294,6 +1326,7 @@ main
 ```
 
 **Conventional Commits:**
+
 ```bash
 feat: add user authentication
 fix: resolve cart item count bug
@@ -1308,6 +1341,7 @@ chore: update dependencies
 ### Q36: Code review process — bạn review code như thế nào?
 
 **Trả lời:**
+
 - Kiểm tra logic correctness trước
 - Security issues (SQL injection, auth bypass, data exposure)
 - Performance (N+1 queries, missing indexes, memory leaks)
@@ -1316,6 +1350,7 @@ chore: update dependencies
 - Tests coverage
 
 **JIRA workflow tiêu chuẩn:**
+
 ```
 Backlog → In Progress → Code Review → Testing → Done
 ```
@@ -1327,6 +1362,7 @@ Backlog → In Progress → Code Review → Testing → Done
 ### Q37: "API của bạn đang bị chậm, bạn sẽ debug như thế nào?"
 
 **Trả lời (structured approach):**
+
 ```
 1. MEASURE — xác định chính xác bottleneck
    → New Relic / Datadog / console.time()
@@ -1372,30 +1408,30 @@ Flow:
 
 ```javascript
 // WebSocket với Redis Pub/Sub
-import { WebSocketServer } from 'ws';
-import { createClient } from 'redis';
+import { WebSocketServer } from 'ws'
+import { createClient } from 'redis'
 
-const wss = new WebSocketServer({ port: 8080 });
-const connections = new Map(); // userId → ws
+const wss = new WebSocketServer({ port: 8080 })
+const connections = new Map() // userId → ws
 
-const sub = createClient();
-await sub.connect();
+const sub = createClient()
+await sub.connect()
 
 // Subscribe to notifications channel
 await sub.subscribe('notifications', (message) => {
-  const { userId, data } = JSON.parse(message);
-  const ws = connections.get(userId);
+  const { userId, data } = JSON.parse(message)
+  const ws = connections.get(userId)
   if (ws?.readyState === WebSocket.OPEN) {
-    ws.send(JSON.stringify(data));
+    ws.send(JSON.stringify(data))
   }
-});
+})
 
 wss.on('connection', (ws, req) => {
-  const userId = extractUserIdFromToken(req);
-  connections.set(userId, ws);
+  const userId = extractUserIdFromToken(req)
+  connections.set(userId, ws)
 
-  ws.on('close', () => connections.delete(userId));
-});
+  ws.on('close', () => connections.delete(userId))
+})
 ```
 
 ---
@@ -1410,30 +1446,32 @@ wss.on('connection', (ws, req) => {
 // Programmer errors: bugs, logic errors → crash process, let PM2 restart
 
 process.on('uncaughtException', (err) => {
-  console.error('UNCAUGHT EXCEPTION:', err);
+  console.error('UNCAUGHT EXCEPTION:', err)
   // Log to monitoring (Sentry, Datadog)
-  logger.fatal({ err }, 'Uncaught exception - process will exit');
+  logger.fatal({ err }, 'Uncaught exception - process will exit')
   // Graceful shutdown
-  process.exit(1); // PM2 sẽ restart
-});
+  process.exit(1) // PM2 sẽ restart
+})
 
 process.on('unhandledRejection', (reason, promise) => {
-  console.error('UNHANDLED REJECTION at:', promise, 'reason:', reason);
+  console.error('UNHANDLED REJECTION at:', promise, 'reason:', reason)
   // Trong production: crash và restart
-  throw reason;
-});
+  throw reason
+})
 
 // PM2 ecosystem.config.js để auto-restart
 module.exports = {
-  apps: [{
-    name: 'api',
-    script: 'dist/main.js',
-    instances: 'max', // cluster mode
-    exec_mode: 'cluster',
-    max_restarts: 10,
-    restart_delay: 4000
-  }]
-};
+  apps: [
+    {
+      name: 'api',
+      script: 'dist/main.js',
+      instances: 'max', // cluster mode
+      exec_mode: 'cluster',
+      max_restarts: 10,
+      restart_delay: 4000,
+    },
+  ],
+}
 ```
 
 ---
@@ -1441,6 +1479,7 @@ module.exports = {
 ## Tips Phỏng Vấn Cuối Cùng
 
 ### Cấu trúc trả lời kỹ thuật (STAR method cho tech):
+
 1. **Situation**: giải thích vấn đề/context
 2. **Technical concept**: giải thích theory
 3. **Code example**: minh họa bằng code cụ thể
@@ -1448,6 +1487,7 @@ module.exports = {
 5. **Real-world experience**: kể về dự án đã làm nếu có
 
 ### Từ khóa thường xuất hiện trong câu hỏi Middle level:
+
 - "Tại sao" → giải thích cơ chế bên dưới
 - "So sánh" → biết trade-offs
 - "Khi nào" → biết chọn đúng tool cho đúng use case
@@ -1455,16 +1495,17 @@ module.exports = {
 - "Thiết kế" → system design thinking
 
 ### Checklist chuẩn bị:
-- [ ] Event Loop & async patterns
-- [ ] Express middleware chain
-- [ ] Database indexing & query optimization
-- [ ] Redis caching patterns
-- [ ] Docker basics & Dockerfile
-- [ ] JWT authentication flow
-- [ ] REST best practices
-- [ ] Git workflow
-- [ ] Một system design scenario (e-commerce / chat / notification)
+
+- [x] Event Loop & async patterns
+- [x] Express middleware chain
+- [x] Database indexing & query optimization
+- [x] Redis caching patterns
+- [x] Docker basics & Dockerfile
+- [x] JWT authentication flow
+- [x] REST best practices
+- [x] Git workflow
+- [x] Một system design scenario (e-commerce / chat / notification)
 
 ---
 
-*Tài liệu được tổng hợp dựa trên research từ InterviewBit, GeeksforGeeks, Turing, CoderPad và yêu cầu tuyển dụng thực tế — April 2026*
+_Tài liệu được tổng hợp dựa trên research từ InterviewBit, GeeksforGeeks, Turing, CoderPad và yêu cầu tuyển dụng thực tế — April 2026_
