@@ -8,6 +8,7 @@
 ## 📋 MỤC LỤC
 
 - [PHẦN 1: EVENT LOOP - Trái Tim của Node.js](#phần-1-event-loop---trái-tim-của-nodejs)
+  - [1.0 Event Loop là gì?](#10-event-loop-là-gì)
   - [1.1 Tổng quan kiến trúc Node.js](#11-tổng-quan-kiến-trúc-nodejs)
   - [1.2 Call Stack là gì?](#12-call-stack-là-gì)
   - [1.3 Các Phase của Event Loop](#13-các-phase-của-event-loop)
@@ -38,6 +39,38 @@
 ---
 
 ## PHẦN 1: EVENT LOOP - Trái Tim của Node.js
+
+### 1.0 Event Loop là gì?
+
+**Event Loop** là cơ chế điều phối trong Node.js, liên tục kiểm tra:
+1. Call Stack đã rỗng chưa
+2. Hàng đợi callback nào sẵn sàng chạy
+3. Phase nào của vòng lặp cần được xử lý tiếp theo
+
+Nói ngắn gọn, Event Loop là "nhịp tim" giúp JavaScript (1 thread) vẫn xử lý được rất nhiều tác vụ bất đồng bộ (I/O, timer, network) mà không phải tạo 1 thread cho mỗi request.
+
+```
+Request đến
+   ↓
+Đăng ký I/O/timer với libuv/OS
+   ↓
+Call Stack tiếp tục rảnh để xử lý request khác
+   ↓
+Khi I/O hoàn tất, callback được đưa vào queue phù hợp
+   ↓
+Event Loop đưa callback vào Call Stack khi stack rỗng
+```
+
+**Hiểu đúng trong 30 giây:**
+- JavaScript của bạn chạy trên **1 Call Stack**.
+- Tác vụ chậm (file, network, DNS, crypto...) được giao cho **libuv/OS**.
+- Event Loop không "chạy code song song", mà **điều phối thời điểm chạy callback**.
+- Sau mỗi phase (hoặc mỗi macrotask), Node.js xử lý hết microtask (`process.nextTick`, Promise) rồi mới đi tiếp.
+- Nếu bạn chạy code đồng bộ nặng (CPU-bound) trên main thread, Event Loop bị "kẹt", callback khác phải chờ.
+
+> 🎯 **Một câu chốt để đi phỏng vấn**: Event Loop là vòng lặp điều phối callback giữa Call Stack và các queue/phase, cho phép Node.js đạt concurrency cao với I/O dù JavaScript chỉ chạy trên một thread.
+
+---
 
 ### 1.1 Tổng quan kiến trúc Node.js
 
