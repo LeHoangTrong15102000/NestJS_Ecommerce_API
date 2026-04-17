@@ -1509,125 +1509,93 @@ A 10GB file uses the same memory as a 10MB file.
 **Script hoàn chỉnh:**
 
 ```javascript
-const fs = require('fs');
-const readline = require('readline');
-const path = require('path');
+const fs = require('fs')
+const readline = require('readline')
+const path = require('path')
 
-const LOG_FILE = path.join(__dirname, 'access.log');
-const OUTPUT_FILE = path.join(__dirname, 'error_report.txt');
-const KEYWORD = 'ERROR';
+const LOG_FILE = path.join(__dirname, 'access.log')
+const OUTPUT_FILE = path.join(__dirname, 'error_report.txt')
+const KEYWORD = 'ERROR'
 
 async function countErrorsInLogFile() {
   // Verify the log file exists before processing
   if (!fs.existsSync(LOG_FILE)) {
-    console.error(`File not found: ${LOG_FILE}`);
-    process.exit(1);
+    console.error(`File not found: ${LOG_FILE}`)
+    process.exit(1)
   }
 
-  const startTime = Date.now();
+  const startTime = Date.now()
 
-  let totalLines = 0;
-  let errorLineCount = 0;
-  let totalErrorOccurrences = 0;
+  let totalLines = 0
+  let errorLineCount = 0
+  let totalErrorOccurrences = 0
 
   // Store first 50 error lines as samples for the report
-  const ERROR_SAMPLE_LIMIT = 50;
-  const errorSamples = [];
+  const ERROR_SAMPLE_LIMIT = 50
+  const errorSamples = []
 
   // createReadStream reads file in small chunks (default 64KB)
   // instead of loading entire 10GB into memory
   const readStream = fs.createReadStream(LOG_FILE, {
     encoding: 'utf-8',
     highWaterMark: 64 * 1024, // 64KB per chunk (default, explicit for clarity)
-  });
+  })
 
   // readline splits the raw byte stream into individual lines
   // so we can process one line at a time
   const rl = readline.createInterface({
     input: readStream,
     crlfDelay: Infinity, // treat \r\n as a single newline (Windows compatibility)
-  });
+  })
 
   for await (const line of rl) {
-    totalLines++;
+    totalLines++
 
     // Count how many times KEYWORD appears in this single line
     // A line like "ERROR: timeout ERROR: retry" has 2 occurrences
-    let occurrencesInLine = 0;
-    let searchFrom = 0;
+    let occurrencesInLine = 0
+    let searchFrom = 0
 
     while (true) {
-      const index = line.indexOf(KEYWORD, searchFrom);
-      if (index === -1) break;
-      occurrencesInLine++;
-      searchFrom = index + KEYWORD.length;
+      const index = line.indexOf(KEYWORD, searchFrom)
+      if (index === -1) break
+      occurrencesInLine++
+      searchFrom = index + KEYWORD.length
     }
 
     if (occurrencesInLine > 0) {
-      errorLineCount++;
-      totalErrorOccurrences += occurrencesInLine;
+      errorLineCount++
+      totalErrorOccurrences += occurrencesInLine
 
       // Collect sample error lines for the report
       if (errorSamples.length < ERROR_SAMPLE_LIMIT) {
         errorSamples.push({
           lineNumber: totalLines,
           content: line.length > 200 ? line.substring(0, 200) + '...' : line,
-        });
+        })
       }
     }
 
     // Print progress every 1 million lines so user knows it's working
     if (totalLines % 1_000_000 === 0) {
-      const elapsedSec = ((Date.now() - startTime) / 1000).toFixed(1);
-      console.log(
-        `  Processed ${(totalLines / 1_000_000).toFixed(0)}M lines... (${elapsedSec}s)`
-      );
+      const elapsedSec = ((Date.now() - startTime) / 1000).toFixed(1)
+      console.log(`  Processed ${(totalLines / 1_000_000).toFixed(0)}M lines... (${elapsedSec}s)`)
     }
   }
 
-  const elapsedMs = Date.now() - startTime;
-
-  // Build the report content
-  const report = [
-    '='.repeat(60),
-    '  ERROR KEYWORD SEARCH REPORT',
-    '='.repeat(60),
-    '',
-    `Log file:               ${LOG_FILE}`,
-    `Keyword searched:       "${KEYWORD}"`,
-    `Date:                   ${new Date().toISOString()}`,
-    '',
-    '-'.repeat(60),
-    '  RESULTS',
-    '-'.repeat(60),
-    '',
-    `Total lines scanned:    ${totalLines.toLocaleString()}`,
-    `Lines containing ERROR: ${errorLineCount.toLocaleString()}`,
-    `Total ERROR count:      ${totalErrorOccurrences.toLocaleString()}`,
-    `Processing time:        ${(elapsedMs / 1000).toFixed(2)}s`,
-    '',
-    '-'.repeat(60),
-    `  SAMPLE ERROR LINES (first ${ERROR_SAMPLE_LIMIT})`,
-    '-'.repeat(60),
-    '',
-    ...errorSamples.map(
-      (s) => `  [Line ${s.lineNumber}] ${s.content}`
-    ),
-    '',
-    '='.repeat(60),
-  ].join('\n');
+  const elapsedMs = Date.now() - startTime
 
   // Write results to output file
-  fs.writeFileSync(OUTPUT_FILE, report, 'utf-8');
+  fs.writeFileSync(OUTPUT_FILE, report, 'utf-8')
 
-  console.log('\n' + report);
-  console.log(`\nReport saved to: ${OUTPUT_FILE}`);
+  console.log('\n' + report)
+  console.log(`\nReport saved to: ${OUTPUT_FILE}`)
 }
 
 countErrorsInLogFile().catch((err) => {
-  console.error('Script failed:', err.message);
-  process.exit(1);
-});
+  console.error('Script failed:', err.message)
+  process.exit(1)
+})
 ```
 
 **Chạy script:**
@@ -1669,14 +1637,14 @@ Processing time:        42.37s
 
 **Giải thích các điểm quan trọng:**
 
-| Vấn đề                              | Giải pháp trong script                   | Tại sao?                                  |
-| ----------------------------------- | ---------------------------------------- | ----------------------------------------- |
-| File 10GB, không thể load vào RAM   | `fs.createReadStream` + `readline`       | Đọc theo chunk 64KB, memory O(1)          |
-| Đếm ERROR xuất hiện nhiều lần/dòng  | Vòng `while` với `indexOf`               | 1 dòng có thể chứa nhiều "ERROR"          |
-| File quá lớn, không biết tiến độ    | Log mỗi 1 triệu dòng                    | User biết script đang chạy, không bị treo |
-| Kết quả cần ghi ra file khác        | `fs.writeFileSync` cho report            | Report nhỏ (vài KB), writeFileSync an toàn |
-| Windows vs Linux line endings        | `crlfDelay: Infinity`                    | Xử lý cả `\n` và `\r\n`                   |
-| Line quá dài trong report            | Cắt tại 200 ký tự                       | Tránh report khổng lồ                     |
+| Vấn đề                             | Giải pháp trong script             | Tại sao?                                   |
+| ---------------------------------- | ---------------------------------- | ------------------------------------------ |
+| File 10GB, không thể load vào RAM  | `fs.createReadStream` + `readline` | Đọc theo chunk 64KB, memory O(1)           |
+| Đếm ERROR xuất hiện nhiều lần/dòng | Vòng `while` với `indexOf`         | 1 dòng có thể chứa nhiều "ERROR"           |
+| File quá lớn, không biết tiến độ   | Log mỗi 1 triệu dòng               | User biết script đang chạy, không bị treo  |
+| Kết quả cần ghi ra file khác       | `fs.writeFileSync` cho report      | Report nhỏ (vài KB), writeFileSync an toàn |
+| Windows vs Linux line endings      | `crlfDelay: Infinity`              | Xử lý cả `\n` và `\r\n`                    |
+| Line quá dài trong report          | Cắt tại 200 ký tự                  | Tránh report khổng lồ                      |
 
 **Phân tích Memory & Performance:**
 
@@ -1707,30 +1675,30 @@ Processing time:        42.37s
 // Option 1: Tăng buffer size — fewer system calls
 const readStream = fs.createReadStream(LOG_FILE, {
   highWaterMark: 1024 * 1024, // 1MB per chunk instead of 64KB
-});
+})
 
 // Option 2: worker_threads — split file into N parts, each thread counts
 //   10GB file ÷ 4 threads = 2.5GB each → ~4x faster on multi-core
 //   (Complex: need to handle line boundaries at split points)
 
 // Option 3: If only exact count needed (no line info), use raw chunks
-const stream = fs.createReadStream(LOG_FILE);
-let count = 0;
-let leftover = '';
+const stream = fs.createReadStream(LOG_FILE)
+let count = 0
+let leftover = ''
 
 stream.on('data', (chunk) => {
-  const text = leftover + chunk.toString();
+  const text = leftover + chunk.toString()
   // Split by keyword and count — number of splits minus 1 = occurrences
-  const parts = text.split(KEYWORD);
-  count += parts.length - 1;
+  const parts = text.split(KEYWORD)
+  count += parts.length - 1
   // Keep last partial line for next chunk (avoid cutting "ERR" | "OR")
-  const lastNewline = text.lastIndexOf('\n');
-  leftover = lastNewline === -1 ? text : text.substring(lastNewline + 1);
-});
+  const lastNewline = text.lastIndexOf('\n')
+  leftover = lastNewline === -1 ? text : text.substring(lastNewline + 1)
+})
 
 stream.on('end', () => {
-  console.log(`Total ERROR count: ${count}`);
-});
+  console.log(`Total ERROR count: ${count}`)
+})
 ```
 
 ---
