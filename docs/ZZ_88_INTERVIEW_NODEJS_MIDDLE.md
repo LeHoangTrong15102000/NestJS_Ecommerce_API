@@ -1476,6 +1476,265 @@ module.exports = {
 
 ---
 
+### Q40: "Hệ thống của bạn có một file log tên là access.log dung lượng 10GB. Viết script bằng NodeJS để tìm và đếm số lần xuất hiện của từ khóa 'ERROR', sau đó ghi kết quả vào file khác."
+
+**Trả lời:**
+
+**Tại sao KHÔNG được dùng `fs.readFileSync` hoặc `fs.readFile`?**
+
+```
+fs.readFileSync('access.log')  →  Load 10GB vào RAM  →  💥 OOM Crash!
+
+Node.js mặc định giới hạn heap ~1.5GB (V8 engine).
+10GB file = hệ thống sập ngay lập tức.
+```
+
+**Giải pháp: Dùng Stream + readline — đọc từng dòng, chỉ giữ 1 dòng trong memory tại bất kỳ thời điểm nào.**
+
+```
+┌──────────────┐    chunk     ┌───────────┐    line     ┌──────────┐
+│  ReadStream  │ ──────────> │  readline  │ ─────────> │ Counting │
+│ (64KB/chunk) │             │ interface  │            │  Logic   │
+└──────────────┘             └───────────┘            └─────┬────┘
+                                                            │
+                                                     ┌──────▼──────┐
+                                                     │ Write result│
+                                                     │  to file    │
+                                                     └─────────────┘
+
+Memory usage: O(1) — constant, regardless of file size.
+A 10GB file uses the same memory as a 10MB file.
+```
+
+**Script hoàn chỉnh:**
+
+```javascript
+const fs = require('fs');
+const readline = require('readline');
+const path = require('path');
+
+const LOG_FILE = path.join(__dirname, 'access.log');
+const OUTPUT_FILE = path.join(__dirname, 'error_report.txt');
+const KEYWORD = 'ERROR';
+
+async function countErrorsInLogFile() {
+  // Verify the log file exists before processing
+  if (!fs.existsSync(LOG_FILE)) {
+    console.error(`File not found: ${LOG_FILE}`);
+    process.exit(1);
+  }
+
+  const startTime = Date.now();
+
+  let totalLines = 0;
+  let errorLineCount = 0;
+  let totalErrorOccurrences = 0;
+
+  // Store first 50 error lines as samples for the report
+  const ERROR_SAMPLE_LIMIT = 50;
+  const errorSamples = [];
+
+  // createReadStream reads file in small chunks (default 64KB)
+  // instead of loading entire 10GB into memory
+  const readStream = fs.createReadStream(LOG_FILE, {
+    encoding: 'utf-8',
+    highWaterMark: 64 * 1024, // 64KB per chunk (default, explicit for clarity)
+  });
+
+  // readline splits the raw byte stream into individual lines
+  // so we can process one line at a time
+  const rl = readline.createInterface({
+    input: readStream,
+    crlfDelay: Infinity, // treat \r\n as a single newline (Windows compatibility)
+  });
+
+  for await (const line of rl) {
+    totalLines++;
+
+    // Count how many times KEYWORD appears in this single line
+    // A line like "ERROR: timeout ERROR: retry" has 2 occurrences
+    let occurrencesInLine = 0;
+    let searchFrom = 0;
+
+    while (true) {
+      const index = line.indexOf(KEYWORD, searchFrom);
+      if (index === -1) break;
+      occurrencesInLine++;
+      searchFrom = index + KEYWORD.length;
+    }
+
+    if (occurrencesInLine > 0) {
+      errorLineCount++;
+      totalErrorOccurrences += occurrencesInLine;
+
+      // Collect sample error lines for the report
+      if (errorSamples.length < ERROR_SAMPLE_LIMIT) {
+        errorSamples.push({
+          lineNumber: totalLines,
+          content: line.length > 200 ? line.substring(0, 200) + '...' : line,
+        });
+      }
+    }
+
+    // Print progress every 1 million lines so user knows it's working
+    if (totalLines % 1_000_000 === 0) {
+      const elapsedSec = ((Date.now() - startTime) / 1000).toFixed(1);
+      console.log(
+        `  Processed ${(totalLines / 1_000_000).toFixed(0)}M lines... (${elapsedSec}s)`
+      );
+    }
+  }
+
+  const elapsedMs = Date.now() - startTime;
+
+  // Build the report content
+  const report = [
+    '='.repeat(60),
+    '  ERROR KEYWORD SEARCH REPORT',
+    '='.repeat(60),
+    '',
+    `Log file:               ${LOG_FILE}`,
+    `Keyword searched:       "${KEYWORD}"`,
+    `Date:                   ${new Date().toISOString()}`,
+    '',
+    '-'.repeat(60),
+    '  RESULTS',
+    '-'.repeat(60),
+    '',
+    `Total lines scanned:    ${totalLines.toLocaleString()}`,
+    `Lines containing ERROR: ${errorLineCount.toLocaleString()}`,
+    `Total ERROR count:      ${totalErrorOccurrences.toLocaleString()}`,
+    `Processing time:        ${(elapsedMs / 1000).toFixed(2)}s`,
+    '',
+    '-'.repeat(60),
+    `  SAMPLE ERROR LINES (first ${ERROR_SAMPLE_LIMIT})`,
+    '-'.repeat(60),
+    '',
+    ...errorSamples.map(
+      (s) => `  [Line ${s.lineNumber}] ${s.content}`
+    ),
+    '',
+    '='.repeat(60),
+  ].join('\n');
+
+  // Write results to output file
+  fs.writeFileSync(OUTPUT_FILE, report, 'utf-8');
+
+  console.log('\n' + report);
+  console.log(`\nReport saved to: ${OUTPUT_FILE}`);
+}
+
+countErrorsInLogFile().catch((err) => {
+  console.error('Script failed:', err.message);
+  process.exit(1);
+});
+```
+
+**Chạy script:**
+
+```bash
+node count_errors.js
+```
+
+**Output mẫu (error_report.txt):**
+
+```text
+============================================================
+  ERROR KEYWORD SEARCH REPORT
+============================================================
+
+Log file:               /var/log/access.log
+Keyword searched:       "ERROR"
+Date:                   2026-04-17T10:30:00.000Z
+
+------------------------------------------------------------
+  RESULTS
+------------------------------------------------------------
+
+Total lines scanned:    85,000,000
+Lines containing ERROR: 12,345
+Total ERROR count:      12,891
+Processing time:        42.37s
+
+------------------------------------------------------------
+  SAMPLE ERROR LINES (first 50)
+------------------------------------------------------------
+
+  [Line 142] 2026-04-17 10:00:01 ERROR [auth] Login failed for user admin
+  [Line 2891] 2026-04-17 10:00:15 ERROR [db] Connection timeout after 30s
+  ...
+
+============================================================
+```
+
+**Giải thích các điểm quan trọng:**
+
+| Vấn đề                              | Giải pháp trong script                   | Tại sao?                                  |
+| ----------------------------------- | ---------------------------------------- | ----------------------------------------- |
+| File 10GB, không thể load vào RAM   | `fs.createReadStream` + `readline`       | Đọc theo chunk 64KB, memory O(1)          |
+| Đếm ERROR xuất hiện nhiều lần/dòng  | Vòng `while` với `indexOf`               | 1 dòng có thể chứa nhiều "ERROR"          |
+| File quá lớn, không biết tiến độ    | Log mỗi 1 triệu dòng                    | User biết script đang chạy, không bị treo |
+| Kết quả cần ghi ra file khác        | `fs.writeFileSync` cho report            | Report nhỏ (vài KB), writeFileSync an toàn |
+| Windows vs Linux line endings        | `crlfDelay: Infinity`                    | Xử lý cả `\n` và `\r\n`                   |
+| Line quá dài trong report            | Cắt tại 200 ký tự                       | Tránh report khổng lồ                     |
+
+**Phân tích Memory & Performance:**
+
+```text
+┌─────────────────────────────────────────────────────────┐
+│  ❌ fs.readFileSync('access.log')                       │
+│     Memory: 10GB → OOM Crash                            │
+│     Time:   N/A (process killed)                        │
+│                                                         │
+│  ✅ createReadStream + readline                         │
+│     Memory: ~10-20MB (buffer + 1 line + GC overhead)    │
+│     Time:   30-60s depending on disk speed              │
+│                                                         │
+│  Tại sao nhanh?                                         │
+│  - readline sử dụng internal buffer, không tạo thêm    │
+│    string objects ngoài dòng hiện tại                    │
+│  - Garbage Collector thu hồi dòng cũ ngay lập tức       │
+│  - Disk I/O là bottleneck, KHÔNG phải CPU               │
+│                                                         │
+│  SSD: ~200MB/s → 10GB ÷ 200MB/s = ~50s                 │
+│  HDD: ~100MB/s → 10GB ÷ 100MB/s = ~100s                │
+└─────────────────────────────────────────────────────────┘
+```
+
+**Mở rộng: Nếu interviewer hỏi thêm "Làm sao nhanh hơn nữa?"**
+
+```javascript
+// Option 1: Tăng buffer size — fewer system calls
+const readStream = fs.createReadStream(LOG_FILE, {
+  highWaterMark: 1024 * 1024, // 1MB per chunk instead of 64KB
+});
+
+// Option 2: worker_threads — split file into N parts, each thread counts
+//   10GB file ÷ 4 threads = 2.5GB each → ~4x faster on multi-core
+//   (Complex: need to handle line boundaries at split points)
+
+// Option 3: If only exact count needed (no line info), use raw chunks
+const stream = fs.createReadStream(LOG_FILE);
+let count = 0;
+let leftover = '';
+
+stream.on('data', (chunk) => {
+  const text = leftover + chunk.toString();
+  // Split by keyword and count — number of splits minus 1 = occurrences
+  const parts = text.split(KEYWORD);
+  count += parts.length - 1;
+  // Keep last partial line for next chunk (avoid cutting "ERR" | "OR")
+  const lastNewline = text.lastIndexOf('\n');
+  leftover = lastNewline === -1 ? text : text.substring(lastNewline + 1);
+});
+
+stream.on('end', () => {
+  console.log(`Total ERROR count: ${count}`);
+});
+```
+
+---
+
 ## Tips Phỏng Vấn Cuối Cùng
 
 ### Cấu trúc trả lời kỹ thuật (STAR method cho tech):
