@@ -213,6 +213,164 @@ fs.readFile('file.txt', (err, data) => {
 })
 ```
 
+##### 🧠 Hiểu sâu hơn về Poll phase
+
+**Cơ chế hoạt động thực sự (pseudocode):**
+
+```
+function pollPhase() {
+  // Bước 1: Chạy hết tất cả callback đang sẵn sàng trong poll queue
+  while (pollQueue.hasCallbacks()) {
+    pollQueue.runNext()
+    runAllMicrotasks()   // nextTick + Promise sau mỗi callback
+  }
+
+  // Bước 2: poll queue trống → quyết định làm gì tiếp
+  if (hasSetImmediate()) {
+    return  // Có việc ở Check phase → không chờ, đi tiếp ngay
+  }
+
+  const nextTimerDelay = getNextTimerDelay()  // ms còn lại của setTimeout sắp nhất
+
+  if (nextTimerDelay !== null) {
+    // Có timer → ngủ TỐI ĐA nextTimerDelay ms
+    // Nếu I/O về trước → thức dậy sớm, chạy callback luôn
+    blockUntilIOorTimeout(nextTimerDelay)
+  } else {
+    // Không có gì cả → ngủ vô thời hạn cho đến khi có I/O
+    blockUntilIO()
+  }
+
+  // Khi thức dậy: quay lại Bước 1 để chạy callback mới vào queue
+}
+```
+
+> 💡 **Điểm mấu chốt**: Poll phase là phase **DUY NHẤT** có thể tự block (ngủ). Node.js không vòng lặp liên tục hỏi "có I/O chưa?" — nó ngủ và để OS đánh thức khi có kết quả. Đây là lý do Node.js không tốn CPU khi idle.
+
+---
+
+##### 🍽️ Ví dụ đời thường: Người phục vụ nhà hàng
+
+> **Dùng khi phỏng vấn**: Ví dụ này giúp giải thích Poll phase trong 30 giây.
+
+Hãy hình dung **Event Loop là người phục vụ nhà hàng duy nhất** (single-thread). Nhà hàng có nhiều bàn (nhiều request), nhưng chỉ 1 người phục vụ.
+
+```
+Poll phase = Người phục vụ đứng ở cửa bếp chờ món:
+
+  "Có món nào bếp vừa làm xong chưa?"
+    → CÓ  → Mang ra bàn ngay (chạy I/O callback)
+    → KHÔNG → Xem tình hình:
+
+       Có khách đặt hẹn giờ sau 5 phút (setTimeout)?
+       → Đứng đợi TỐI ĐA 5 phút
+       → Nếu bếp xong trước 5 phút → mang ra ngay (thức dậy sớm)
+
+       Có yêu cầu "mang ra ngay sau bếp xong" (setImmediate)?
+       → Không đứng chờ, đi Check phase ngay
+
+       Không có gì cả?
+       → Đứng đợi vô thời hạn đến khi bếp (OS) gọi
+```
+
+**Tại sao đứng đợi thay vì chạy vòng vòng hỏi bếp?**
+→ Chạy vòng vòng hỏi liên tục (busy-waiting) tốn sức vô ích. Bếp (OS) sẽ **tự gọi** khi có món xong — đây là cơ chế `epoll` (Linux) / `kqueue` (macOS) / `IOCP` (Windows).
+
+---
+
+##### 📦 Ví dụ đời thường: Shipper giao hàng
+
+```
+Timeline thực tế:
+
+  t=0ms    Shipper (Node.js) nhận 3 đơn:
+           - Đơn A: hẹn lấy sau 30 phút (setTimeout 30000ms)
+           - Đơn B: hẹn lấy sau 60 phút (setTimeout 60000ms)
+           - Đơn C: kho đang đóng gói, chưa biết khi nào xong (fs.readFile)
+
+  t=0ms    Poll phase: queue trống
+           → Tính: "timer gần nhất là 30 phút"
+           → NGỦ tối đa 30 phút (không burn CPU)
+
+  t=10min  Kho xong Đơn C! OS đánh thức Poll phase
+           → Thức dậy SỚM, lấy Đơn C luôn, tiếp tục ngủ
+
+  t=30min  Hết giờ → thoát Poll, Timers phase: lấy Đơn A
+  t=60min  Vòng lặp tiếp → Timers phase: lấy Đơn B
+```
+
+**Điểm quan trọng**: Shipper không nhìn đồng hồ từng giây (không burn CPU 100%). Kho **tự gọi** khi có hàng.
+
+---
+
+##### 🔌 I/O là gì? — Những thứ Poll phase phải chờ
+
+**"I/O" = Input/Output = bất cứ thứ gì Node.js phải "ra ngoài" lấy** — ra ổ cứng, ra mạng, ra DB, ra DNS server. Đối lập với tính toán trong RAM (CPU-bound như sort, Fibonacci) thì **không phải I/O**.
+
+| Loại I/O | Ví dụ cụ thể | Cơ chế libuv |
+|----------|--------------|--------------|
+| **Network I/O** | HTTP request/response, TCP socket, WebSocket, gRPC | OS Kernel (epoll/kqueue/IOCP) |
+| **File System I/O** | `fs.readFile()`, `fs.writeFile()`, `fs.stat()` | Thread Pool (4 threads mặc định) |
+| **Database I/O** | `prisma.user.findMany()`, Redis GET/SET, MongoDB query | Network I/O đến DB server |
+| **DNS I/O** | `dns.lookup('google.com')` — tra cứu IP từ domain | Thread Pool |
+| **Pipe / IPC** | Đọc từ `stdin`, giao tiếp giữa child_process | OS Kernel |
+
+> ⚠️ **Lưu ý**: Database query thực chất là **Network I/O** — Node.js gửi query qua TCP đến DB server, rồi chờ response về. Poll phase chờ đúng cái response TCP đó.
+
+**Điểm KHÔNG phải I/O (không thuộc Poll phase):**
+- Tính toán CPU nặng: Fibonacci, sort, JSON.parse file lớn → Block Event Loop, cần Worker Threads
+- `fs.readFileSync()` → Block main thread trực tiếp, không qua Poll
+
+---
+
+##### 💼 Ví dụ thực tế trong NestJS
+
+```typescript
+// Một request vào API GET /orders/:id
+async getOrder(id: string) {
+
+  // Node.js "ra ngoài" gửi query đến PostgreSQL
+  const order = await prisma.order.findById(id)
+  //            ↑
+  //  1. Node.js gửi SQL query đến PostgreSQL qua TCP (Network I/O)
+  //  2. Event Loop đến Poll phase → NGỦ chờ PostgreSQL trả lời
+  //  3. Trong lúc ngủ → Event Loop xử lý request KHÁC được bình thường
+  //  4. PostgreSQL xong → OS đánh thức → Poll phase nhận callback
+  //  5. Code tiếp tục chạy từ dòng dưới await
+  //
+  //  ↑ ĐÂY CHÍNH LÀ LÝ DO Node.js phục vụ hàng ngàn request đồng thời!
+
+  return order
+}
+```
+
+**Nếu thay bằng CPU-bound (KHÔNG phải I/O):**
+
+```typescript
+// ❌ Tính Fibonacci trực tiếp trên main thread
+async getOrder(id: string) {
+  const fib = fibonacci(40)  // Tính mất 2 giây
+  //          ↑
+  //  KHÔNG phải I/O → Poll phase không giúp được
+  //  Event Loop bị BLOCK 2 giây → tất cả request khác phải chờ!
+  //  → Cần Worker Threads để xử lý
+
+  return fib
+}
+```
+
+---
+
+##### 🎯 Script trả lời phỏng vấn (30-60 giây)
+
+> **Câu hỏi**: "Poll phase trong Event Loop Node.js hoạt động như thế nào?"
+
+**Trả lời ngắn (30 giây):**
+> "Poll phase là nơi Event Loop xử lý các I/O callback — tức là kết quả trả về từ database, file system, network. Khi không có callback nào sẵn sàng, Poll phase sẽ **block và chờ OS thông báo**, thay vì vòng lặp liên tục tốn CPU. Đây chính là cơ chế giúp Node.js với 1 thread duy nhất vẫn phục vụ được hàng ngàn kết nối đồng thời."
+
+**Trả lời đầy đủ hơn (60 giây — nếu interviewer hỏi sâu thêm):**
+> "Poll phase hoạt động theo 2 bước: Một là chạy hết tất cả I/O callback đang sẵn sàng trong queue. Hai là khi queue trống, nó tính toán thời gian chờ — nếu có setImmediate thì thoát ngay sang Check phase; nếu có setTimeout sắp hết hạn thì chờ tối đa thời gian đó; nếu không có gì thì ngủ vô thời hạn cho đến khi OS báo có I/O xong. Cơ chế ngủ này dùng epoll trên Linux, kqueue trên macOS — tức là OS kernel tự đánh thức khi có event, không tốn CPU chờ."
+
 #### Phase 5: Check ✅
 
 Thực thi callback của `setImmediate()`. Phase này chạy ngay sau Poll phase.
