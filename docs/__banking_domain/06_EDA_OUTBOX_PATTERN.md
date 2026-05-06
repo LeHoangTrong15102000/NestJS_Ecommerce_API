@@ -174,7 +174,7 @@ FOR UPDATE SKIP LOCKED;
 // outbox/outbox.service.ts
 import { Injectable } from '@nestjs/common';
 import { InjectDataSource } from '@nestjs/typeorm';
-import { DataSource } from 'typeorm';
+import { DataSource, QueryRunner } from 'typeorm';
 
 export interface OutboxEvent {
   aggregateType: string;
@@ -384,7 +384,7 @@ export class OutboxWorker {
 
 ```typescript
 // outbox/artemis-outbox.worker.ts
-import { Client, connect } from 'rhea-promise';  // AMQP 1.0 library cho Artemis
+import { Container, Connection, Sender } from 'rhea-promise';  // AMQP 1.0 library cho Artemis
 
 @Injectable()
 export class ArtemisOutboxWorker {

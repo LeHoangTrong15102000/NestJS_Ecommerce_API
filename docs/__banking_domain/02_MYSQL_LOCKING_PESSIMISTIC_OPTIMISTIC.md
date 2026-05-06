@@ -194,7 +194,7 @@ BEGIN
 
     IF v_rows_affected = 0 THEN
       -- Đợi một chút trước khi retry (tránh thundering herd)
-      DO SLEEP(0.01 * v_retry_count);  -- Exponential: 10ms, 20ms, 30ms
+      DO SLEEP(0.01 * v_retry_count);  -- Linear: 10ms, 20ms, 30ms
     END IF;
   END WHILE;
 

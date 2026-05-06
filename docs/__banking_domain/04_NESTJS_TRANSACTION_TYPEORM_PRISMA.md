@@ -225,7 +225,7 @@ async debitAccount(accountId: number, amount: number, reference: string) {
 
 ```typescript
 // Cách ngắn gọn hơn, tự động commit/rollback
-// NHƯNG: không set được isolation level tùy chỉnh
+// Có thể set isolation level bằng cách truyền vào argument đầu tiên
 async simpleTransfer(fromId: number, toId: number, amount: number) {
   await this.dataSource.transaction(async (manager) => {
     // manager là EntityManager trong scope transaction này

@@ -185,7 +185,7 @@ SELECT * FROM transactions WHERE reference = 'TXN20250101001';
 -- Use case 4: Đối soát theo loại giao dịch + ngày
 -- Query: type + date (cho reconciliation)
 CREATE INDEX idx_type_date ON transactions(type, DATE(created_at));
--- Lưu ý: function-based index (MySQL 5.7+ hỗ trợ)
+-- Lưu ý: function-based index (MySQL 8.0.13+ hỗ trợ)
 ```
 
 ---
