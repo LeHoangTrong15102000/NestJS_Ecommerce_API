@@ -52,7 +52,6 @@ async function bootstrap() {
       crossOriginEmbedderPolicy: false,
     }),
   )
-  // app.useGlobalInterceptors(new LoggingInterceptor())
   // Cái này nó giới hạn dựa trên cái địa chỉ IP của client
   // Trust proxy: 1 hop in production (behind reverse proxy), loopback in development
   app.set('trust proxy', process.env.NODE_ENV === 'production' ? 1 : 'loopback')
@@ -91,7 +90,6 @@ async function bootstrap() {
       persistAuthorization: true,
     },
   })
-  // app.useWebSocketAdapter(new WebsocketAdapter(app))
   try {
     const websocketAdapter = new WebsocketAdapter(app)
     await websocketAdapter.connectToRedis()
@@ -104,9 +102,6 @@ async function bootstrap() {
     }
     logger.warn('WebSocket disabled in development due to Redis connection failure')
   }
-  // app.useStaticAssets(UPLOAD_DIR, {
-  //   prefix: '/media/static',
-  // })
   await app.listen(process.env.PORT ?? 3000)
 
   // Enable graceful shutdown hooks

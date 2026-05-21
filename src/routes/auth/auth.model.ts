@@ -115,18 +115,6 @@ export const DeviceSchema = z.object({
   isActive: z.boolean(),
 })
 
-// export const RoleSchema = z.object({
-//   id: z.number(),
-//   name: z.string(),
-//   description: z.string(),
-//   isActive: z.boolean(),
-//   createdById: z.number().nullable(),
-//   updatedById: z.number().nullable(),
-//   createdAt: z.date(),
-//   updatedAt: z.date(),
-//   deletedAt: z.date().nullable(),
-// })
-
 // Logout body Schema nó sẽ giống với RefreshTokenBodySchema
 export const LogoutBodySchema = RefreshTokenBodySchema
 
@@ -205,7 +193,6 @@ export type RefreshTokenResType = LoginResType // chỗ này cũng có thể ghi
 export type LogoutBodyType = RefreshTokenBodyType
 
 export type DeviceType = z.infer<typeof DeviceSchema>
-// export type RoleType = z.infer<typeof RoleSchema>
 export type GoogleAuthStateType = z.infer<typeof GoogleAuthStateSchema>
 export type GetAuthorizationUrlResType = z.infer<typeof GetAuthorizationUrlResSchema>
 
@@ -213,27 +200,3 @@ export type ForgotPasswordBodyType = z.infer<typeof ForgotPasswordBodySchema>
 export type EnableTwoFactorBodyType = z.infer<typeof EnableTwoFactorBodySchema>
 export type DisableTwoFactorBodyType = z.infer<typeof DisableTwoFactorBodySchema>
 export type TwoFactorEnableResType = z.infer<typeof TwoFactorEnableResSchema>
-
-// export const ForgotPasswordBodySchema = z.object({
-//   email: z.string().email(),
-// })
-// export type ForgotPasswordBodyType = z.infer<typeof ForgotPasswordBodySchema>
-
-// export const ResetPasswordBodySchema = z.object({
-//   email: z.string().email(),
-//   code: z.string().length(6),
-//   newPassword: z.string().min(6).max(100),
-// }).strict()
-// export type ResetPasswordBodyType = z.infer<typeof ResetPasswordBodySchema>
-
-// export const TwoFactorSetupBodySchema  = z.object({})
-// export type TwoFactorSetupBodyType = z.infer<typeof TwoFactorSetupBodySchema>
-
-// export const TwoFactorSetupResSChema  = z.object({})
-// export type TwoFactorSetupResType = z.infer<typeof TwoFactorSetupResSchema>
-
-// export const TwoFactorVerifyBodySchema  = z.object({})
-//  export type TwoFactorVerifyBodyType = z.infer<typeof TwoFactorVerifyBodySchema>
-
-// export const DisableTwoFactorBodySchema = z.object({})
-// export type DisableTwoFactorBodyType = z.infer<typeof DisableTwoFactorBodySchema>

@@ -11,14 +11,6 @@ export const CACHE_TTL = {
   VERY_LONG: 24 * 60 * 60 * 1000, // 24 hours
 } as const
 
-// Cache TTL values (in seconds) for cache-manager
-export const CACHE_TTL_SECONDS = {
-  SHORT: 60, // 1 minute
-  MEDIUM: 300, // 5 minutes
-  LONG: 3600, // 1 hour
-  VERY_LONG: 86400, // 24 hours
-} as const
-
 // Job delays (in milliseconds)
 export const JOB_DELAYS = {
   PAYMENT_CANCEL: 24 * 60 * 60 * 1000, // 24 hours

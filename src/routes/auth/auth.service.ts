@@ -1,5 +1,4 @@
 import { HttpException, Injectable, UnauthorizedException } from '@nestjs/common'
-import { RolesService } from 'src/routes/auth/roles.service'
 import { generateOTP, isNotFoundPrismaError, isUniqueConstraintPrismaError } from 'src/shared/helpers'
 import { MESSAGES } from 'src/shared/constants/app.constant'
 import { HashingService } from 'src/shared/services/hashing.service'
@@ -13,7 +12,7 @@ import {
   SendOTPBodyType,
 } from 'src/routes/auth/auth.model'
 import { AuthRepository } from 'src/routes/auth/auth.repo'
-import { addMilliseconds, isThisSecond } from 'date-fns'
+import { addMilliseconds } from 'date-fns'
 import { SharedUserRepository } from 'src/shared/repositories/shared-user.repo'
 import ms from 'ms'
 import envConfig from 'src/shared/config'

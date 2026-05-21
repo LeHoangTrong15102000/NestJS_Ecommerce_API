@@ -43,12 +43,8 @@ import { ThrottlerBehindProxyGuard } from 'src/shared/guards/throttler-behind-pr
 import CustomZodValidationPipe from 'src/shared/pipes/custom-zod-validation.pipe'
 import { SharedModule } from 'src/shared/shared.module'
 import { WebsocketModule } from 'src/websockets/websocket.module'
-import { AppController } from './app.controller'
-import { AppService } from './app.service'
 
 import { LoggerModule } from 'nestjs-pino'
-
-// console.log(path.resolve('src/i18n/'))
 
 @Module({
   imports: [
@@ -193,9 +189,8 @@ import { LoggerModule } from 'nestjs-pino'
     AIAssistantModule,
     WishlistModule,
   ],
-  controllers: [AppController],
+  controllers: [],
   providers: [
-    AppService,
     // Thằng Pipe dùng để biến đổi cấu trúc lỗi trả về, chỉ chạy trước cái route handler
     {
       provide: APP_PIPE,

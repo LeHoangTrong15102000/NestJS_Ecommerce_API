@@ -144,48 +144,6 @@ export class AuthRepository {
     }) as any
   }
 
-  updateDeviceWithTransaction(
-    deviceId: number,
-    data: Partial<DeviceType>,
-    prisma?: PrismaService,
-  ): Promise<DeviceType> {
-    const db = prisma ?? this.prismaService
-
-    return db.device.update({
-      where: {
-        id: deviceId,
-      },
-      data,
-    }) as any
-  }
-
-  // Tạo refreshToken có sử dụng transaction
-  createRefreshTokenWithTransaction(
-    data: { token: string; userId: number; deviceId: number; expiresAt: Date },
-    prisma?: PrismaService,
-  ): Promise<RefreshTokenType> {
-    const db = prisma ?? this.prismaService
-    return db.refreshToken.create({
-      data,
-    }) as any
-  }
-
-  // Xóa refreshToken có sử dụng transaction
-  async deleteRefreshTokenWithTransaction(token: string, prisma?: PrismaService): Promise<void> {
-    const db = prisma ?? this.prismaService
-    ;(await db.refreshToken.delete({
-      where: { token },
-    })) as any
-  }
-
-  // // Update user
-  // updateUser(where: { id: number } | { email: string }, data: Partial<Omit<UserType, 'id'>>): Promise<UserType> {
-  //   return this.prismaService.user.update({
-  //     where,
-  //     data,
-  //   })
-  // }
-
   // Delete verificationCode
   deleteVerificationCode(
     uniqueValue: { id: number } | { email_type: { email: string; type: TypeOfVerificationCodeType } },

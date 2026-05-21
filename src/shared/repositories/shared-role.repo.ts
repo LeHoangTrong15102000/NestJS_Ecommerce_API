@@ -23,13 +23,6 @@ export class SharedRoleRepository {
       return res[0]
     })
 
-    // Lấy phần từ tiên chính là lấy cái role là Client luôn
-    // console.log('Check role', role)
-    // const role = await this.prismaService.role.findUniqueOrThrow({
-    //   where: {
-    //     name: RoleName.Client,
-    //   },
-    // })
     return role
   }
 
@@ -53,5 +46,3 @@ export class SharedRoleRepository {
     return role.id
   }
 }
-
-// new RolesService(new PrismaService()).getClientRoleId()
