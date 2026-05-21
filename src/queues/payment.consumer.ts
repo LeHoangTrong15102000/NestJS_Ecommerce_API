@@ -1,27 +1,29 @@
 import { Processor, WorkerHost } from '@nestjs/bullmq'
-import { Logger } from '@nestjs/common'
+import { Injectable } from '@nestjs/common'
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino'
 import { Job } from 'bullmq'
 import { CANCEL_PAYMENT_JOB_NAME, PAYMENT_QUEUE_NAME } from 'src/shared/constants/queue.constant'
 import { SharedPaymentRepository } from 'src/shared/repositories/shared-payment.repo'
 
 @Processor(PAYMENT_QUEUE_NAME)
 export class PaymentConsumer extends WorkerHost {
-  private readonly logger = new Logger(PaymentConsumer.name)
-
-  constructor(private readonly sharedPaymentRepo: SharedPaymentRepository) {
+  constructor(
+    @InjectPinoLogger(PaymentConsumer.name) private readonly logger: PinoLogger,
+    private readonly sharedPaymentRepo: SharedPaymentRepository,
+  ) {
     super()
   }
 
   async process(job: Job<{ paymentId: number }, any, string>): Promise<any> {
-    this.logger.log(`Processing job ${job.name} with ID ${job.id}, attempt ${job.attemptsMade + 1}`)
+    this.logger.info(`Processing job ${job.name} with ID ${job.id}, attempt ${job.attemptsMade + 1}`)
 
     try {
       switch (job.name) {
         case CANCEL_PAYMENT_JOB_NAME: {
           const paymentId = job.data.paymentId
-          this.logger.log(`Cancelling payment with ID: ${paymentId}`)
+          this.logger.info(`Cancelling payment with ID: ${paymentId}`)
           await this.sharedPaymentRepo.cancelPaymentAndOrder(paymentId)
-          this.logger.log(`Successfully cancelled payment with ID: ${paymentId}`)
+          this.logger.info(`Successfully cancelled payment with ID: ${paymentId}`)
           return { success: true, paymentId }
         }
         default: {

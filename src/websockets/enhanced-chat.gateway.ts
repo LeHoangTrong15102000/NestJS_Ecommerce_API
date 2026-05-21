@@ -8,7 +8,8 @@ import {
   ConnectedSocket,
 } from '@nestjs/websockets'
 import { Server, Socket } from 'socket.io'
-import { Injectable, Logger, OnModuleDestroy } from '@nestjs/common'
+import { Injectable, OnModuleDestroy } from '@nestjs/common'
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino'
 
 // Import handlers
 import { ChatConnectionHandler } from './handlers/chat-connection.handler'
@@ -49,13 +50,12 @@ export class EnhancedChatGateway implements OnGatewayConnection, OnGatewayDiscon
   @WebSocketServer()
   server: Server
 
-  private readonly logger = new Logger(EnhancedChatGateway.name)
-
   // Store interval reference for cleanup (fix memory leak)
   private cleanupIntervalId: ReturnType<typeof setInterval> | null = null
   private readonly rateLimiter: TokenBucketRateLimiter
 
   constructor(
+    @InjectPinoLogger(EnhancedChatGateway.name) private readonly logger: PinoLogger,
     private readonly connectionHandler: ChatConnectionHandler,
     private readonly messageHandler: ChatMessageHandler,
     private readonly typingHandler: ChatTypingHandler,
@@ -81,7 +81,7 @@ export class EnhancedChatGateway implements OnGatewayConnection, OnGatewayDiscon
       void this.typingHandler.cleanupExpiredTypingIndicators()
     }, 30000)
 
-    this.logger.log('EnhancedChatGateway initialized with typing cleanup interval')
+    this.logger.info('EnhancedChatGateway initialized with typing cleanup interval')
   }
 
   /**
@@ -91,7 +91,7 @@ export class EnhancedChatGateway implements OnGatewayConnection, OnGatewayDiscon
     if (this.cleanupIntervalId) {
       clearInterval(this.cleanupIntervalId)
       this.cleanupIntervalId = null
-      this.logger.log('Cleared typing cleanup interval')
+      this.logger.info('Cleared typing cleanup interval')
     }
   }
 

@@ -1,4 +1,5 @@
-import { ExceptionFilter, Catch, ArgumentsHost, HttpException, HttpStatus, Logger } from '@nestjs/common'
+import { ExceptionFilter, Catch, ArgumentsHost, HttpException, HttpStatus } from '@nestjs/common'
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino'
 import { HttpAdapterHost } from '@nestjs/core'
 import {
   isUniqueConstraintPrismaError,
@@ -8,9 +9,10 @@ import {
 
 @Catch()
 export class CatchEverythingFilter implements ExceptionFilter {
-  private readonly logger = new Logger(CatchEverythingFilter.name)
-
-  constructor(private readonly httpAdapterHost: HttpAdapterHost) {}
+  constructor(
+    @InjectPinoLogger(CatchEverythingFilter.name) private readonly logger: PinoLogger,
+    private readonly httpAdapterHost: HttpAdapterHost,
+  ) {}
 
   catch(exception: unknown, host: ArgumentsHost): void {
     const { httpAdapter } = this.httpAdapterHost

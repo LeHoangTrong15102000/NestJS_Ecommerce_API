@@ -1,4 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing'
+import { getLoggerToken } from 'nestjs-pino'
 import { Server } from 'socket.io'
 import { ConversationService } from 'src/routes/conversation/conversation.service'
 import { ChatRedisService } from '../../services/chat-redis.service'
@@ -63,6 +64,7 @@ describe('ChatTypingHandler', () => {
         ChatTypingHandler,
         { provide: ConversationService, useValue: mockConversationService },
         { provide: ChatRedisService, useValue: mockRedisService },
+        { provide: getLoggerToken(ChatTypingHandler.name), useValue: { log: jest.fn(), error: jest.fn(), warn: jest.fn(), debug: jest.fn() } },
       ],
     }).compile()
 

@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common'
+import { Injectable } from '@nestjs/common'
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino'
 import { Cron, CronExpression } from '@nestjs/schedule'
 import { PrismaService } from 'src/shared/services/prisma.service'
 
@@ -7,10 +8,12 @@ const BATCH_SIZE = 1000
 
 @Injectable()
 export class RemoveRefreshTokenCronjob {
-  private readonly logger = new Logger(RemoveRefreshTokenCronjob.name)
   private isRunning = false
 
-  constructor(private prismaService: PrismaService) {}
+  constructor(
+    @InjectPinoLogger(RemoveRefreshTokenCronjob.name) private readonly logger: PinoLogger,
+    private prismaService: PrismaService,
+  ) {}
 
   @Cron(CronExpression.EVERY_DAY_AT_1AM)
   async handleCron() {
@@ -24,7 +27,7 @@ export class RemoveRefreshTokenCronjob {
     const startTime = Date.now()
     let totalDeleted = 0
 
-    this.logger.log('Starting expired refresh token cleanup...')
+    this.logger.info('Starting expired refresh token cleanup...')
 
     try {
       // Delete in batches to avoid memory issues with large datasets
@@ -53,7 +56,7 @@ export class RemoveRefreshTokenCronjob {
       } while (deletedCount === BATCH_SIZE)
 
       const duration = Date.now() - startTime
-      this.logger.log(`Refresh token cleanup completed. Removed ${totalDeleted} tokens in ${duration}ms`)
+      this.logger.info(`Refresh token cleanup completed. Removed ${totalDeleted} tokens in ${duration}ms`)
     } catch (error) {
       this.logger.error('Failed to cleanup expired refresh tokens:', error)
     } finally {

@@ -1,4 +1,5 @@
-import { BadRequestException, ForbiddenException, Injectable, Logger, NotFoundException } from '@nestjs/common'
+import { BadRequestException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common'
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino'
 import { SharedUserRepository } from 'src/shared/repositories/shared-user.repo'
 import { ConversationRepository } from './conversation.repo'
 import { MessageRepository } from './message.repo'
@@ -6,9 +7,8 @@ import { MESSAGE_LIMITS } from 'src/shared/constants/app.constant'
 
 @Injectable()
 export class MessageService {
-  private readonly logger = new Logger(MessageService.name)
-
   constructor(
+    @InjectPinoLogger(MessageService.name) private readonly logger: PinoLogger,
     private readonly messageRepo: MessageRepository,
     private readonly conversationRepo: ConversationRepository,
     private readonly userRepo: SharedUserRepository,

@@ -1,4 +1,5 @@
-import { Injectable, NestInterceptor, ExecutionContext, CallHandler, Logger } from '@nestjs/common'
+import { Injectable, NestInterceptor, ExecutionContext, CallHandler } from '@nestjs/common'
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino'
 import { Reflector } from '@nestjs/core'
 import { Observable } from 'rxjs'
 import { map } from 'rxjs/operators'
@@ -6,9 +7,10 @@ import { ZOD_RESPONSE_ONLY_KEY } from '../decorators/zod-response-only.decorator
 
 @Injectable()
 export class ZodOutputInterceptor implements NestInterceptor {
-  private readonly logger = new Logger(ZodOutputInterceptor.name)
-
-  constructor(private reflector: Reflector) {}
+  constructor(
+    @InjectPinoLogger(ZodOutputInterceptor.name) private readonly logger: PinoLogger,
+    private reflector: Reflector,
+  ) {}
 
   intercept(context: ExecutionContext, next: CallHandler): Observable<any> {
     const handler = context.getHandler()

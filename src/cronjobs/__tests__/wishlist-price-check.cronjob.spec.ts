@@ -1,4 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing'
+import { getLoggerToken } from 'nestjs-pino'
 import { WishlistProducer } from 'src/routes/wishlist/wishlist.producer'
 import { WishlistPriceCheckCronjob } from '../wishlist-price-check.cronjob'
 
@@ -21,7 +22,11 @@ describe('WishlistPriceCheckCronjob', () => {
     } as any
 
     const module: TestingModule = await Test.createTestingModule({
-      providers: [WishlistPriceCheckCronjob, { provide: WishlistProducer, useValue: mockWishlistProducer }],
+      providers: [
+        WishlistPriceCheckCronjob,
+        { provide: WishlistProducer, useValue: mockWishlistProducer },
+        { provide: getLoggerToken(WishlistPriceCheckCronjob.name), useValue: { log: jest.fn(), error: jest.fn(), warn: jest.fn(), debug: jest.fn() } },
+      ],
     }).compile()
 
     cronjob = module.get<WishlistPriceCheckCronjob>(WishlistPriceCheckCronjob)
@@ -42,7 +47,7 @@ describe('WishlistPriceCheckCronjob', () => {
     })
 
     it('should log start message', async () => {
-      const loggerSpy = jest.spyOn(cronjob['logger'], 'log')
+      const loggerSpy = jest.spyOn(cronjob['logger'], 'info')
       mockWishlistProducer.addPriceCheckJob.mockResolvedValue({} as any)
 
       await cronjob.handlePriceCheck()
@@ -51,7 +56,7 @@ describe('WishlistPriceCheckCronjob', () => {
     })
 
     it('should log success message', async () => {
-      const loggerSpy = jest.spyOn(cronjob['logger'], 'log')
+      const loggerSpy = jest.spyOn(cronjob['logger'], 'info')
       mockWishlistProducer.addPriceCheckJob.mockResolvedValue({} as any)
 
       await cronjob.handlePriceCheck()
@@ -114,7 +119,7 @@ describe('WishlistPriceCheckCronjob', () => {
     })
 
     it('should log both start and success messages in order', async () => {
-      const loggerSpy = jest.spyOn(cronjob['logger'], 'log')
+      const loggerSpy = jest.spyOn(cronjob['logger'], 'info')
       mockWishlistProducer.addPriceCheckJob.mockResolvedValue({} as any)
 
       await cronjob.handlePriceCheck()
@@ -124,7 +129,7 @@ describe('WishlistPriceCheckCronjob', () => {
     })
 
     it('should not log success message on error', async () => {
-      const loggerLogSpy = jest.spyOn(cronjob['logger'], 'log')
+      const loggerLogSpy = jest.spyOn(cronjob['logger'], 'info')
       const loggerErrorSpy = jest.spyOn(cronjob['logger'], 'error')
       mockWishlistProducer.addPriceCheckJob.mockRejectedValue(new Error('Failed'))
 
@@ -261,7 +266,7 @@ describe('WishlistPriceCheckCronjob', () => {
     })
 
     it('should log at appropriate levels', async () => {
-      const logSpy = jest.spyOn(cronjob['logger'], 'log')
+      const logSpy = jest.spyOn(cronjob['logger'], 'info')
       const errorSpy = jest.spyOn(cronjob['logger'], 'error')
       mockWishlistProducer.addPriceCheckJob.mockResolvedValue({} as any)
 

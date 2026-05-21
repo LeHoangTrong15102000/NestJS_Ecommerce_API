@@ -1,6 +1,7 @@
-import { ArgumentsHost, HttpException, HttpStatus, Logger } from '@nestjs/common'
+import { ArgumentsHost, HttpException, HttpStatus } from '@nestjs/common'
 import { BaseExceptionFilter } from '@nestjs/core'
 import { Test, TestingModule } from '@nestjs/testing'
+import { getLoggerToken, PinoLogger } from 'nestjs-pino'
 import { HttpExceptionFilter } from '../http-exception.filter'
 
 /**
@@ -19,9 +20,15 @@ import { HttpExceptionFilter } from '../http-exception.filter'
  * - Edge cases: null/undefined, malformed errors
  */
 
+const mockPinoLogger = {
+  log: jest.fn(),
+  error: jest.fn(),
+  warn: jest.fn(),
+  debug: jest.fn(),
+}
+
 describe('HttpExceptionFilter', () => {
   let filter: HttpExceptionFilter
-  let mockLogger: jest.SpyInstance
   let mockSuperCatch: jest.SpyInstance
   let mockArgumentsHost: jest.Mocked<ArgumentsHost>
 
@@ -58,14 +65,14 @@ describe('HttpExceptionFilter', () => {
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
-      providers: [HttpExceptionFilter],
+      providers: [
+        HttpExceptionFilter,
+        { provide: getLoggerToken(HttpExceptionFilter.name), useValue: mockPinoLogger },
+      ],
     }).compile()
 
     filter = module.get<HttpExceptionFilter>(HttpExceptionFilter)
     mockArgumentsHost = createMockArgumentsHost()
-
-    // Mock Logger methods
-    mockLogger = jest.spyOn(Logger.prototype, 'error').mockImplementation()
 
     // Mock BaseExceptionFilter.catch
     mockSuperCatch = jest.spyOn(BaseExceptionFilter.prototype, 'catch').mockImplementation()
@@ -174,7 +181,7 @@ describe('HttpExceptionFilter', () => {
       // The filter should always call super.catch for any HttpException
       expect(mockSuperCatch).toHaveBeenCalledWith(exception, mockArgumentsHost)
       // For non-ZodSerializationException, logger should not be called
-      expect(mockLogger).not.toHaveBeenCalled()
+      expect(mockPinoLogger.error).not.toHaveBeenCalled()
 
       consoleLogSpy.mockRestore()
     })
@@ -192,7 +199,7 @@ describe('HttpExceptionFilter', () => {
 
       // Assert
       // For regular HttpException, logger should NOT be called
-      expect(mockLogger).not.toHaveBeenCalled()
+      expect(mockPinoLogger.error).not.toHaveBeenCalled()
       expect(mockSuperCatch).toHaveBeenCalledWith(exception, mockArgumentsHost)
 
       consoleLogSpy.mockRestore()
@@ -233,8 +240,8 @@ describe('HttpExceptionFilter', () => {
       const loggerInstance = (filter as any).logger
 
       // Assert
-      expect(loggerInstance).toBeInstanceOf(Logger)
-      // Logger context is set in constructor: new Logger(HttpExceptionFilter.name)
+      expect(loggerInstance).toBeInstanceOf(PinoLogger)
+      // Logger context is set in constructor: @InjectPinoLogger(HttpExceptionFilter.name)
     })
 
     it('should not log for regular HttpException', () => {
@@ -245,7 +252,7 @@ describe('HttpExceptionFilter', () => {
       filter.catch(exception, mockArgumentsHost)
 
       // Assert
-      expect(mockLogger).not.toHaveBeenCalled()
+      expect(mockPinoLogger.error).not.toHaveBeenCalled()
     })
 
     it('should not log for HttpException with object response', () => {
@@ -259,7 +266,7 @@ describe('HttpExceptionFilter', () => {
       filter.catch(exception, mockArgumentsHost)
 
       // Assert
-      expect(mockLogger).not.toHaveBeenCalled()
+      expect(mockPinoLogger.error).not.toHaveBeenCalled()
     })
   })
 

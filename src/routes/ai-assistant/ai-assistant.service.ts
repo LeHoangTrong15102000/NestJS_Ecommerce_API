@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common'
+import { Injectable } from '@nestjs/common'
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino'
 import envConfig from 'src/shared/config'
 import Anthropic from '@anthropic-ai/sdk'
 import { AIAssistantRepo } from './ai-assistant.repo'
@@ -13,10 +14,12 @@ interface AIConversationMessage {
 
 @Injectable()
 export class AIAssistantService {
-  private readonly logger = new Logger(AIAssistantService.name)
   private readonly anthropic: Anthropic
 
-  constructor(private readonly aiAssistantRepo: AIAssistantRepo) {
+  constructor(
+    @InjectPinoLogger(AIAssistantService.name) private readonly logger: PinoLogger,
+    private readonly aiAssistantRepo: AIAssistantRepo,
+  ) {
     const apiKey = envConfig.ANTHROPIC_API_KEY
 
     if (!apiKey) {
@@ -163,7 +166,7 @@ export class AIAssistantService {
         context: dto.context || {},
       })
 
-      this.logger.log(`Created AI conversation ${conversation.id} for user ${userId}`)
+      this.logger.info(`Created AI conversation ${conversation.id} for user ${userId}`)
       return conversation
     } catch (error) {
       this.logger.error('Error creating AI conversation:', error)
@@ -254,7 +257,7 @@ export class AIAssistantService {
         await this.aiAssistantRepo.updateConversation(conversationId, { title })
       }
 
-      this.logger.log(`AI message created for conversation ${conversationId} in ${responseTime}ms`)
+      this.logger.info(`AI message created for conversation ${conversationId} in ${responseTime}ms`)
 
       return {
         userMessage,
@@ -276,11 +279,11 @@ export class AIAssistantService {
 
       // Kiểm tra API key trước khi gọi Anthropic
       if (!apiKey) {
-        this.logger.log('🚫 Không có ANTHROPIC_API_KEY - sử dụng fallback')
+        this.logger.info('🚫 Không có ANTHROPIC_API_KEY - sử dụng fallback')
         return this.getFallbackResponse(userMessage)
       }
 
-      this.logger.log('🤖 Đang gọi Anthropic Claude API...')
+      this.logger.info('🤖 Đang gọi Anthropic Claude API...')
 
       const allMessages = [...previousMessages, { role: AIMessageRole.USER, content: userMessage }]
 
@@ -298,7 +301,7 @@ export class AIAssistantService {
         .map((block) => block.text)
         .join('')
 
-      this.logger.log('✅ Anthropic Claude API response thành công')
+      this.logger.info('✅ Anthropic Claude API response thành công')
       return text || this.getFallbackResponse(userMessage, 'general')
     } catch (error: unknown) {
       this.logger.error('❌ Lỗi khi gọi Anthropic API:', error)
@@ -307,7 +310,7 @@ export class AIAssistantService {
 
       // Kiểm tra loại lỗi cụ thể
       if (apiError.status === 429 || apiError.message?.includes('quota') || apiError.message?.includes('rate limit')) {
-        this.logger.log('💳 Lỗi quota/rate limit Anthropic - sử dụng fallback response')
+        this.logger.info('💳 Lỗi quota/rate limit Anthropic - sử dụng fallback response')
         return this.getFallbackResponse(userMessage, 'quota')
       }
 
@@ -316,12 +319,12 @@ export class AIAssistantService {
         apiError.message?.includes('authentication') ||
         apiError.message?.includes('api key')
       ) {
-        this.logger.log('🔑 Lỗi authentication Anthropic - sử dụng fallback response')
+        this.logger.info('🔑 Lỗi authentication Anthropic - sử dụng fallback response')
         return this.getFallbackResponse(userMessage, 'auth')
       }
 
       // Fallback response cho các lỗi khác
-      this.logger.log('🔧 Lỗi khác - sử dụng fallback response')
+      this.logger.info('🔧 Lỗi khác - sử dụng fallback response')
       return this.getFallbackResponse(userMessage, 'general')
     }
   }
@@ -335,7 +338,7 @@ export class AIAssistantService {
     signal?: AbortSignal,
   ): Promise<void> {
     return new Promise<void>((resolve) => {
-      this.logger.log('🚫 Không có ANTHROPIC_API_KEY - sử dụng fallback streaming')
+      this.logger.info('🚫 Không có ANTHROPIC_API_KEY - sử dụng fallback streaming')
       const fallbackText = this.getFallbackResponse(userMessage)
 
       const words = fallbackText.split(' ')
@@ -423,7 +426,7 @@ export class AIAssistantService {
           return
         }
 
-        this.logger.log('🤖 Đang khởi tạo Anthropic Claude Streaming...')
+        this.logger.info('🤖 Đang khởi tạo Anthropic Claude Streaming...')
 
         const stream = this.setupAnthropicStream(previousMessages, userMessage)
 
@@ -431,14 +434,14 @@ export class AIAssistantService {
           signal.addEventListener('abort', () => stream.abort(), { once: true })
         }
 
-        this.logger.log('📡 Đang nhận streaming data từ Claude...')
+        this.logger.info('📡 Đang nhận streaming data từ Claude...')
 
         stream.on('text', (chunk: string) => {
           callbacks.onChunk(chunk)
         })
 
         stream.on('end', () => {
-          this.logger.log('✅ Streaming hoàn tất')
+          this.logger.info('✅ Streaming hoàn tất')
           callbacks.onComplete()
           resolve()
         })
@@ -467,7 +470,7 @@ export class AIAssistantService {
 
       await this.aiAssistantRepo.updateConversation(conversationId, { isArchived: true })
 
-      this.logger.log(`Archived AI conversation ${conversationId}`)
+      this.logger.info(`Archived AI conversation ${conversationId}`)
       return { success: true }
     } catch (error) {
       this.logger.error('Error archiving conversation:', error)
@@ -487,7 +490,7 @@ export class AIAssistantService {
 
       await this.aiAssistantRepo.deleteConversation(conversationId)
 
-      this.logger.log(`Deleted AI conversation ${conversationId}`)
+      this.logger.info(`Deleted AI conversation ${conversationId}`)
       return { success: true }
     } catch (error) {
       this.logger.error('Error deleting conversation:', error)

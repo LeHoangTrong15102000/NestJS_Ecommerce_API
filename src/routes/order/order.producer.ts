@@ -1,5 +1,6 @@
 import { InjectQueue } from '@nestjs/bullmq'
-import { Injectable, Logger } from '@nestjs/common'
+import { Injectable } from '@nestjs/common'
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino'
 import { CANCEL_PAYMENT_JOB_NAME, PAYMENT_QUEUE_NAME } from 'src/shared/constants/queue.constant'
 import { Queue } from 'bullmq'
 import { generateCancelPaymentJobId } from 'src/shared/helpers'
@@ -9,9 +10,10 @@ const PAYMENT_CANCEL_DELAY_MS = 1000 * 60 * 60 * 24
 
 @Injectable()
 export class OrderProducer {
-  private readonly logger = new Logger(OrderProducer.name)
-
-  constructor(@InjectQueue(PAYMENT_QUEUE_NAME) private paymentQueue: Queue) {}
+  constructor(
+    @InjectPinoLogger(OrderProducer.name) private readonly logger: PinoLogger,
+    @InjectQueue(PAYMENT_QUEUE_NAME) private paymentQueue: Queue,
+  ) {}
 
   async addCancelPaymentJob(paymentId: number): Promise<void> {
     const jobId = generateCancelPaymentJobId(paymentId)
@@ -41,7 +43,7 @@ export class OrderProducer {
         },
       )
 
-      this.logger.log(`Cancel payment job scheduled for paymentId: ${paymentId}, will execute in 24 hours`)
+      this.logger.info(`Cancel payment job scheduled for paymentId: ${paymentId}, will execute in 24 hours`)
     } catch (error) {
       this.logger.error(`Failed to add cancel payment job for paymentId: ${paymentId}`, error)
       throw error
@@ -54,7 +56,7 @@ export class OrderProducer {
     try {
       const result = await this.paymentQueue.remove(jobId)
       if (result) {
-        this.logger.log(`Cancel payment job removed for paymentId: ${paymentId}`)
+        this.logger.info(`Cancel payment job removed for paymentId: ${paymentId}`)
       } else {
         this.logger.warn(`Cancel payment job not found for paymentId: ${paymentId}`)
       }

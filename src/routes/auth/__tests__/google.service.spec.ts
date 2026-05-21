@@ -1,5 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing'
 import { google } from 'googleapis'
+import { getLoggerToken } from 'nestjs-pino'
 import { UserStatus } from '../../../shared/constants/auth.constant'
 import { SharedRoleRepository } from '../../../shared/repositories/shared-role.repo'
 import { HashingService } from '../../../shared/services/hashing.service'
@@ -27,6 +28,13 @@ jest.mock('googleapis', () => ({
  * - State encoding/decoding (userAgent, IP)
  * - Error handling (invalid token, missing email, etc.)
  */
+
+const mockPinoLogger = {
+  info: jest.fn(),
+  error: jest.fn(),
+  warn: jest.fn(),
+  debug: jest.fn(),
+}
 
 describe('GoogleService', () => {
   let service: GoogleService
@@ -128,6 +136,7 @@ describe('GoogleService', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         GoogleService,
+        { provide: getLoggerToken(GoogleService.name), useValue: mockPinoLogger },
         { provide: AuthRepository, useValue: mockAuthRepository },
         { provide: HashingService, useValue: mockHashingService },
         { provide: SharedRoleRepository, useValue: mockSharedRoleRepository },
@@ -591,22 +600,17 @@ describe('GoogleService', () => {
         userinfo: { get: mockUserinfoGet },
       })
 
-      // Spy on console.error
-      const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation()
-
       // Act - Thực hiện callback
       const result = await service.googleCallback({ code, state })
 
       // Assert - Kiểm tra kết quả vẫn thành công với default values
       expect(result).toEqual(mockAuthTokens)
-      expect(consoleErrorSpy).toHaveBeenCalledWith('Error parsing state:', expect.any(Error))
+      expect(mockPinoLogger.error).toHaveBeenCalledWith({ err: expect.any(Error) }, 'Error parsing state')
       expect(mockAuthRepository.createDevice).toHaveBeenCalledWith({
         userId: mockUser.id,
         userAgent: 'unknown', // Default value
         ip: 'unknown', // Default value
       })
-
-      consoleErrorSpy.mockRestore()
     })
 
     it('should handle empty state parameter', async () => {
@@ -667,15 +671,10 @@ describe('GoogleService', () => {
         userinfo: { get: mockUserinfoGet },
       })
 
-      // Spy on console.error
-      const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation()
-
       // Act & Assert - Thực hiện callback và kiểm tra lỗi
       await expect(service.googleCallback({ code, state })).rejects.toThrow(GoogleUserInfoError)
 
-      expect(consoleErrorSpy).toHaveBeenCalledWith('Error in google callback:', GoogleUserInfoError)
-
-      consoleErrorSpy.mockRestore()
+      expect(mockPinoLogger.error).toHaveBeenCalledWith({ err: GoogleUserInfoError }, 'Error in google callback')
     })
 
     it('should throw error when token exchange fails', async () => {
@@ -686,15 +685,10 @@ describe('GoogleService', () => {
       const tokenError = new Error('Invalid authorization code')
       mockOAuth2Client.getToken.mockRejectedValue(tokenError)
 
-      // Spy on console.error
-      const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation()
-
       // Act & Assert - Thực hiện callback và kiểm tra lỗi
       await expect(service.googleCallback({ code, state })).rejects.toThrow('Invalid authorization code')
 
-      expect(consoleErrorSpy).toHaveBeenCalledWith('Error in google callback:', tokenError)
-
-      consoleErrorSpy.mockRestore()
+      expect(mockPinoLogger.error).toHaveBeenCalledWith({ err: tokenError }, 'Error in google callback')
     })
 
     it('should throw error when Google API fails', async () => {
@@ -713,15 +707,10 @@ describe('GoogleService', () => {
         userinfo: { get: mockUserinfoGet },
       })
 
-      // Spy on console.error
-      const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation()
-
       // Act & Assert - Thực hiện callback và kiểm tra lỗi
       await expect(service.googleCallback({ code, state })).rejects.toThrow('Google API error')
 
-      expect(consoleErrorSpy).toHaveBeenCalledWith('Error in google callback:', apiError)
-
-      consoleErrorSpy.mockRestore()
+      expect(mockPinoLogger.error).toHaveBeenCalledWith({ err: apiError }, 'Error in google callback')
     })
 
     it('should throw error when user creation fails', async () => {
@@ -745,15 +734,10 @@ describe('GoogleService', () => {
         userinfo: { get: mockUserinfoGet },
       })
 
-      // Spy on console.error
-      const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation()
-
       // Act & Assert - Thực hiện callback và kiểm tra lỗi
       await expect(service.googleCallback({ code, state })).rejects.toThrow('Database error: Failed to create user')
 
-      expect(consoleErrorSpy).toHaveBeenCalledWith('Error in google callback:', dbError)
-
-      consoleErrorSpy.mockRestore()
+      expect(mockPinoLogger.error).toHaveBeenCalledWith({ err: dbError }, 'Error in google callback')
     })
 
     it('should throw error when device creation fails', async () => {
@@ -776,15 +760,10 @@ describe('GoogleService', () => {
         userinfo: { get: mockUserinfoGet },
       })
 
-      // Spy on console.error
-      const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation()
-
       // Act & Assert - Thực hiện callback và kiểm tra lỗi
       await expect(service.googleCallback({ code, state })).rejects.toThrow('Failed to create device')
 
-      expect(consoleErrorSpy).toHaveBeenCalledWith('Error in google callback:', deviceError)
-
-      consoleErrorSpy.mockRestore()
+      expect(mockPinoLogger.error).toHaveBeenCalledWith({ err: deviceError }, 'Error in google callback')
     })
 
     it('should throw error when token generation fails', async () => {
@@ -809,15 +788,10 @@ describe('GoogleService', () => {
         userinfo: { get: mockUserinfoGet },
       })
 
-      // Spy on console.error
-      const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation()
-
       // Act & Assert - Thực hiện callback và kiểm tra lỗi
       await expect(service.googleCallback({ code, state })).rejects.toThrow('Failed to generate tokens')
 
-      expect(consoleErrorSpy).toHaveBeenCalledWith('Error in google callback:', tokenError)
-
-      consoleErrorSpy.mockRestore()
+      expect(mockPinoLogger.error).toHaveBeenCalledWith({ err: tokenError }, 'Error in google callback')
     })
 
     it('should throw error when getClientRoleId fails', async () => {
@@ -839,15 +813,10 @@ describe('GoogleService', () => {
         userinfo: { get: mockUserinfoGet },
       })
 
-      // Spy on console.error
-      const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation()
-
       // Act & Assert - Thực hiện callback và kiểm tra lỗi
       await expect(service.googleCallback({ code, state })).rejects.toThrow('Failed to get client role ID')
 
-      expect(consoleErrorSpy).toHaveBeenCalledWith('Error in google callback:', roleError)
-
-      consoleErrorSpy.mockRestore()
+      expect(mockPinoLogger.error).toHaveBeenCalledWith({ err: roleError }, 'Error in google callback')
     })
 
     it('should throw error when password hashing fails', async () => {
@@ -870,15 +839,10 @@ describe('GoogleService', () => {
         userinfo: { get: mockUserinfoGet },
       })
 
-      // Spy on console.error
-      const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation()
-
       // Act & Assert - Thực hiện callback và kiểm tra lỗi
       await expect(service.googleCallback({ code, state })).rejects.toThrow('Failed to hash password')
 
-      expect(consoleErrorSpy).toHaveBeenCalledWith('Error in google callback:', hashError)
-
-      consoleErrorSpy.mockRestore()
+      expect(mockPinoLogger.error).toHaveBeenCalledWith({ err: hashError }, 'Error in google callback')
     })
   })
 })

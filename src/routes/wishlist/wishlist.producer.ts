@@ -1,5 +1,6 @@
 import { InjectQueue } from '@nestjs/bullmq'
-import { Injectable, Logger } from '@nestjs/common'
+import { Injectable } from '@nestjs/common'
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino'
 import { Queue } from 'bullmq'
 import {
   WISHLIST_QUEUE_NAME,
@@ -12,9 +13,10 @@ const PRICE_CHECK_JOB_ID = 'daily-price-check'
 
 @Injectable()
 export class WishlistProducer {
-  private readonly logger = new Logger(WishlistProducer.name)
-
-  constructor(@InjectQueue(WISHLIST_QUEUE_NAME) private wishlistQueue: Queue) {}
+  constructor(
+    @InjectPinoLogger(WishlistProducer.name) private readonly logger: PinoLogger,
+    @InjectQueue(WISHLIST_QUEUE_NAME) private wishlistQueue: Queue,
+  ) {}
 
   /**
    * Add price check job to queue
@@ -51,7 +53,7 @@ export class WishlistProducer {
         },
       )
 
-      this.logger.log('Price check job added to queue')
+      this.logger.info('Price check job added to queue')
     } catch (error) {
       this.logger.error('Failed to add price check job:', error)
       throw error
@@ -93,7 +95,7 @@ export class WishlistProducer {
         },
       })
 
-      this.logger.log(`Price alert job added for user ${data.userId}, product ${data.productId}`)
+      this.logger.info(`Price alert job added for user ${data.userId}, product ${data.productId}`)
     } catch (error) {
       this.logger.error(`Failed to add price alert job for user ${data.userId}:`, error)
       throw error

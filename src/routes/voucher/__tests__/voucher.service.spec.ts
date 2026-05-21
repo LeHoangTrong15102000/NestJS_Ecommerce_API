@@ -1,5 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing'
 import { HttpException } from '@nestjs/common'
+import { getLoggerToken } from 'nestjs-pino'
 import { VoucherService } from '../voucher.service'
 import { VoucherRepository } from '../voucher.repo'
 import { VOUCHER_ERRORS } from '../voucher.error'
@@ -159,6 +160,13 @@ describe('VoucherService', () => {
   let module: TestingModule
   let mockVoucherRepository: jest.Mocked<VoucherRepository>
 
+  const mockPinoLogger = {
+    info: jest.fn(),
+    warn: jest.fn(),
+    error: jest.fn(),
+    debug: jest.fn(),
+  }
+
   beforeEach(async () => {
     // Tạo mock cho VoucherRepository với tất cả methods cần thiết
     mockVoucherRepository = {
@@ -188,7 +196,11 @@ describe('VoucherService', () => {
     } as any
 
     module = await Test.createTestingModule({
-      providers: [VoucherService, { provide: VoucherRepository, useValue: mockVoucherRepository }],
+      providers: [
+        VoucherService,
+        { provide: getLoggerToken(VoucherService.name), useValue: mockPinoLogger },
+        { provide: VoucherRepository, useValue: mockVoucherRepository },
+      ],
     }).compile()
 
     service = module.get<VoucherService>(VoucherService)

@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common'
+import { Injectable } from '@nestjs/common'
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino'
 import { PrismaService } from 'src/shared/services/prisma.service'
 import Redis from 'ioredis'
 
@@ -20,10 +21,12 @@ export interface HealthCheckResponse {
 
 @Injectable()
 export class HealthService {
-  private readonly logger = new Logger(HealthService.name)
   private redis: Redis
 
-  constructor(private readonly prisma: PrismaService) {
+  constructor(
+    @InjectPinoLogger(HealthService.name) private readonly logger: PinoLogger,
+    private readonly prisma: PrismaService,
+  ) {
     // Create dedicated Redis connection for health checks
     const redisUrl = process.env.REDIS_URL || 'redis://localhost:6379'
     this.redis = new Redis(redisUrl, {

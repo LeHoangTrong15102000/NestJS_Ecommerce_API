@@ -1,4 +1,5 @@
 import { Injectable, HttpException } from '@nestjs/common'
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino'
 import { VoucherRepository } from './voucher.repo'
 import {
   CreateVoucherBody,
@@ -19,7 +20,10 @@ import { VOUCHER_ERRORS } from './voucher.error'
 
 @Injectable()
 export class VoucherService {
-  constructor(private readonly voucherRepository: VoucherRepository) {}
+  constructor(
+    @InjectPinoLogger(VoucherService.name) private readonly logger: PinoLogger,
+    private readonly voucherRepository: VoucherRepository,
+  ) {}
 
   // ===== VOUCHER MANAGEMENT (Admin/Seller) =====
 
@@ -308,7 +312,7 @@ export class VoucherService {
       const maxPossibleDiscount = (data.minOrderValue * data.value) / 100
       if (data.maxDiscount > maxPossibleDiscount) {
         // Cảnh báo nhưng không throw error
-        console.warn(
+        this.logger.warn(
           `MaxDiscount ${data.maxDiscount} is higher than possible discount ${maxPossibleDiscount} for minOrderValue ${data.minOrderValue}`,
         )
       }

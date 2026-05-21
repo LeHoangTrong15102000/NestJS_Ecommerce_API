@@ -1,13 +1,16 @@
-import { Injectable, Logger } from '@nestjs/common'
+import { Injectable } from '@nestjs/common'
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino'
 import { Cron, CronExpression } from '@nestjs/schedule'
 import { WishlistProducer } from 'src/routes/wishlist/wishlist.producer'
 
 @Injectable()
 export class WishlistPriceCheckCronjob {
-  private readonly logger = new Logger(WishlistPriceCheckCronjob.name)
   private isRunning = false
 
-  constructor(private readonly wishlistProducer: WishlistProducer) {}
+  constructor(
+    @InjectPinoLogger(WishlistPriceCheckCronjob.name) private readonly logger: PinoLogger,
+    private readonly wishlistProducer: WishlistProducer,
+  ) {}
 
   /**
    * Run price check daily at 2 AM
@@ -22,11 +25,11 @@ export class WishlistPriceCheckCronjob {
     }
 
     this.isRunning = true
-    this.logger.log('Triggering daily wishlist price check...')
+    this.logger.info('Triggering daily wishlist price check...')
 
     try {
       await this.wishlistProducer.addPriceCheckJob()
-      this.logger.log('Price check job queued successfully')
+      this.logger.info('Price check job queued successfully')
     } catch (error) {
       this.logger.error('Failed to queue price check job:', error)
     } finally {

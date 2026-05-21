@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common'
+import { Injectable } from '@nestjs/common'
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino'
 import { Prisma } from '@prisma/client'
 import { SerializeAll } from 'src/shared/decorators/serialize.decorator'
 import { PrismaService } from 'src/shared/services/prisma.service'
@@ -7,9 +8,10 @@ import { TYPING_INDICATOR } from 'src/shared/constants/app.constant'
 @Injectable()
 @SerializeAll()
 export class ConversationRepository {
-  private readonly logger = new Logger(ConversationRepository.name)
-
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    @InjectPinoLogger(ConversationRepository.name) private readonly logger: PinoLogger,
+    private readonly prisma: PrismaService,
+  ) {}
 
   // ===== CONVERSATION CRUD =====
 

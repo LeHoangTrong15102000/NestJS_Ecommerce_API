@@ -8,6 +8,13 @@ import { AIAssistantService } from '../ai-assistant.service'
  * Tests for SSE streaming connection cleanup behavior (Task 6.7)
  */
 
+const mockPinoLogger = {
+  info: jest.fn(),
+  error: jest.fn(),
+  warn: jest.fn(),
+  debug: jest.fn(),
+}
+
 describe('AIAssistantController', () => {
   let controller: AIAssistantController
   let mockAIService: jest.Mocked<AIAssistantService>
@@ -21,7 +28,7 @@ describe('AIAssistantController', () => {
       saveMessage: jest.fn(),
     } as any
 
-    controller = new AIAssistantController(mockAIService)
+    controller = new AIAssistantController(mockPinoLogger as any, mockAIService)
   })
 
   afterEach(() => {

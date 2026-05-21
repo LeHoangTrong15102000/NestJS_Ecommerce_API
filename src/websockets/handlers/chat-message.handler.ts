@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common'
+import { Injectable } from '@nestjs/common'
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino'
 import { Server } from 'socket.io'
 import { MessageService } from 'src/routes/conversation/message.service'
 import { ConversationService } from 'src/routes/conversation/conversation.service'
@@ -22,9 +23,8 @@ export type DeleteMessageData = DeleteMessageDataType
 
 @Injectable()
 export class ChatMessageHandler {
-  private readonly logger = new Logger(ChatMessageHandler.name)
-
   constructor(
+    @InjectPinoLogger(ChatMessageHandler.name) private readonly logger: PinoLogger,
     private readonly messageService: MessageService,
     private readonly conversationService: ConversationService,
     private readonly redisService: ChatRedisService,
@@ -174,7 +174,7 @@ export class ChatMessageHandler {
         }))
 
       if (offlineMembers.length > 0) {
-        this.logger.log(
+        this.logger.info(
           `Would send push notification to ${offlineMembers.length} offline users for message: ${message.id}`,
         )
 

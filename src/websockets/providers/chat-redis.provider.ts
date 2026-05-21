@@ -1,4 +1,5 @@
 import { Inject, Injectable, Logger, OnModuleDestroy } from '@nestjs/common'
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino'
 import Redis from 'ioredis'
 import envConfig from 'src/shared/config'
 import { CHAT_REDIS } from '../websocket.constants'
@@ -65,14 +66,15 @@ export const ChatRedisProvider = {
  */
 @Injectable()
 export class ChatRedisShutdownService implements OnModuleDestroy {
-  private readonly logger = new Logger(ChatRedisShutdownService.name)
-
-  constructor(@Inject(CHAT_REDIS) private readonly redis: Redis) {}
+  constructor(
+    @InjectPinoLogger(ChatRedisShutdownService.name) private readonly logger: PinoLogger,
+    @Inject(CHAT_REDIS) private readonly redis: Redis,
+  ) {}
 
   async onModuleDestroy(): Promise<void> {
     try {
       await this.redis.quit()
-      this.logger.log('Chat Redis disconnected gracefully')
+      this.logger.info('Chat Redis disconnected gracefully')
     } catch (error) {
       this.logger.error('Error disconnecting Chat Redis:', error)
     }

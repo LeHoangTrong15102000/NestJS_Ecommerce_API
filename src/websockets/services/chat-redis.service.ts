@@ -1,12 +1,11 @@
-import { Inject, Injectable, Logger } from '@nestjs/common'
+import { Inject, Injectable } from '@nestjs/common'
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino'
 import Redis from 'ioredis'
 import { SocketUserInfo } from '../websocket.interfaces'
 import { CHAT_REDIS } from '../websocket.constants'
 
 @Injectable()
 export class ChatRedisService {
-  private readonly logger = new Logger(ChatRedisService.name)
-
   // Redis key prefixes
   private readonly KEYS = {
     ONLINE_USERS: 'chat:online_users', // Set: userId -> set of socket IDs
@@ -23,7 +22,10 @@ export class ChatRedisService {
     USER_CONVERSATIONS: 300, // 5 minutes
   } as const
 
-  constructor(@Inject(CHAT_REDIS) private readonly redis: Redis) {}
+  constructor(
+    @InjectPinoLogger(ChatRedisService.name) private readonly logger: PinoLogger,
+    @Inject(CHAT_REDIS) private readonly redis: Redis,
+  ) {}
 
   // ===== ONLINE USERS MANAGEMENT =====
 

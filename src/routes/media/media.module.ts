@@ -16,7 +16,6 @@ const storage = multer.diskStorage({
     cb(null, UPLOAD_DIR)
   },
   filename: function (req, file, cb) {
-    console.log(file)
     // Ở trong thằng file thì nó sẽ có originalname
     // const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9)
     const newFilename = generateRandomFileName(file.originalname)

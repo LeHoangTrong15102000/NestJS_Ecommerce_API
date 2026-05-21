@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common'
+import { Injectable } from '@nestjs/common'
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino'
 import { Server } from 'socket.io'
 import { MessageService } from 'src/routes/conversation/message.service'
 import { ConversationService } from 'src/routes/conversation/conversation.service'
@@ -22,9 +23,8 @@ export type ReactToMessageData = ReactToMessageDataType
 
 @Injectable()
 export class ChatInteractionHandler {
-  private readonly logger = new Logger(ChatInteractionHandler.name)
-
   constructor(
+    @InjectPinoLogger(ChatInteractionHandler.name) private readonly logger: PinoLogger,
     private readonly messageService: MessageService,
     private readonly conversationService: ConversationService,
     private readonly conversationRepo: ConversationRepository,

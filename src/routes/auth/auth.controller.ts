@@ -1,6 +1,7 @@
 import { Body, Controller, Get, HttpCode, HttpStatus, Ip, Post, Query, Res } from '@nestjs/common'
 import { Throttle } from '@nestjs/throttler'
 import { Response } from 'express'
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino'
 import { ZodResponse } from 'nestjs-zod'
 import {
   DisableTwoFactorBodyDTO,
@@ -28,6 +29,7 @@ import { MessageResDTO } from 'src/shared/dtos/response.dto'
 @Controller('auth')
 export class AuthController {
   constructor(
+    @InjectPinoLogger(AuthController.name) private readonly logger: PinoLogger,
     private readonly authService: AuthService,
     private readonly googleService: GoogleService,
   ) {}
@@ -108,7 +110,7 @@ export class AuthController {
       )
     } catch (error) {
       // Trường hợp mà googleCallback nó thất bại
-      console.error(error)
+      this.logger.error({ err: error }, 'Google callback failed')
       // Nếu nó là instanceof của một cái object Error
       const errorMessage =
         error instanceof Error

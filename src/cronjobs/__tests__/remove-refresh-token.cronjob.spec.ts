@@ -1,4 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing'
+import { getLoggerToken } from 'nestjs-pino'
 import { PrismaService } from 'src/shared/services/prisma.service'
 import { RemoveRefreshTokenCronjob } from '../remove-refresh-token.cronjob'
 
@@ -25,7 +26,11 @@ describe('RemoveRefreshTokenCronjob', () => {
     }
 
     const module: TestingModule = await Test.createTestingModule({
-      providers: [RemoveRefreshTokenCronjob, { provide: PrismaService, useValue: mockPrismaService }],
+      providers: [
+        RemoveRefreshTokenCronjob,
+        { provide: PrismaService, useValue: mockPrismaService },
+        { provide: getLoggerToken(RemoveRefreshTokenCronjob.name), useValue: { log: jest.fn(), error: jest.fn(), warn: jest.fn(), debug: jest.fn() } },
+      ],
     }).compile()
 
     cronjob = module.get<RemoveRefreshTokenCronjob>(RemoveRefreshTokenCronjob)
@@ -176,7 +181,7 @@ describe('RemoveRefreshTokenCronjob', () => {
     })
 
     it('should log completion with total count and duration', async () => {
-      const loggerSpy = jest.spyOn(cronjob['logger'], 'log')
+      const loggerSpy = jest.spyOn(cronjob['logger'], 'info')
       mockDeleteMany.mockResolvedValue({ count: 99999 })
 
       await cronjob.handleCron()

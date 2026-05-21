@@ -1,14 +1,16 @@
 import { InjectQueue } from '@nestjs/bullmq'
-import { Injectable, Logger } from '@nestjs/common'
+import { Injectable } from '@nestjs/common'
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino'
 import { Queue } from 'bullmq'
 import { PAYMENT_QUEUE_NAME } from 'src/shared/constants/queue.constant'
 import { generateCancelPaymentJobId } from 'src/shared/helpers'
 
 @Injectable()
 export class PaymentProducer {
-  private readonly logger = new Logger(PaymentProducer.name)
-
-  constructor(@InjectQueue(PAYMENT_QUEUE_NAME) private paymentQueue: Queue) {}
+  constructor(
+    @InjectPinoLogger(PaymentProducer.name) private readonly logger: PinoLogger,
+    @InjectQueue(PAYMENT_QUEUE_NAME) private paymentQueue: Queue,
+  ) {}
 
   /**
    * Remove a scheduled cancel payment job
@@ -30,7 +32,7 @@ export class PaymentProducer {
       // Only remove if job is still pending (waiting or delayed)
       if (state === 'waiting' || state === 'delayed') {
         await job.remove()
-        this.logger.log(`Cancel payment job removed for paymentId: ${paymentId}`)
+        this.logger.info(`Cancel payment job removed for paymentId: ${paymentId}`)
         return true
       }
 

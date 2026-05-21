@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common'
+import { Injectable } from '@nestjs/common'
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino'
 import { PaymentRepo } from 'src/routes/payment/payment.repo'
 import { WebhookPaymentBodyType } from 'src/routes/payment/payment.model'
 import { PaymentGateway } from 'src/websockets/payment.gateway'
@@ -6,9 +7,8 @@ import { MESSAGES } from 'src/shared/constants/app.constant'
 
 @Injectable()
 export class PaymentService {
-  private readonly logger = new Logger(PaymentService.name)
-
   constructor(
+    @InjectPinoLogger(PaymentService.name) private readonly logger: PinoLogger,
     private readonly paymentRepo: PaymentRepo,
     private readonly paymentGateway: PaymentGateway,
   ) {}

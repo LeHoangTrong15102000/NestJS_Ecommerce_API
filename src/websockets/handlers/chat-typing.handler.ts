@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common'
+import { Injectable } from '@nestjs/common'
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino'
 import { Server } from 'socket.io'
 import { ConversationService } from 'src/routes/conversation/conversation.service'
 import { ChatRedisService } from '../services/chat-redis.service'
@@ -11,13 +12,12 @@ export type TypingData = TypingDataType
 
 @Injectable()
 export class ChatTypingHandler {
-  private readonly logger = new Logger(ChatTypingHandler.name)
-
   // Track typing timeouts to prevent memory leaks
   // Key format: `${conversationId}:${userId}`
   private typingTimeouts: Map<string, ReturnType<typeof setTimeout>> = new Map()
 
   constructor(
+    @InjectPinoLogger(ChatTypingHandler.name) private readonly logger: PinoLogger,
     private readonly conversationService: ConversationService,
     private readonly redisService: ChatRedisService,
   ) {}

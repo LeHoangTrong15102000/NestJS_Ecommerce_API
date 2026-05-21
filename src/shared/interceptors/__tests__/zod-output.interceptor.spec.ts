@@ -1,5 +1,7 @@
 import { CallHandler, ExecutionContext } from '@nestjs/common'
+import { Test, TestingModule } from '@nestjs/testing'
 import { Reflector } from '@nestjs/core'
+import { getLoggerToken } from 'nestjs-pino'
 import { of, throwError } from 'rxjs'
 import { ZOD_RESPONSE_ONLY_KEY } from 'src/shared/decorators/zod-response-only.decorator'
 import { z } from 'zod'
@@ -28,7 +30,7 @@ describe('ZodOutputInterceptor', () => {
   let consoleWarnSpy: jest.SpyInstance
   let loggerWarnSpy: jest.SpyInstance
 
-  beforeEach(() => {
+  beforeEach(async () => {
     // Mock Reflector
     mockReflector = {
       get: jest.fn(),
@@ -37,10 +39,17 @@ describe('ZodOutputInterceptor', () => {
       getAllAndOverride: jest.fn(),
     } as any
 
-    // Khởi tạo interceptor
-    interceptor = new ZodOutputInterceptor(mockReflector)
+    const module: TestingModule = await Test.createTestingModule({
+      providers: [
+        ZodOutputInterceptor,
+        { provide: Reflector, useValue: mockReflector },
+        { provide: getLoggerToken(ZodOutputInterceptor.name), useValue: { log: jest.fn(), info: jest.fn(), error: jest.fn(), warn: jest.fn(), debug: jest.fn() } },
+      ],
+    }).compile()
 
-    // Mock console.warn — also spy on Logger.warn for NestJS Logger
+    interceptor = module.get<ZodOutputInterceptor>(ZodOutputInterceptor)
+
+    // Mock console.warn — also spy on PinoLogger.warn
     consoleWarnSpy = jest.spyOn(console, 'warn').mockImplementation()
     loggerWarnSpy = jest.spyOn(interceptor['logger'], 'warn').mockImplementation()
 

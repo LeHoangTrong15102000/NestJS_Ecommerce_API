@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common'
+import { Injectable } from '@nestjs/common'
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino'
 import { Socket } from 'socket.io'
 import { SharedUserRepository } from 'src/shared/repositories/shared-user.repo'
 import { ChatRedisService } from '../services/chat-redis.service'
@@ -8,9 +9,8 @@ import { emitInternalError } from '../websocket.helpers'
 
 @Injectable()
 export class ChatConnectionHandler {
-  private readonly logger = new Logger(ChatConnectionHandler.name)
-
   constructor(
+    @InjectPinoLogger(ChatConnectionHandler.name) private readonly logger: PinoLogger,
     private readonly userRepo: SharedUserRepository,
     private readonly redisService: ChatRedisService,
   ) {}
@@ -54,7 +54,7 @@ export class ChatConnectionHandler {
       // Note: User is already joined to their personal room by WebsocketAdapter
       // Room name: generateRoomUserId(userId) = "userId-{id}"
 
-      this.logger.log(`User ${user.id} (${user.name}) connected with socket ${client.id}`)
+      this.logger.info(`User ${user.id} (${user.name}) connected with socket ${client.id}`)
 
       // Send connection confirmation
       client.emit('connected', {
@@ -88,7 +88,7 @@ export class ChatConnectionHandler {
       // Clean up socket reference
       await this.redisService.removeSocket(client.id)
 
-      this.logger.log(`User ${client.userId} disconnected (socket: ${client.id})`)
+      this.logger.info(`User ${client.userId} disconnected (socket: ${client.id})`)
 
       return userWentOffline // True nếu user hoàn toàn offline
     } catch (error) {

@@ -8,13 +8,13 @@ import {
 import { WishlistRepo } from 'src/routes/wishlist/wishlist.repo'
 import { WishlistProducer } from 'src/routes/wishlist/wishlist.producer'
 import { EmailService } from '../shared/services/email.service'
-import { Logger } from '@nestjs/common'
+import { Injectable } from '@nestjs/common'
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino'
 
 @Processor(WISHLIST_QUEUE_NAME)
 export class WishlistConsumer extends WorkerHost {
-  private readonly logger = new Logger(WishlistConsumer.name)
-
   constructor(
+    @InjectPinoLogger(WishlistConsumer.name) private readonly logger: PinoLogger,
     private readonly wishlistRepo: WishlistRepo,
     private readonly wishlistProducer: WishlistProducer,
     private readonly emailService: EmailService,
@@ -42,13 +42,13 @@ export class WishlistConsumer extends WorkerHost {
    * This runs daily via cron job
    */
   private async handlePriceCheck() {
-    this.logger.log('Starting price check job...')
+    this.logger.info('Starting price check job...')
 
     try {
       // Get all items that need price check
       const items = await this.wishlistRepo.getItemsForPriceCheck()
 
-      this.logger.log(`Found ${items.length} items to check`)
+      this.logger.info(`Found ${items.length} items to check`)
 
       let alertsSent = 0
       const processedAlerts = new Set<string>()
@@ -99,7 +99,7 @@ export class WishlistConsumer extends WorkerHost {
         }
       }
 
-      this.logger.log(`Price check completed. Sent ${alertsSent} alerts.`)
+      this.logger.info(`Price check completed. Sent ${alertsSent} alerts.`)
 
       return { success: true, itemsChecked: items.length, alertsSent }
     } catch (error) {
@@ -122,7 +122,7 @@ export class WishlistConsumer extends WorkerHost {
     priceDropPercentage: number
     wishlistItemId: number
   }) {
-    this.logger.log(`Sending price alert to ${data.userEmail} for product ${data.productName}`)
+    this.logger.info(`Sending price alert to ${data.userEmail} for product ${data.productName}`)
 
     try {
       // Send email (you'll need to create a price alert email template)
@@ -135,7 +135,7 @@ export class WishlistConsumer extends WorkerHost {
       // Update price alert as sent
       await this.wishlistRepo.updatePriceAlert(data.wishlistItemId, data.newPrice, true)
 
-      this.logger.log(`Price alert sent successfully to ${data.userEmail}`)
+      this.logger.info(`Price alert sent successfully to ${data.userEmail}`)
 
       return { success: true }
     } catch (error) {

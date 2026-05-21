@@ -1,4 +1,5 @@
-import { Body, Controller, Delete, Get, HttpStatus, Logger, Param, Patch, Post, Query, Req, Res } from '@nestjs/common'
+import { Body, Controller, Delete, Get, HttpStatus, Param, Patch, Post, Query, Req, Res } from '@nestjs/common'
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino'
 import { Request, Response } from 'express'
 import { ActiveUser } from 'src/shared/decorators/active-user.decorator'
 import {
@@ -14,9 +15,10 @@ import { AIAssistantService } from './ai-assistant.service'
 
 @Controller('ai-assistant')
 export class AIAssistantController {
-  private readonly logger = new Logger(AIAssistantController.name)
-
-  constructor(private readonly aiAssistantService: AIAssistantService) {}
+  constructor(
+    @InjectPinoLogger(AIAssistantController.name) private readonly logger: PinoLogger,
+    private readonly aiAssistantService: AIAssistantService,
+  ) {}
 
   /**
    * Tạo conversation mới với AI Assistant

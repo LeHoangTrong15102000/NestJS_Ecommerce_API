@@ -9,6 +9,7 @@ import {
 } from '@nestjs/common'
 import { Cache } from 'cache-manager'
 import { keyBy } from 'lodash'
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino'
 import { RoleWithPermissionsType } from 'src/routes/role/role.model'
 import { REQUEST_ROLE_PERMISSIONS, REQUEST_USER_KEY } from 'src/shared/constants/auth.constant'
 import { HTTPMethod } from 'src/shared/constants/role.constant'
@@ -27,6 +28,7 @@ type CachedRole = RolePermissionsType & {
 @Injectable()
 export class AccessTokenGuard implements CanActivate {
   constructor(
+    @InjectPinoLogger(AccessTokenGuard.name) private readonly logger: PinoLogger,
     private readonly tokenService: TokenService,
     private readonly prismaService: PrismaService,
     @Inject(CACHE_MANAGER) private readonly cacheManager: Cache,
@@ -71,7 +73,7 @@ export class AccessTokenGuard implements CanActivate {
 
     // DEBUG: Log path and method for conversation routes
     if (path?.includes('conversation')) {
-      console.log('[AccessTokenGuard] DEBUG - Path:', path, 'Method:', method)
+      this.logger.debug({ path, method }, 'Conversation route access')
     }
     // 1. Thử lấy từ cache
     let cachedRole = await this.cacheManager.get<CachedRole>(cacheKey)

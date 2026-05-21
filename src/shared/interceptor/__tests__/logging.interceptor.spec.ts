@@ -1,4 +1,6 @@
-import { CallHandler, ExecutionContext, Logger } from '@nestjs/common'
+import { CallHandler, ExecutionContext } from '@nestjs/common'
+import { Test, TestingModule } from '@nestjs/testing'
+import { getLoggerToken, PinoLogger } from 'nestjs-pino'
 import { of, throwError } from 'rxjs'
 import { LoggingInterceptor } from '../logging.interceptor'
 
@@ -16,18 +18,27 @@ import { LoggingInterceptor } from '../logging.interceptor'
  * - Observable stream processing
  */
 
+const mockPinoLogger = {
+  log: jest.fn(),
+  error: jest.fn(),
+  warn: jest.fn(),
+  debug: jest.fn(),
+}
+
 describe('LoggingInterceptor', () => {
   let interceptor: LoggingInterceptor
   let mockExecutionContext: jest.Mocked<ExecutionContext>
   let mockCallHandler: jest.Mocked<CallHandler>
-  let loggerLogSpy: jest.SpyInstance
 
-  beforeEach(() => {
-    // Arrange: Khởi tạo interceptor
-    interceptor = new LoggingInterceptor()
+  beforeEach(async () => {
+    const module: TestingModule = await Test.createTestingModule({
+      providers: [
+        LoggingInterceptor,
+        { provide: getLoggerToken(LoggingInterceptor.name), useValue: mockPinoLogger },
+      ],
+    }).compile()
 
-    // Mock Logger.log
-    loggerLogSpy = jest.spyOn(Logger.prototype, 'log').mockImplementation()
+    interceptor = module.get<LoggingInterceptor>(LoggingInterceptor)
 
     // Mock ExecutionContext
     mockExecutionContext = {
@@ -54,6 +65,7 @@ describe('LoggingInterceptor', () => {
   })
 
   afterEach(() => {
+    jest.clearAllMocks()
     jest.restoreAllMocks()
   })
 
@@ -61,7 +73,7 @@ describe('LoggingInterceptor', () => {
   // LOGGING BEHAVIOR
   // ============================================
 
-  describe('📝 Logging Behavior', () => {
+  describe('Logging Behavior', () => {
     it('Nên log response body', (done) => {
       // Arrange: Chuẩn bị response data
       const responseData = { id: 1, name: 'Test' }
@@ -73,7 +85,7 @@ describe('LoggingInterceptor', () => {
       // Assert: Verify logging
       result$.subscribe({
         next: () => {
-          expect(loggerLogSpy).toHaveBeenCalledWith({
+          expect(mockPinoLogger.log).toHaveBeenCalledWith({
             body: responseData,
           })
           done()
@@ -92,7 +104,7 @@ describe('LoggingInterceptor', () => {
       // Assert: Verify array logging
       result$.subscribe({
         next: () => {
-          expect(loggerLogSpy).toHaveBeenCalledWith({
+          expect(mockPinoLogger.log).toHaveBeenCalledWith({
             body: responseData,
           })
           done()
@@ -111,7 +123,7 @@ describe('LoggingInterceptor', () => {
       // Assert: Verify primitive logging
       result$.subscribe({
         next: () => {
-          expect(loggerLogSpy).toHaveBeenCalledWith({
+          expect(mockPinoLogger.log).toHaveBeenCalledWith({
             body: responseData,
           })
           done()
@@ -129,7 +141,7 @@ describe('LoggingInterceptor', () => {
       // Assert: Verify null logging
       result$.subscribe({
         next: () => {
-          expect(loggerLogSpy).toHaveBeenCalledWith({
+          expect(mockPinoLogger.log).toHaveBeenCalledWith({
             body: null,
           })
           done()
@@ -147,7 +159,7 @@ describe('LoggingInterceptor', () => {
       // Assert: Verify undefined logging
       result$.subscribe({
         next: () => {
-          expect(loggerLogSpy).toHaveBeenCalledWith({
+          expect(mockPinoLogger.log).toHaveBeenCalledWith({
             body: undefined,
           })
           done()
@@ -165,7 +177,7 @@ describe('LoggingInterceptor', () => {
       // Assert: Verify empty object logging
       result$.subscribe({
         next: () => {
-          expect(loggerLogSpy).toHaveBeenCalledWith({
+          expect(mockPinoLogger.log).toHaveBeenCalledWith({
             body: {},
           })
           done()
@@ -178,7 +190,7 @@ describe('LoggingInterceptor', () => {
   // ERROR HANDLING
   // ============================================
 
-  describe('❌ Error Handling', () => {
+  describe('Error Handling', () => {
     it('Nên propagate errors từ handler', (done) => {
       // Arrange: Chuẩn bị error
       const error = new Error('Handler error')
@@ -191,7 +203,7 @@ describe('LoggingInterceptor', () => {
       result$.subscribe({
         error: (err) => {
           expect(err).toBe(error)
-          expect(loggerLogSpy).not.toHaveBeenCalled()
+          expect(mockPinoLogger.log).not.toHaveBeenCalled()
           done()
         },
       })
@@ -208,7 +220,7 @@ describe('LoggingInterceptor', () => {
       // Assert: Verify không log
       result$.subscribe({
         error: () => {
-          expect(loggerLogSpy).not.toHaveBeenCalled()
+          expect(mockPinoLogger.log).not.toHaveBeenCalled()
           done()
         },
       })
@@ -219,7 +231,7 @@ describe('LoggingInterceptor', () => {
   // OBSERVABLE BEHAVIOR
   // ============================================
 
-  describe('🔄 Observable Behavior', () => {
+  describe('Observable Behavior', () => {
     it('Nên return Observable stream', () => {
       // Arrange: Chuẩn bị response
       mockCallHandler.handle.mockReturnValue(of({ data: 'test' }))
@@ -286,11 +298,11 @@ describe('LoggingInterceptor', () => {
   // LOGGER INTEGRATION
   // ============================================
 
-  describe('📊 Logger Integration', () => {
-    it('Nên sử dụng Logger instance', () => {
+  describe('Logger Integration', () => {
+    it('Nên sử dụng PinoLogger instance', () => {
       // Assert: Verify logger được khởi tạo
       expect(interceptor['logger']).toBeDefined()
-      expect(interceptor['logger']).toBeInstanceOf(Logger)
+      expect(interceptor['logger']).toBeInstanceOf(PinoLogger)
     })
 
     it('Nên log với đúng format', (done) => {
@@ -304,8 +316,8 @@ describe('LoggingInterceptor', () => {
       // Assert: Verify log format
       result$.subscribe({
         next: () => {
-          expect(loggerLogSpy).toHaveBeenCalledTimes(1)
-          expect(loggerLogSpy).toHaveBeenCalledWith(
+          expect(mockPinoLogger.log).toHaveBeenCalledTimes(1)
+          expect(mockPinoLogger.log).toHaveBeenCalledWith(
             expect.objectContaining({
               body: responseData,
             }),
@@ -325,7 +337,7 @@ describe('LoggingInterceptor', () => {
       // Assert: Verify log được gọi đúng 1 lần
       result$.subscribe({
         next: () => {
-          expect(loggerLogSpy).toHaveBeenCalledTimes(1)
+          expect(mockPinoLogger.log).toHaveBeenCalledTimes(1)
           done()
         },
       })
