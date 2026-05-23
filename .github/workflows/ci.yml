@@ -118,8 +118,8 @@ jobs:
           DIRECT_URL: postgresql://test_user:test_password@localhost:5432/test_db
           REDIS_URL: redis://localhost:6379
           NODE_ENV: test
-          NODE_OPTIONS: '--max-old-space-size=4096'
-        run: pnpm run test:cov
+          NODE_OPTIONS: '--max-old-space-size=6144'
+        run: pnpm run test:cov -- --workerIdleMemoryLimit=512MB
 
       - name: Upload coverage reports
         uses: codecov/codecov-action@v4
