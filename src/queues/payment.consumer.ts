@@ -1,3 +1,7 @@
+// Architecture: producer/consumer split pattern.
+// Producers live in feature modules (e.g. src/routes/payment/payment.producer.ts), co-located
+// with the business logic that enqueues jobs. Consumers live here in src/queues/ as standalone
+// workers. Queue and job name constants are centralized in src/shared/constants/queue.constant.ts.
 import { Processor, WorkerHost } from '@nestjs/bullmq'
 import { Injectable } from '@nestjs/common'
 import { InjectPinoLogger, PinoLogger } from 'nestjs-pino'

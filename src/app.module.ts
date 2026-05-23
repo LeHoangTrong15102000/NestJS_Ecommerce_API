@@ -222,6 +222,9 @@ import pino from 'pino'
       provide: APP_GUARD,
       useClass: AuthenticationGuard,
     },
+    // Queue Architecture: Producers live in feature modules (order, payment, wishlist) co-located
+    // with the business logic that enqueues jobs. Consumers live here in src/queues/ as standalone
+    // workers. All queue/job name constants are centralized in src/shared/constants/queue.constant.ts.
     // Background job consumers (requires Redis)
     PaymentConsumer, // Process payment jobs from queue
     WishlistConsumer, // Process wishlist background jobs (price check, alerts)

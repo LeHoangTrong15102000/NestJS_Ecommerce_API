@@ -38,7 +38,7 @@ const sharedServices = [
     // AuthenticationGuard được export để AppModule có thể đăng ký làm APP_GUARD
     AuthenticationGuard,
   ],
-  exports: [...sharedServices, AccessTokenGuard, PaymentAPIKeyGuard, AuthenticationGuard],
+  exports: [...sharedServices, AuthenticationGuard],
   imports: [JwtModule],
 })
 export class SharedModule {}
