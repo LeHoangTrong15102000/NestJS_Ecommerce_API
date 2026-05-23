@@ -116,8 +116,7 @@ jobs:
         env:
           DATABASE_URL: postgresql://test_user:test_password@localhost:5432/test_db
           DIRECT_URL: postgresql://test_user:test_password@localhost:5432/test_db
-          REDIS_HOST: localhost
-          REDIS_PORT: 6379
+          REDIS_URL: redis://localhost:6379
           NODE_ENV: test
         run: pnpm run test:cov
 

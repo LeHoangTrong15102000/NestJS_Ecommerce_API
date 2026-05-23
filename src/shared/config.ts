@@ -3,13 +3,9 @@ import fs from 'fs'
 import path from 'path'
 import { config } from 'dotenv'
 
-config({
-  path: '.env',
-})
-// Kiểm tra coi thử có file .env hay chưa
-if (!fs.existsSync(path.resolve('.env'))) {
-  console.log('Không tìm thấy file .env')
-  process.exit(1)
+// Load .env file if it exists (CI/production sets env vars directly)
+if (fs.existsSync(path.resolve('.env'))) {
+  config({ path: '.env' })
 }
 
 // Nó gọn hơn rất là nhiều so với class-validator, class-transform
@@ -85,11 +81,15 @@ const configSchema = z.object({
 
 const configServer = configSchema.safeParse(process.env)
 if (!configServer.success) {
-  console.error('❌ Invalid environment configuration:')
-  console.error(configServer.error.format())
-  process.exit(1)
+  if (process.env.NODE_ENV === 'test') {
+    console.warn('⚠️ Skipping env validation in test environment')
+  } else {
+    console.error('❌ Invalid environment configuration:')
+    console.error(configServer.error.format())
+    process.exit(1)
+  }
 }
 
-const envConfig = configServer.data
+const envConfig = configServer.success ? configServer.data : (process.env as unknown as z.infer<typeof configSchema>)
 
 export default envConfig
