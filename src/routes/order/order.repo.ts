@@ -96,7 +96,7 @@ export class OrderRepo {
       limit,
       totalItems,
       totalPages: Math.ceil(totalItems / limit),
-    } as any
+    } as unknown as GetOrderListResType
   }
 
   async create(
@@ -194,7 +194,7 @@ export class OrderRepo {
     return {
       paymentId,
       orders,
-    } as any
+    } as unknown as { paymentId: number; orders: CreateOrderResType['orders'] }
   }
 
   async fetchAndValidateCartItems(
@@ -336,7 +336,7 @@ export class OrderRepo {
     if (!order) {
       throw OrderNotFoundException
     }
-    return order as any
+    return order as unknown as GetOrderDetailResType
   }
 
   async cancel(userId: number, orderId: number): Promise<CancelOrderResType> {
@@ -362,7 +362,7 @@ export class OrderRepo {
           updatedById: userId,
         },
       })
-      return updatedOrder as any
+      return updatedOrder as unknown as CancelOrderResType
     } catch (error) {
       if (isNotFoundPrismaError(error)) {
         throw OrderNotFoundException

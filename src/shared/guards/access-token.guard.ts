@@ -8,6 +8,7 @@ import {
   UnauthorizedException,
 } from '@nestjs/common'
 import { Cache } from 'cache-manager'
+import { Request } from 'express'
 import { keyBy } from 'lodash'
 import { InjectPinoLogger, PinoLogger } from 'nestjs-pino'
 import { RoleWithPermissionsType } from 'src/routes/role/role.model'
@@ -44,19 +45,19 @@ export class AccessTokenGuard implements CanActivate {
     return true
   }
 
-  private async extractAndValidateToken(request: any): Promise<AccessTokenPayload> {
+  private async extractAndValidateToken(request: Request): Promise<AccessTokenPayload> {
     const accessToken = this.extractAccessTokenFromHeader(request)
     try {
       const decodedAccessToken = await this.tokenService.verifyAccessToken(accessToken)
 
-      request[REQUEST_USER_KEY] = decodedAccessToken
+      ;(request as unknown as Record<string, unknown>)[REQUEST_USER_KEY] = decodedAccessToken
       return decodedAccessToken
     } catch (error) {
       throw new UnauthorizedException('Error.InvalidAccessToken')
     }
   }
 
-  private extractAccessTokenFromHeader(request: any): string {
+  private extractAccessTokenFromHeader(request: Request): string {
     const accessToken = request.headers.authorization?.split(' ')[1]
     if (!accessToken) {
       throw new UnauthorizedException('Error.MissingAccessToken')
@@ -65,9 +66,9 @@ export class AccessTokenGuard implements CanActivate {
   }
 
   // func Validate user permission
-  private async validateUserPermission(decodedAccessToken: AccessTokenPayload, request: any): Promise<void> {
+  private async validateUserPermission(decodedAccessToken: AccessTokenPayload, request: Request): Promise<void> {
     const roleId: number = decodedAccessToken.roleId
-    const path: string = request.route.path
+    const path: string = (request as Request & { route: { path: string } }).route.path
     const method = request.method as keyof typeof HTTPMethod
     const cacheKey = `role:${roleId}`
 
@@ -109,8 +110,8 @@ export class AccessTokenGuard implements CanActivate {
       cachedRole = { ...role, permissions: permissionObject }
       await this.cacheManager.set(cacheKey, cachedRole, 1000 * 60 * 60) // Cache for 1 hour
 
-      // request[REQUEST_ROLE_PERMISSIONS] = role // Thêm role vào cho người dùng(có kèm theo cả permissions cho người dùng nữa)
-      request[REQUEST_ROLE_PERMISSIONS] = role
+      // as unknown: REQUEST_ROLE_PERMISSIONS is a custom property added to Express Request at runtime
+      ;(request as unknown as Record<string, unknown>)[REQUEST_ROLE_PERMISSIONS] = role
     }
 
     // console.log('role permission', role.permissions.length)

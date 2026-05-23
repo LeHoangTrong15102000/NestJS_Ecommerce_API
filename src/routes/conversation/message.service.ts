@@ -462,7 +462,7 @@ export class MessageService {
 
   // ===== PRIVATE HELPER METHODS =====
 
-  private generateMessagePreview(message: any): string {
+  private generateMessagePreview(message: NonNullable<Awaited<ReturnType<MessageRepository['getLastMessage']>>>): string {
     if (message.isDeleted) {
       return 'Tin nhắn đã bị xóa'
     }

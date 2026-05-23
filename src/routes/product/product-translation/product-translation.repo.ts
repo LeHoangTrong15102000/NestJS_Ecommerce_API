@@ -19,7 +19,7 @@ export class ProductTranslationRepo {
         id,
         deletedAt: null,
       },
-    }) as any
+    }) as unknown as Promise<GetProductTranslationDetailResType | null>
   }
 
   create({
@@ -34,7 +34,7 @@ export class ProductTranslationRepo {
         ...data,
         createdById,
       },
-    }) as any
+    }) as unknown as Promise<ProductTranslationType>
   }
 
   update({
@@ -55,7 +55,7 @@ export class ProductTranslationRepo {
         ...data,
         updatedById,
       },
-    }) as any
+    }) as unknown as Promise<ProductTranslationType>
   }
 
   delete(
@@ -73,7 +73,7 @@ export class ProductTranslationRepo {
           where: {
             id,
           },
-        }) as any)
+        }) as unknown as Promise<ProductTranslationType>)
       : (this.prismaService.productTranslation.update({
           where: {
             id,
@@ -83,6 +83,6 @@ export class ProductTranslationRepo {
             deletedAt: new Date(),
             deletedById,
           },
-        }) as any)
+        }) as unknown as Promise<ProductTranslationType>)
   }
 }

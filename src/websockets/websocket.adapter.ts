@@ -77,7 +77,7 @@ export class WebsocketAdapter extends IoAdapter {
       this.adapterConstructor = createAdapter(pubClient, subClient)
       this.logger.log('Redis pub/sub adapter connected successfully')
     } catch (error) {
-      this.logger.error(`Failed to connect Redis adapter: ${error.message}`)
+      this.logger.error(`Failed to connect Redis adapter: ${error instanceof Error ? error.message : String(error)}`)
       throw error
     }
   }
@@ -117,7 +117,7 @@ export class WebsocketAdapter extends IoAdapter {
    * Authentication middleware - verifies JWT and attaches user info to socket
    * This is the SINGLE source of truth for WebSocket authentication
    */
-  async authMiddleware(socket: Socket, next: (err?: any) => void) {
+  async authMiddleware(socket: Socket, next: (err?: Error) => void) {
     // Extract token from headers or auth object
     const authorization = socket.handshake.auth?.authorization || socket.handshake.headers?.authorization
     if (!authorization) {
@@ -141,7 +141,7 @@ export class WebsocketAdapter extends IoAdapter {
       this.logger.debug(`Socket ${socket.id} authenticated for user ${userId}`)
       next()
     } catch (error) {
-      this.logger.warn(`Socket authentication failed: ${error.message}`)
+      this.logger.warn(`Socket authentication failed: ${error instanceof Error ? error.message : String(error)}`)
       next(new Error('Authentication failed'))
     }
   }

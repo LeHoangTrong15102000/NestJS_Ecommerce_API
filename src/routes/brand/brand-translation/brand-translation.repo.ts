@@ -19,7 +19,7 @@ export class BrandTranslationRepo {
         id,
         deletedAt: null,
       },
-    }) as any
+    }) as unknown as Promise<GetBrandTranslationDetailResType | null>
   }
 
   create({
@@ -34,7 +34,7 @@ export class BrandTranslationRepo {
         ...data,
         createdById,
       },
-    }) as any
+    }) as unknown as Promise<BrandTranslationType>
   }
 
   update({
@@ -55,7 +55,7 @@ export class BrandTranslationRepo {
         ...data,
         updatedById,
       },
-    }) as any
+    }) as unknown as Promise<BrandTranslationType>
   }
 
   delete(
@@ -85,6 +85,6 @@ export class BrandTranslationRepo {
               deletedById,
             },
           })
-    ) as any
+    ) as unknown as Promise<BrandTranslationType>
   }
 }

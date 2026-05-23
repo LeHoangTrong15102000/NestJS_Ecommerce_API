@@ -47,7 +47,7 @@ export class BrandRepo {
       page: pagination.page,
       limit: pagination.limit,
       totalPages: Math.ceil(totalItems / pagination.limit),
-    } as any
+    } as unknown as GetBrandsResType
   }
 
   findById(id: number, languageId: string): Promise<BrandIncludeTranslationType | null> {
@@ -61,7 +61,7 @@ export class BrandRepo {
           where: languageId === ALL_LANGUAGE_CODE ? { deletedAt: null } : { deletedAt: null, languageId },
         },
       },
-    }) as any
+    }) as unknown as Promise<BrandIncludeTranslationType | null>
   }
 
   create({
@@ -81,7 +81,7 @@ export class BrandRepo {
           where: { deletedAt: null },
         },
       },
-    }) as any
+    }) as unknown as Promise<BrandIncludeTranslationType>
   }
 
   update({
@@ -107,7 +107,7 @@ export class BrandRepo {
           where: { deletedAt: null },
         },
       },
-    }) as any
+    }) as unknown as Promise<BrandIncludeTranslationType>
   }
 
   delete(
@@ -137,6 +137,6 @@ export class BrandRepo {
               deletedById,
             },
           })
-    ) as any
+    ) as unknown as Promise<BrandType>
   }
 }

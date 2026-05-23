@@ -170,7 +170,33 @@ export const MessageReadReceiptSchema = z.object({
   user: UserBasicSchema,
 })
 
-export const ConversationMessageSchema = z.object({
+// Explicit interface to break the recursive type inference cycle
+interface ConversationMessageType {
+  id: string
+  conversationId: string
+  fromUserId: number
+  content: string | null
+  type: 'TEXT' | 'IMAGE' | 'VIDEO' | 'AUDIO' | 'FILE' | 'STICKER' | 'SYSTEM' | 'LOCATION' | 'CONTACT'
+  replyToId: string | null
+  isEdited: boolean
+  editedAt: string | null
+  isDeleted: boolean
+  deletedAt: string | null
+  deletedForEveryone: boolean
+  createdAt: string
+  updatedAt: string
+  fromUser: z.infer<typeof UserBasicSchema>
+  replyTo: Omit<ConversationMessageType, 'replyTo' | 'reactions' | 'readReceipts'> | null
+  attachments: z.infer<typeof MessageAttachmentSchema>[]
+  reactions: z.infer<typeof MessageReactionSchema>[]
+  readReceipts: z.infer<typeof MessageReadReceiptSchema>[]
+  isReadByCurrentUser?: boolean
+  readByCount?: number
+}
+
+// Internal schema kept as ZodObject so .omit() and .extend() work on it
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const _ConversationMessageSchemaInternal: z.ZodType<ConversationMessageType, any, any> = z.object({
   id: z.string(),
   conversationId: z.string(),
   fromUserId: z.number(),
@@ -187,7 +213,7 @@ export const ConversationMessageSchema = z.object({
   fromUser: UserBasicSchema,
   replyTo: z
     .lazy(() =>
-      ConversationMessageSchema.omit({
+      (_ConversationMessageSchemaInternal as z.ZodObject<z.ZodRawShape>).omit({
         replyTo: true,
         reactions: true,
         readReceipts: true,
@@ -201,6 +227,8 @@ export const ConversationMessageSchema = z.object({
   isReadByCurrentUser: z.boolean().optional(),
   readByCount: z.number().optional(),
 })
+
+export const ConversationMessageSchema = _ConversationMessageSchemaInternal
 
 export const ConversationSchema = z.object({
   id: z.string(),
@@ -279,7 +307,7 @@ export const MessagesListSchema = z.object({
 
 export const MessageSearchResultSchema = z.object({
   data: z.array(
-    ConversationMessageSchema.extend({
+    (ConversationMessageSchema as z.ZodObject<z.ZodRawShape>).extend({
       conversation: ConversationSchema.pick({
         id: true,
         name: true,

@@ -39,7 +39,7 @@ export class RoleRepo {
       page: pagination.page,
       limit: pagination.limit,
       totalPages: Math.ceil(totalItems / pagination.limit),
-    } as any
+    } as unknown as GetRolesResType
   }
 
   findById(id: number): Promise<RoleWithPermissionsType | null> {
@@ -56,7 +56,7 @@ export class RoleRepo {
           },
         },
       },
-    }) as any
+    }) as unknown as Promise<RoleWithPermissionsType | null>
   }
 
   create({ createdById, data }: { createdById: number | null; data: CreateRoleBodyType }): Promise<RoleType> {
@@ -65,7 +65,7 @@ export class RoleRepo {
         ...data,
         createdById,
       },
-    }) as any
+    }) as unknown as Promise<RoleType>
   }
 
   async update({
@@ -123,7 +123,7 @@ export class RoleRepo {
           },
         },
       },
-    }) as any
+    }) as unknown as Promise<RolePermissionsType>
   }
 
   delete(
@@ -153,6 +153,6 @@ export class RoleRepo {
               deletedById,
             },
           })
-    ) as any
+    ) as unknown as Promise<RoleType>
   }
 }

@@ -4,15 +4,33 @@ import {
   AddWishlistItemBodyType,
   AddWishlistItemResType,
   CreateCollectionBodyType,
+  GetCollectionsResType,
   GetWishlistItemsQueryType,
   GetWishlistItemsResType,
   UpdateCollectionBodyType,
   UpdateWishlistItemBodyType,
+  WishlistCollectionType,
 } from 'src/routes/wishlist/wishlist.model'
 import { SerializeAll } from 'src/shared/decorators/serialize.decorator'
 import { PrismaService } from 'src/shared/services/prisma.service'
 
 type TransactionClient = Omit<PrismaClient, '$connect' | '$disconnect' | '$on' | '$transaction' | '$use' | '$extends'>
+
+// Type for getCollectionByShareCode which includes nested items
+type WishlistCollectionWithItems = Prisma.WishlistCollectionGetPayload<{
+  include: {
+    items: {
+      include: {
+        wishlistItem: {
+          include: {
+            product: { select: { id: true; name: true; basePrice: true; images: true } }
+            sku: { select: { id: true; value: true; price: true; image: true } }
+          }
+        }
+      }
+    }
+  }
+}>
 
 const WISHLIST_ITEM_INCLUDE = {
   product: {
@@ -61,7 +79,7 @@ export class WishlistRepo {
       await this.upsertPriceAlert(tx, wishlistItem.id, currentPrice)
 
       return wishlistItem
-    }) as any
+    }) as unknown as Promise<AddWishlistItemResType>
   }
 
   private async getCurrentPrice(productId: number, skuId?: number): Promise<number> {
@@ -233,7 +251,7 @@ export class WishlistRepo {
     })
 
     return {
-      data: transformedItems as any,
+      data: transformedItems as unknown as GetWishlistItemsResType['data'],
       totalItems,
       page,
       limit,
@@ -274,7 +292,7 @@ export class WishlistRepo {
           },
         },
       },
-    }) as any
+    }) as unknown as Promise<AddWishlistItemResType>
   }
 
   /**
@@ -383,13 +401,13 @@ export class WishlistRepo {
         isPublic: data.isPublic ?? false,
         shareCode,
       },
-    }) as any
+    }) as unknown as Promise<WishlistCollectionType>
   }
 
   /**
    * Get all collections for user
    */
-  async getCollections(userId: number) {
+  async getCollections(userId: number): Promise<GetCollectionsResType> {
     const collections = await this.prismaService.wishlistCollection.findMany({
       where: { userId },
       include: {
@@ -403,19 +421,21 @@ export class WishlistRepo {
     return {
       data: collections.map((col) => ({
         ...col,
+        createdAt: col.createdAt.toISOString(),
+        updatedAt: col.updatedAt.toISOString(),
         itemCount: col._count.items,
         _count: undefined,
       })),
       totalItems: collections.length,
-    } as any
+    } as unknown as GetCollectionsResType
   }
 
   /**
    * Update collection
    */
-  async updateCollection(userId: number, collectionId: number, data: UpdateCollectionBodyType) {
+  async updateCollection(userId: number, collectionId: number, data: UpdateCollectionBodyType): Promise<WishlistCollectionType> {
     // If changing to public and no shareCode exists, generate one
-    const updateData: any = { ...data }
+    const updateData: Prisma.WishlistCollectionUpdateInput = { ...data }
     if (data.isPublic) {
       const existing = await this.prismaService.wishlistCollection.findUnique({
         where: { id: collectionId },
@@ -432,7 +452,7 @@ export class WishlistRepo {
         userId, // Ensure user owns this collection
       },
       data: updateData,
-    }) as any
+    }) as unknown as Promise<WishlistCollectionType>
   }
 
   /**
@@ -490,7 +510,7 @@ export class WishlistRepo {
   /**
    * Get collection by share code
    */
-  async getCollectionByShareCode(shareCode: string) {
+  async getCollectionByShareCode(shareCode: string): Promise<WishlistCollectionWithItems | null> {
     return this.prismaService.wishlistCollection.findUnique({
       where: { shareCode, isPublic: true },
       include: {
@@ -519,7 +539,7 @@ export class WishlistRepo {
           },
         },
       },
-    }) as any
+    })
   }
 
   // ============================================

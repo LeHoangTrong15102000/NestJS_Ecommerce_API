@@ -1,4 +1,5 @@
 import { Injectable, HttpException } from '@nestjs/common'
+import { Prisma } from '@prisma/client'
 import { InjectPinoLogger, PinoLogger } from 'nestjs-pino'
 import { VoucherRepository } from './voucher.repo'
 import {
@@ -63,7 +64,7 @@ export class VoucherService {
     // Không cho phép edit voucher đã được sử dụng một số trường quan trọng
     if (existingVoucher.usedCount > 0) {
       const restrictedFields = ['type', 'value', 'minOrderValue', 'applicableProducts', 'excludedProducts']
-      const hasRestrictedChanges = restrictedFields.some((field) => data[field] !== undefined)
+      const hasRestrictedChanges = restrictedFields.some((field) => (data as Record<string, unknown>)[field] !== undefined)
 
       if (hasRestrictedChanges) {
         throw new HttpException(VOUCHER_ERRORS.CANNOT_EDIT_USED_VOUCHER, 400)
@@ -319,7 +320,7 @@ export class VoucherService {
     }
   }
 
-  private formatVoucherResponse(voucher: any): VoucherResponse {
+  private formatVoucherResponse(voucher: Prisma.VoucherGetPayload<Record<string, never>>): VoucherResponse {
     return {
       id: voucher.id,
       code: voucher.code,
@@ -332,25 +333,27 @@ export class VoucherService {
       usageLimit: voucher.usageLimit,
       usedCount: voucher.usedCount,
       userUsageLimit: voucher.userUsageLimit,
-      startDate: voucher.startDate,
-      endDate: voucher.endDate,
+      startDate: voucher.startDate.toISOString(),
+      endDate: voucher.endDate.toISOString(),
       isActive: voucher.isActive,
       sellerId: voucher.sellerId,
       applicableProducts: voucher.applicableProducts || [],
       excludedProducts: voucher.excludedProducts || [],
-      createdAt: voucher.createdAt,
-      updatedAt: voucher.updatedAt,
+      createdAt: voucher.createdAt.toISOString(),
+      updatedAt: voucher.updatedAt.toISOString(),
     }
   }
 
-  private formatUserVoucherResponse(userVoucher: any): UserVoucherResponse {
+  private formatUserVoucherResponse(
+    userVoucher: Prisma.UserVoucherGetPayload<{ include: { voucher: true } }>,
+  ): UserVoucherResponse {
     return {
       id: userVoucher.id,
       userId: userVoucher.userId,
       voucherId: userVoucher.voucherId,
       usedCount: userVoucher.usedCount,
-      usedAt: userVoucher.usedAt,
-      savedAt: userVoucher.savedAt,
+      usedAt: userVoucher.usedAt ? userVoucher.usedAt.toISOString() : null,
+      savedAt: userVoucher.savedAt.toISOString(),
       voucher: this.formatVoucherResponse(userVoucher.voucher),
     }
   }

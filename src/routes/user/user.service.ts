@@ -31,7 +31,7 @@ export class UserService {
    * Vì chỉ có người thực hiện là admin role mới có quyền sau: Tạo admin user, update roleId thành admin, xóa admin user.
    * Còn nếu không phải admin thì không được phép tác động đến admin
    */
-  private async verifyRole({ roleNameAgent, roleIdTarget }) {
+  private async verifyRole({ roleNameAgent, roleIdTarget }: { roleNameAgent: string; roleIdTarget: number }) {
     // Agent là admin thì cho phép
     if (roleNameAgent === RoleName.Admin) {
       return true

@@ -45,13 +45,14 @@ import { SharedModule } from 'src/shared/shared.module'
 import { WebsocketModule } from 'src/websockets/websocket.module'
 
 import { LoggerModule } from 'nestjs-pino'
+import pino from 'pino'
 
 @Module({
   imports: [
     LoggerModule.forRoot({
       pinoHttp: {
         serializers: {
-          req(req: any) {
+          req(req: pino.SerializedRequest) {
             return {
               method: req.method,
               url: req.url,
@@ -59,7 +60,7 @@ import { LoggerModule } from 'nestjs-pino'
               params: req.params,
             }
           },
-          res(res: any) {
+          res(res: pino.SerializedResponse) {
             return {
               statusCode: res.statusCode,
             }

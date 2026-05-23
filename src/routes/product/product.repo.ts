@@ -134,7 +134,7 @@ export class ProductRepo {
       page: page,
       limit: limit,
       totalPages: Math.ceil(totalItems / limit),
-    } as any
+    } as unknown as GetProductsResType
   }
 
   findById(productId: number): Promise<ProductType | null> {
@@ -143,7 +143,7 @@ export class ProductRepo {
         id: productId,
         deletedAt: null,
       },
-    }) as any
+    }) as unknown as Promise<ProductType | null>
   }
 
   getDetail({
@@ -200,7 +200,7 @@ export class ProductRepo {
           },
         },
       },
-    }) as any
+    }) as unknown as Promise<GetProductDetailResType | null>
   }
 
   create({
@@ -249,7 +249,7 @@ export class ProductRepo {
           },
         },
       },
-    }) as any
+    }) as unknown as Promise<GetProductDetailResType>
   }
 
   async update({
@@ -349,7 +349,7 @@ export class ProductRepo {
       }),
     ])
 
-    return product as any
+    return product as unknown as ProductType
   }
 
   async delete(
@@ -367,7 +367,7 @@ export class ProductRepo {
         where: {
           id,
         },
-      }) as any
+      }) as unknown as Promise<ProductType>
     }
     const now = new Date()
     const [product] = await Promise.all([
@@ -402,6 +402,6 @@ export class ProductRepo {
         },
       }),
     ])
-    return product as any
+    return product as unknown as ProductType
   }
 }

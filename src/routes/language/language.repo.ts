@@ -14,7 +14,7 @@ export class LanguageRepo {
         // Sẽ lọc theo cái deletedAt là null
         deletedAt: null,
       },
-    }) as any
+    }) as unknown as Promise<LanguageType[]>
   }
 
   findById(id: string): Promise<LanguageType | null> {
@@ -25,7 +25,7 @@ export class LanguageRepo {
         id, // Cái Id nó đã index được rồi,
         deletedAt: null, // find ra được rồi thì nó sẽ filter(thằng này nó có deletedAt là null hay không rồi thì nó mới trả về).
       },
-    }) as any
+    }) as unknown as Promise<LanguageType | null>
   }
 
   // Truyền thêm cái trường là createdById vào
@@ -35,7 +35,7 @@ export class LanguageRepo {
         ...data,
         createdById,
       },
-    }) as any
+    }) as unknown as Promise<LanguageType>
   }
 
   // Cũng thêm vào trường updatedById
@@ -58,7 +58,7 @@ export class LanguageRepo {
         ...data,
         updatedById,
       },
-    }) as any
+    }) as unknown as Promise<LanguageType>
   }
 
   delete(id: string, isHard?: boolean): Promise<LanguageType> {
@@ -79,6 +79,6 @@ export class LanguageRepo {
               deletedAt: new Date(),
             },
           })
-    ) as any
+    ) as unknown as Promise<LanguageType>
   }
 }

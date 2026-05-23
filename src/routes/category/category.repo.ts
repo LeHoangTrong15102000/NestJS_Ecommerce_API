@@ -40,7 +40,7 @@ export class CategoryRepo {
     return {
       data: categories,
       totalItems: categories.length,
-    } as any
+    } as unknown as GetAllCategoriesResType
   }
 
   findById({ id, languageId }: { id: number; languageId: string }): Promise<CategoryIncludeTranslationType | null> {
@@ -54,7 +54,7 @@ export class CategoryRepo {
           where: languageId === ALL_LANGUAGE_CODE ? { deletedAt: null } : { deletedAt: null, languageId },
         },
       },
-    }) as any
+    }) as unknown as Promise<CategoryIncludeTranslationType | null>
   }
 
   create({
@@ -74,7 +74,7 @@ export class CategoryRepo {
           where: { deletedAt: null },
         },
       },
-    }) as any
+    }) as unknown as Promise<CategoryIncludeTranslationType>
   }
 
   update({
@@ -100,7 +100,7 @@ export class CategoryRepo {
           where: { deletedAt: null },
         },
       },
-    }) as any
+    }) as unknown as Promise<CategoryIncludeTranslationType>
   }
 
   delete(
@@ -130,6 +130,6 @@ export class CategoryRepo {
               deletedById,
             },
           })
-    ) as any
+    ) as unknown as Promise<CategoryType>
   }
 }

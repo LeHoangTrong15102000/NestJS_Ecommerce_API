@@ -19,7 +19,7 @@ export class CategoryTranslationRepo {
         id,
         deletedAt: null,
       },
-    }) as any
+    }) as unknown as Promise<GetCategoryTranslationDetailResType | null>
   }
 
   create({
@@ -34,7 +34,7 @@ export class CategoryTranslationRepo {
         ...data,
         createdById,
       },
-    }) as any
+    }) as unknown as Promise<CategoryTranslationType>
   }
 
   update({
@@ -55,7 +55,7 @@ export class CategoryTranslationRepo {
         ...data,
         updatedById,
       },
-    }) as any
+    }) as unknown as Promise<CategoryTranslationType>
   }
 
   delete(
@@ -85,6 +85,6 @@ export class CategoryTranslationRepo {
               deletedById,
             },
           })
-    ) as any
+    ) as unknown as Promise<CategoryTranslationType>
   }
 }

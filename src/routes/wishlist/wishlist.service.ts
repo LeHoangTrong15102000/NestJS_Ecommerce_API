@@ -7,6 +7,7 @@ import {
   GetWishlistItemsQueryType,
   UpdateCollectionBodyType,
   UpdateWishlistItemBodyType,
+  WishlistCollectionType,
 } from 'src/routes/wishlist/wishlist.model'
 import { WishlistRepo } from 'src/routes/wishlist/wishlist.repo'
 import { CACHE_TTL } from 'src/shared/constants/app.constant'
@@ -198,7 +199,7 @@ export class WishlistService {
       throw new NotFoundException('Shared collection not found or is private')
     }
 
-    return collection
+    return collection as unknown as WishlistCollectionType
   }
 
   // ============================================

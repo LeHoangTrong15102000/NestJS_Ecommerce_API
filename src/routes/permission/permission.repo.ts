@@ -37,7 +37,7 @@ export class PermissionRepo {
       page: pagination.page,
       limit: pagination.limit,
       totalPages: Math.ceil(totalItems / pagination.limit),
-    } as any
+    } as unknown as GetPermissionsResType
   }
 
   findById(id: number): Promise<PermissionType | null> {
@@ -46,7 +46,7 @@ export class PermissionRepo {
         id,
         deletedAt: null,
       },
-    }) as any
+    }) as unknown as Promise<PermissionType | null>
   }
 
   create({
@@ -61,7 +61,7 @@ export class PermissionRepo {
         ...data,
         createdById,
       },
-    }) as any
+    }) as unknown as Promise<PermissionType>
   }
 
   update({
@@ -85,7 +85,7 @@ export class PermissionRepo {
       include: {
         roles: true,
       },
-    }) as any
+    }) as unknown as Promise<PermissionType & { roles: { id: number }[] }>
   }
 
   delete(
@@ -121,6 +121,6 @@ export class PermissionRepo {
               roles: true,
             },
           })
-    ) as any
+    ) as unknown as Promise<PermissionType & { roles: { id: number }[] }>
   }
 }

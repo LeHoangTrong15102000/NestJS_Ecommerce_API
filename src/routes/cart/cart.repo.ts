@@ -77,7 +77,7 @@ export class CartRepo {
     ) {
       throw ProductNotFoundException
     }
-    return sku as any
+    return sku as unknown as SKUSchemaType
   }
 
   async list({

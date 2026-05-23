@@ -9,7 +9,7 @@ export class AIAssistantRepo {
   /**
    * Tạo AI conversation mới
    */
-  createConversation(data: { userId: number; title?: string; context?: any }) {
+  createConversation(data: { userId: number; title?: string; context?: Prisma.InputJsonValue }) {
     return this.prisma.aIConversation.create({
       data: {
         userId: data.userId,
@@ -143,7 +143,7 @@ export class AIAssistantRepo {
     responseTime?: number
     model?: string
     error?: string
-    contextUsed?: any
+    contextUsed?: Prisma.InputJsonValue
   }) {
     // Tạo message
     const message = await this.prisma.aIMessage.create({
@@ -184,7 +184,7 @@ export class AIAssistantRepo {
     conversationId: string,
     data: Partial<{
       title: string
-      context: any
+      context: Prisma.InputJsonValue
       isActive: boolean
       isArchived: boolean
     }>,

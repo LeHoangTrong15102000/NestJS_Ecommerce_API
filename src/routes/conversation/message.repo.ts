@@ -3,6 +3,93 @@ import { MessageType, Prisma } from '@prisma/client'
 import { SerializeAll } from 'src/shared/decorators/serialize.decorator'
 import { PrismaService } from 'src/shared/services/prisma.service'
 
+// Module-level const so that `typeof MESSAGE_INCLUDE` can be used in GetPayload generics
+const MESSAGE_INCLUDE = {
+  fromUser: {
+    select: {
+      id: true,
+      name: true,
+      email: true,
+      avatar: true,
+      status: true,
+    },
+  },
+  replyTo: {
+    select: {
+      id: true,
+      content: true,
+      type: true,
+      fromUserId: true,
+      createdAt: true,
+      isDeleted: true,
+      deletedForEveryone: true,
+      fromUser: {
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          avatar: true,
+          status: true,
+        },
+      },
+      attachments: {
+        select: {
+          id: true,
+          type: true,
+          fileName: true,
+          fileUrl: true,
+          thumbnail: true,
+          width: true,
+          height: true,
+        },
+      },
+    },
+  },
+  attachments: {
+    orderBy: { createdAt: 'asc' as const },
+  },
+  reactions: {
+    include: {
+      user: {
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          avatar: true,
+          status: true,
+        },
+      },
+    },
+    orderBy: { createdAt: 'asc' as const },
+  },
+  readReceipts: {
+    include: {
+      user: {
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          avatar: true,
+          status: true,
+        },
+      },
+    },
+    orderBy: { readAt: 'asc' as const },
+  },
+} as const
+
+type NormalizedMessage = Prisma.ConversationMessageGetPayload<{ include: typeof MESSAGE_INCLUDE }>
+
+// Extended type for search results that include conversation context
+type NormalizedMessageWithConversation = NormalizedMessage & {
+  conversation?: {
+    id: string
+    name: string | null
+    type: string
+    avatar: string | null
+  } | null
+}
+
 @Injectable()
 @SerializeAll([
   'resolveCursor',
@@ -205,7 +292,7 @@ export class MessageRepository {
     }
 
     // Build createdAt filter
-    const createdAtFilter: any = {}
+    const createdAtFilter: NonNullable<Prisma.ConversationMessageWhereInput['createdAt']> = {}
     if (dateFrom) createdAtFilter.gte = dateFrom
     if (dateTo) createdAtFilter.lte = dateTo
 
@@ -280,7 +367,7 @@ export class MessageRepository {
   }
 
   async delete(id: string, forEveryone: boolean = false) {
-    const updateData: any = {
+    const updateData: Prisma.ConversationMessageUpdateInput = {
       isDeleted: true,
       deletedAt: new Date(),
     }
@@ -627,79 +714,7 @@ export class MessageRepository {
   }
 
   private getMessageInclude() {
-    return {
-      fromUser: {
-        select: {
-          id: true,
-          name: true,
-          email: true,
-          avatar: true,
-          status: true,
-        },
-      },
-      replyTo: {
-        select: {
-          id: true,
-          content: true,
-          type: true,
-          fromUserId: true,
-          createdAt: true,
-          isDeleted: true,
-          deletedForEveryone: true,
-          fromUser: {
-            select: {
-              id: true,
-              name: true,
-              email: true,
-              avatar: true,
-              status: true,
-            },
-          },
-          attachments: {
-            select: {
-              id: true,
-              type: true,
-              fileName: true,
-              fileUrl: true,
-              thumbnail: true,
-              width: true,
-              height: true,
-            },
-          },
-        },
-      },
-      attachments: {
-        orderBy: { createdAt: 'asc' as const },
-      },
-      reactions: {
-        include: {
-          user: {
-            select: {
-              id: true,
-              name: true,
-              email: true,
-              avatar: true,
-              status: true,
-            },
-          },
-        },
-        orderBy: { createdAt: 'asc' as const },
-      },
-      readReceipts: {
-        include: {
-          user: {
-            select: {
-              id: true,
-              name: true,
-              email: true,
-              avatar: true,
-              status: true,
-            },
-          },
-        },
-        orderBy: { readAt: 'asc' as const },
-      },
-    }
+    return MESSAGE_INCLUDE
   }
 
   private getMessageIncludeWithConversation() {
@@ -720,7 +735,7 @@ export class MessageRepository {
    * Normalize message to ensure arrays are never undefined
    * Prisma returns undefined for empty relations, but Zod schema expects empty arrays
    */
-  private normalizeMessage(message: any) {
+  private normalizeMessage(message: NormalizedMessageWithConversation) {
     return {
       id: message.id,
       conversationId: message.conversationId,

@@ -16,7 +16,7 @@ export class PaymentRepo {
     private readonly paymentProducer: PaymentProducer,
   ) {}
 
-  private getTotalPrice(orders: any[]): number {
+  private getTotalPrice(orders: Array<{ totalAmount: number | { toString(): string } }>): number {
     const result = orders.reduce((total, order) => {
       // Handle Prisma Decimal type by converting to number
       const amount =
@@ -108,7 +108,7 @@ export class PaymentRepo {
         throw new BadRequestException(`No orders found for payment ${paymentId}`)
       }
       const userId = orders[0].userId
-      const totalPrice = this.getTotalPrice(orders as any)
+      const totalPrice = this.getTotalPrice(orders)
       if (totalPrice !== body.transferAmount) {
         throw new BadRequestException(`Price not match, expected ${totalPrice} but got ${body.transferAmount}`)
       }

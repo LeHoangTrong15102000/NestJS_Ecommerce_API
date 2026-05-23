@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common'
+import { Prisma } from '@prisma/client'
 import { SerializeAll } from 'src/shared/decorators/serialize.decorator'
 import { PrismaService } from 'src/shared/services/prisma.service'
 import { PermissionType } from 'src/shared/models/shared-permission.model'
@@ -20,7 +21,7 @@ export class SharedUserRepository {
         ...uniqueObject,
         deletedAt: null,
       },
-    }) as any
+    }) as unknown as Promise<UserType | null>
   }
 
   findUniqueIncludeRolePermissions(uniqueObject: WhereUniqueUserType): Promise<UserIncludeRolePermissionsType | null> {
@@ -40,7 +41,7 @@ export class SharedUserRepository {
           },
         },
       },
-    }) as any
+    }) as unknown as Promise<UserIncludeRolePermissionsType | null>
   }
 
   // Chỗ này không cần dùng email thì chúng ta chỉ cần quy định id là được
@@ -51,7 +52,7 @@ export class SharedUserRepository {
         deletedAt: null,
       },
       data,
-    }) as any
+    }) as unknown as Promise<UserType | null>
   }
 
   // Thêm methods cần thiết cho chat system
@@ -65,10 +66,15 @@ export class SharedUserRepository {
         id: { in: ids },
         deletedAt: null,
       },
-    }) as any
+    }) as unknown as Promise<UserType[]>
   }
 
-  findMany(options?: { skip?: number; take?: number; where?: any; orderBy?: any }): Promise<UserType[]> {
+  findMany(options?: {
+    skip?: number
+    take?: number
+    where?: Prisma.UserWhereInput
+    orderBy?: Prisma.UserOrderByWithRelationInput
+  }): Promise<UserType[]> {
     return this.prismaService.user.findMany({
       where: {
         deletedAt: null,
@@ -77,6 +83,6 @@ export class SharedUserRepository {
       skip: options?.skip,
       take: options?.take,
       orderBy: options?.orderBy,
-    }) as any
+    }) as unknown as Promise<UserType[]>
   }
 }

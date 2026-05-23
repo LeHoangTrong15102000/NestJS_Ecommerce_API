@@ -36,7 +36,7 @@ export class UserRepo {
       page: pagination.page,
       limit: pagination.limit,
       totalPages: Math.ceil(totalItems / pagination.limit),
-    } as any
+    } as unknown as GetUsersResType
   }
 
   createUser({ createdById, data }: { createdById: number | null; data: CreateUserBodyType }): Promise<UserType> {
@@ -45,7 +45,7 @@ export class UserRepo {
         ...data,
         createdById,
       },
-    }) as any
+    }) as unknown as Promise<UserType>
   }
 
   deleteUser({ id, deletedById }: { id: number; deletedById: number }, isHard?: boolean): Promise<UserType> {
@@ -65,6 +65,6 @@ export class UserRepo {
               deletedById,
             },
           })
-    ) as any
+    ) as unknown as Promise<UserType>
   }
 }

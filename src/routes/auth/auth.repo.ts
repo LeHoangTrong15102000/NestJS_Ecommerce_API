@@ -25,7 +25,7 @@ export class AuthRepository {
         password: true,
         totpSecret: true,
       },
-    }) as any
+    }) as unknown as Promise<Omit<UserType, 'password' | 'totpSecret'>>
   }
 
   // Hàm tạo user bao gồm cả role ở bên trong nữa
@@ -37,7 +37,7 @@ export class AuthRepository {
       include: {
         role: true,
       },
-    }) as any
+    }) as unknown as Promise<UserType & { role: RoleType }>
   }
 
   // func tạo ra verificationCode
@@ -57,7 +57,7 @@ export class AuthRepository {
         code: payload.code,
         expiresAt: payload.expiresAt,
       },
-    }) as any
+    }) as unknown as Promise<VerificationCodeType>
   }
 
   // func tìm ra verificationCode để mà xác thực
@@ -74,7 +74,7 @@ export class AuthRepository {
   ): Promise<VerificationCodeType | null> {
     return this.prismaService.verificationCode.findUnique({
       where: uniqueValue,
-    }) as any
+    }) as unknown as Promise<VerificationCodeType | null>
   }
 
   //  Tạo token ko dùng transaction
@@ -88,7 +88,7 @@ export class AuthRepository {
     // Sẽ trả về một bản ghi bị xóa dưới dạng object
     return this.prismaService.refreshToken.delete({
       where: uniqueObject,
-    }) as any
+    }) as unknown as Promise<RefreshTokenType>
   }
 
   createDevice(
@@ -96,7 +96,7 @@ export class AuthRepository {
   ) {
     return this.prismaService.device.create({
       data,
-    }) as any
+    }) as unknown as Promise<DeviceType>
   }
 
   updateDevice(deviceId: number, data: Partial<DeviceType>): Promise<DeviceType> {
@@ -105,7 +105,7 @@ export class AuthRepository {
         id: deviceId,
       },
       data,
-    }) as any
+    }) as unknown as Promise<DeviceType>
   }
 
   // Chỉnh sửa thêm deletedAt: null vào dể mà bên những service gọi tới không cần phải thêm vào
@@ -118,7 +118,7 @@ export class AuthRepository {
       include: {
         role: true,
       },
-    }) as any
+    }) as unknown as Promise<(UserType & { role: RoleType }) | null>
     // return this.prismaService.user.findUnique({
     //   where: uniqueObject,
     //   include: {
@@ -141,7 +141,7 @@ export class AuthRepository {
           },
         },
       },
-    }) as any
+    }) as unknown as Promise<(RefreshTokenType & { user: UserType & { role: RoleType } }) | null>
   }
 
   // Delete verificationCode
@@ -150,7 +150,7 @@ export class AuthRepository {
   ) {
     return this.prismaService.verificationCode.delete({
       where: uniqueValue,
-    }) as any
+    }) as unknown as Promise<VerificationCodeType>
   }
 
   // async findUse

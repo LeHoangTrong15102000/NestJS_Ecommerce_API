@@ -49,7 +49,7 @@ export class ReviewRepository {
       }),
     ])
     return {
-      data: data as any,
+      data: data as unknown as GetReviewsType['data'],
       totalItems,
       page: pagination.page,
       limit: pagination.limit,
@@ -135,7 +135,7 @@ export class ReviewRepository {
         ...review,
         medias: reviewMedias,
       }
-    }) as any
+    }) as unknown as Promise<CreateReviewResType>
   }
 
   async update({
@@ -200,6 +200,6 @@ export class ReviewRepository {
         ...review,
         medias: reviewMedias,
       }
-    }) as any
+    }) as unknown as Promise<UpdateReviewResType>
   }
 }

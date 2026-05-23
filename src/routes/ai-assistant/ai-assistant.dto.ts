@@ -1,5 +1,6 @@
 import { z } from 'zod'
 import { createZodDto } from 'nestjs-zod'
+import { Prisma } from '@prisma/client'
 
 // ===== AI CONVERSATION DTOs =====
 
@@ -69,7 +70,7 @@ export interface AIConversationResponse {
   id: string
   userId: number
   title?: string
-  context?: any
+  context?: Prisma.JsonValue
   isActive: boolean
   isArchived: boolean
   createdAt: Date
