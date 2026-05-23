@@ -10,7 +10,7 @@ const config: Config = {
   testRegex: '.*\\.spec\\.ts$',
   testPathIgnorePatterns: ['/node_modules/', '/dist/', 'test/integration/', 'test/e2e/'],
   transform: {
-    '^.+\\.(t|j)sx?$': ['ts-jest', { tsconfig: 'tsconfig.test.json' }],
+    '^.+\\.(t|j)sx?$': ['ts-jest', { tsconfig: 'tsconfig.test.json', diagnostics: false }],
   },
   // Allow ts-jest to transform ESM packages (MSW v2 and its deps)
   // Must handle pnpm's .pnpm directory structure on both Unix and Windows
