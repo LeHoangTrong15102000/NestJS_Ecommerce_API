@@ -10,7 +10,7 @@ const config: Config = {
   testRegex: '.*\\.spec\\.ts$',
   testPathIgnorePatterns: ['/node_modules/', '/dist/', 'test/integration/', 'test/e2e/'],
   transform: {
-    '^.+\\.(t|j)sx?$': 'ts-jest',
+    '^.+\\.(t|j)sx?$': ['ts-jest', { tsconfig: 'tsconfig.test.json' }],
   },
   // Allow ts-jest to transform ESM packages (MSW v2 and its deps)
   // Must handle pnpm's .pnpm directory structure on both Unix and Windows
@@ -114,6 +114,9 @@ const config: Config = {
 
   // Parallel execution - giảm workers để tránh memory overflow
   maxWorkers: process.env.CI ? 1 : '50%', // Use 50% of cores locally, 1 in CI to avoid OOM
+
+  // Restart worker khi memory vượt ngưỡng (giúp GC giải phóng memory trong CI)
+  workerIdleMemoryLimit: process.env.CI ? '512MB' : undefined,
 
   // Verbose output for debugging
   verbose: false,

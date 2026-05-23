@@ -119,7 +119,7 @@ jobs:
           REDIS_URL: redis://localhost:6379
           NODE_ENV: test
           NODE_OPTIONS: '--max-old-space-size=6144'
-        run: pnpm run test:cov -- --workerIdleMemoryLimit=512MB
+        run: pnpm run test:cov
 
       - name: Upload coverage reports
         uses: codecov/codecov-action@v4
