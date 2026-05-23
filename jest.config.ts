@@ -113,7 +113,7 @@ const config: Config = {
   detectOpenHandles: true,
 
   // Parallel execution - giảm workers để tránh memory overflow
-  maxWorkers: process.env.CI ? 2 : '50%', // Use 50% of cores locally, 2 in CI
+  maxWorkers: process.env.CI ? 1 : '50%', // Use 50% of cores locally, 1 in CI to avoid OOM
 
   // Verbose output for debugging
   verbose: false,
