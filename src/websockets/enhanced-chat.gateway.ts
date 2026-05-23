@@ -24,10 +24,10 @@ import { ConversationRepository } from 'src/routes/conversation/conversation.rep
 import { TokenBucketRateLimiter, RateLimitConfig } from './utils/rate-limiter'
 
 /**
- * Get CORS allowed origins - mirrors WebsocketAdapter configuration
+ * Get CORS allowed origins - mirrors WebsocketAdapter configuration (uses ALLOWED_ORIGINS env var)
  */
 function getCorsOrigins(): string[] | boolean {
-  const corsOrigins = process.env.CORS_ORIGINS
+  const corsOrigins = process.env.ALLOWED_ORIGINS
   if (corsOrigins) {
     return corsOrigins.split(',').map((origin) => origin.trim())
   }

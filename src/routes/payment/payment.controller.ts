@@ -3,7 +3,7 @@ import { PaymentService } from './payment.service'
 import { MessageResDTO } from 'src/shared/dtos/response.dto'
 import { ZodResponse } from 'nestjs-zod'
 import { Auth } from 'src/shared/decorators/auth.decorator'
-import { WebhookPaymentBodyDTO } from 'src/routes/payment/payment.dto.'
+import { WebhookPaymentBodyDTO } from 'src/routes/payment/payment.dto'
 import { AuthType } from 'src/shared/constants/auth.constant'
 import { ApiSecurity } from '@nestjs/swagger'
 
