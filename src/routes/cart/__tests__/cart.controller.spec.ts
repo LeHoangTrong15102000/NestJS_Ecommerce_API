@@ -544,7 +544,9 @@ describe('CartController', () => {
                     name: 'Test Product',
                     variants: [{ value: 'Size', options: ['M', 'L', 'XL'] }],
                     publishedAt: fixedDate,
-                    productTranslations: [{ id: 1, name: 'Test Product', description: 'Test Description', languageId: 'vi' }],
+                    productTranslations: [
+                      { id: 1, name: 'Test Product', description: 'Test Description', languageId: 'vi' },
+                    ],
                   },
                 },
               },

@@ -43,7 +43,10 @@ describe('ZodOutputInterceptor', () => {
       providers: [
         ZodOutputInterceptor,
         { provide: Reflector, useValue: mockReflector },
-        { provide: getLoggerToken(ZodOutputInterceptor.name), useValue: { log: jest.fn(), info: jest.fn(), error: jest.fn(), warn: jest.fn(), debug: jest.fn() } },
+        {
+          provide: getLoggerToken(ZodOutputInterceptor.name),
+          useValue: { log: jest.fn(), info: jest.fn(), error: jest.fn(), warn: jest.fn(), debug: jest.fn() },
+        },
       ],
     }).compile()
 

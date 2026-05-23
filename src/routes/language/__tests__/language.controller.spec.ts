@@ -473,7 +473,12 @@ describe('LanguageController', () => {
     })
 
     it('should match language create response structure', async () => {
-      const mockLanguage = createMockLanguage({ id: 'ja', name: 'Japanese', createdAt: fixedDate, updatedAt: fixedDate })
+      const mockLanguage = createMockLanguage({
+        id: 'ja',
+        name: 'Japanese',
+        createdAt: fixedDate,
+        updatedAt: fixedDate,
+      })
       mockLanguageService.create.mockResolvedValue(mockLanguage)
       const result = await controller.create({ id: 'ja', name: 'Japanese' }, 1)
       expect(result).toMatchSnapshot()

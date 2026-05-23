@@ -846,12 +846,17 @@ describe('OrderService', () => {
           voucherId: 1,
         },
       ]
-      const mockCartItems = createMockCartItems([{ quantity: 1, sku: { ...createMockCartItems()[0].sku, price: 50000 } }])
+      const mockCartItems = createMockCartItems([
+        { quantity: 1, sku: { ...createMockCartItems()[0].sku, price: 50000 } },
+      ])
       const mockCartItemMap = new Map<number, CartItemWithRelations>()
       mockCartItems.forEach((item) => mockCartItemMap.set(item.id, item))
       const mockVoucher = { id: 1, type: 'FIXED_AMOUNT', value: 999999 } // exceeds order total
 
-      mockOrderRepo.fetchAndValidateCartItems.mockResolvedValue({ cartItems: mockCartItems, cartItemMap: mockCartItemMap })
+      mockOrderRepo.fetchAndValidateCartItems.mockResolvedValue({
+        cartItems: mockCartItems,
+        cartItemMap: mockCartItemMap,
+      })
       mockVoucherRepository.findById.mockResolvedValue(mockVoucher as any)
       mockOrderRepo.create.mockResolvedValue(createTestData.createOrderResponse())
 
@@ -883,7 +888,10 @@ describe('OrderService', () => {
       const mockCartItemMap = new Map<number, CartItemWithRelations>()
       mockCartItems.forEach((item) => mockCartItemMap.set(item.id, item))
 
-      mockOrderRepo.fetchAndValidateCartItems.mockResolvedValue({ cartItems: mockCartItems, cartItemMap: mockCartItemMap })
+      mockOrderRepo.fetchAndValidateCartItems.mockResolvedValue({
+        cartItems: mockCartItems,
+        cartItemMap: mockCartItemMap,
+      })
       mockOrderRepo.create.mockResolvedValue(createTestData.createOrderResponse())
 
       await service.create(userId, body)
@@ -916,7 +924,10 @@ describe('OrderService', () => {
       const mockCartItemMap = new Map<number, CartItemWithRelations>()
       mockCartItems.forEach((item) => mockCartItemMap.set(item.id, item))
 
-      mockOrderRepo.fetchAndValidateCartItems.mockResolvedValue({ cartItems: mockCartItems, cartItemMap: mockCartItemMap })
+      mockOrderRepo.fetchAndValidateCartItems.mockResolvedValue({
+        cartItems: mockCartItems,
+        cartItemMap: mockCartItemMap,
+      })
       mockVoucherRepository.findById.mockResolvedValue(null)
       mockOrderRepo.create.mockResolvedValue(createTestData.createOrderResponse())
 
@@ -942,7 +953,10 @@ describe('OrderService', () => {
       const mockCartItemMap = new Map<number, CartItemWithRelations>()
       mockCartItems.forEach((item) => mockCartItemMap.set(item.id, item))
 
-      mockOrderRepo.fetchAndValidateCartItems.mockResolvedValue({ cartItems: mockCartItems, cartItemMap: mockCartItemMap })
+      mockOrderRepo.fetchAndValidateCartItems.mockResolvedValue({
+        cartItems: mockCartItems,
+        cartItemMap: mockCartItemMap,
+      })
       mockOrderRepo.create.mockResolvedValue(createTestData.createOrderResponse())
 
       // Concurrent calls should both succeed at service level (repo handles locking)
@@ -988,8 +1002,13 @@ describe('OrderService', () => {
       const mockVoucher1 = { id: 1, type: 'PERCENTAGE', value: 10, maxDiscount: null }
       const mockVoucher2 = { id: 2, type: 'FIXED_AMOUNT', value: 20000 }
 
-      mockOrderRepo.fetchAndValidateCartItems.mockResolvedValue({ cartItems: mockCartItems, cartItemMap: mockCartItemMap })
-      mockVoucherRepository.findById.mockResolvedValueOnce(mockVoucher1 as any).mockResolvedValueOnce(mockVoucher2 as any)
+      mockOrderRepo.fetchAndValidateCartItems.mockResolvedValue({
+        cartItems: mockCartItems,
+        cartItemMap: mockCartItemMap,
+      })
+      mockVoucherRepository.findById
+        .mockResolvedValueOnce(mockVoucher1 as any)
+        .mockResolvedValueOnce(mockVoucher2 as any)
       mockOrderRepo.create.mockResolvedValue(createTestData.createOrderResponse())
 
       await service.create(userId, body)

@@ -32,10 +32,7 @@ describe('LoggingInterceptor', () => {
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
-      providers: [
-        LoggingInterceptor,
-        { provide: getLoggerToken(LoggingInterceptor.name), useValue: mockPinoLogger },
-      ],
+      providers: [LoggingInterceptor, { provide: getLoggerToken(LoggingInterceptor.name), useValue: mockPinoLogger }],
     }).compile()
 
     interceptor = module.get<LoggingInterceptor>(LoggingInterceptor)

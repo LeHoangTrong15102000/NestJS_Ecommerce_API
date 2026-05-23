@@ -828,7 +828,15 @@ describe('ReviewController', () => {
             updateCount: 0,
             createdAt: fixedDate,
             updatedAt: fixedDate,
-            medias: [{ id: 1, url: 'https://example.com/image1.jpg', type: MediaType.IMAGE, reviewId: 1, createdAt: fixedDate }],
+            medias: [
+              {
+                id: 1,
+                url: 'https://example.com/image1.jpg',
+                type: MediaType.IMAGE,
+                reviewId: 1,
+                createdAt: fixedDate,
+              },
+            ],
             user: { id: 1, name: 'Test User', avatar: 'https://example.com/avatar.jpg' },
           },
         ],
@@ -849,7 +857,9 @@ describe('ReviewController', () => {
         updateCount: 0,
         createdAt: fixedDate,
         updatedAt: fixedDate,
-        medias: [{ id: 1, url: 'https://example.com/image1.jpg', type: MediaType.IMAGE, reviewId: 1, createdAt: fixedDate }],
+        medias: [
+          { id: 1, url: 'https://example.com/image1.jpg', type: MediaType.IMAGE, reviewId: 1, createdAt: fixedDate },
+        ],
         user: { id: 1, name: 'Test User', avatar: 'https://example.com/avatar.jpg' },
       }
       mockReviewService.create.mockResolvedValue(mockResponse)

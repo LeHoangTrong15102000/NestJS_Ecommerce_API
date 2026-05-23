@@ -25,7 +25,10 @@ describe('WishlistPriceCheckCronjob', () => {
       providers: [
         WishlistPriceCheckCronjob,
         { provide: WishlistProducer, useValue: mockWishlistProducer },
-        { provide: getLoggerToken(WishlistPriceCheckCronjob.name), useValue: { log: jest.fn(), error: jest.fn(), warn: jest.fn(), debug: jest.fn() } },
+        {
+          provide: getLoggerToken(WishlistPriceCheckCronjob.name),
+          useValue: { log: jest.fn(), error: jest.fn(), warn: jest.fn(), debug: jest.fn() },
+        },
       ],
     }).compile()
 

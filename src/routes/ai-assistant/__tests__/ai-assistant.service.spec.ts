@@ -477,7 +477,6 @@ describe('AIAssistantService', () => {
       const userMessage = 'Hello'
       const serverError = new Error('Internal server error')
       ;(serverError as any).status = 500
-
       ;(mockAnthropicClient.messages.create as jest.Mock).mockRejectedValue(serverError)
 
       const result = await service.generateResponse(previousMessages, userMessage)
@@ -491,7 +490,6 @@ describe('AIAssistantService', () => {
       const userMessage = 'Hello'
       const timeoutError = new Error('Request timed out')
       ;(timeoutError as any).code = 'ETIMEDOUT'
-
       ;(mockAnthropicClient.messages.create as jest.Mock).mockRejectedValue(timeoutError)
 
       const result = await service.generateResponse(previousMessages, userMessage)

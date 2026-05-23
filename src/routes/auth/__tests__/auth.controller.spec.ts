@@ -868,7 +868,11 @@ describe('AuthController', () => {
     it('should match refresh token response structure', async () => {
       const mockResult = createMockTokens()
       mockAuthService.refreshToken.mockResolvedValue(mockResult as any)
-      const result = await controller.refreshToken({ refreshToken: 'mock-refresh-token' } as any, 'Mozilla/5.0', '127.0.0.1')
+      const result = await controller.refreshToken(
+        { refreshToken: 'mock-refresh-token' } as any,
+        'Mozilla/5.0',
+        '127.0.0.1',
+      )
       expect(result).toMatchSnapshot()
     })
   })

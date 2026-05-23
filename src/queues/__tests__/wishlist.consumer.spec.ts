@@ -282,9 +282,27 @@ describe('WishlistConsumer', () => {
 
     it('should handle multiple items with different users', async () => {
       const items = [
-        createMockWishlistItem({ id: 1, userId: 1, user: { id: 1, email: 'u1@test.com', name: 'U1' }, product: { id: 101, name: 'P1', basePrice: 100000 }, sku: { price: 94000 } }), // 6% drop
-        createMockWishlistItem({ id: 2, userId: 2, user: { id: 2, email: 'u2@test.com', name: 'U2' }, product: { id: 102, name: 'P2', basePrice: 100000 }, sku: { price: 96000 } }), // 4% drop — no alert
-        createMockWishlistItem({ id: 3, userId: 3, user: { id: 3, email: 'u3@test.com', name: 'U3' }, product: { id: 103, name: 'P3', basePrice: 100000 }, sku: { price: 90000 } }), // 10% drop
+        createMockWishlistItem({
+          id: 1,
+          userId: 1,
+          user: { id: 1, email: 'u1@test.com', name: 'U1' },
+          product: { id: 101, name: 'P1', basePrice: 100000 },
+          sku: { price: 94000 },
+        }), // 6% drop
+        createMockWishlistItem({
+          id: 2,
+          userId: 2,
+          user: { id: 2, email: 'u2@test.com', name: 'U2' },
+          product: { id: 102, name: 'P2', basePrice: 100000 },
+          sku: { price: 96000 },
+        }), // 4% drop — no alert
+        createMockWishlistItem({
+          id: 3,
+          userId: 3,
+          user: { id: 3, email: 'u3@test.com', name: 'U3' },
+          product: { id: 103, name: 'P3', basePrice: 100000 },
+          sku: { price: 90000 },
+        }), // 10% drop
       ]
       const job = createMockJob(PRICE_CHECK_JOB_NAME)
       mockWishlistRepo.getItemsForPriceCheck.mockResolvedValue(items as any)

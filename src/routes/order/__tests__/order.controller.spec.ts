@@ -697,7 +697,9 @@ describe('OrderController', () => {
                 id: 1,
                 productId: 1,
                 productName: 'Test Product',
-                productTranslations: [{ id: 1, name: 'Test Product', description: 'Test Description', languageId: 'vi' }],
+                productTranslations: [
+                  { id: 1, name: 'Test Product', description: 'Test Description', languageId: 'vi' },
+                ],
                 skuPrice: 50000,
                 image: 'test-image.jpg',
                 skuValue: 'Size: M, Color: Red',

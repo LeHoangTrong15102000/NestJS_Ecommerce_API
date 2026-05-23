@@ -65,10 +65,7 @@ describe('HttpExceptionFilter', () => {
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
-      providers: [
-        HttpExceptionFilter,
-        { provide: getLoggerToken(HttpExceptionFilter.name), useValue: mockPinoLogger },
-      ],
+      providers: [HttpExceptionFilter, { provide: getLoggerToken(HttpExceptionFilter.name), useValue: mockPinoLogger }],
     }).compile()
 
     filter = module.get<HttpExceptionFilter>(HttpExceptionFilter)

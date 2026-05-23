@@ -75,7 +75,12 @@ describe('OrderService — Edge Cases', () => {
     it('should round PERCENTAGE discount to integer', async () => {
       const items = [createCartItem({ id: 1, quantity: 1, sku: { ...createCartItem().sku, price: 33333 } })]
       setupCreate(items)
-      mockVoucherRepository.findById.mockResolvedValue({ id: 1, type: 'PERCENTAGE', value: 33, maxDiscount: null } as any)
+      mockVoucherRepository.findById.mockResolvedValue({
+        id: 1,
+        type: 'PERCENTAGE',
+        value: 33,
+        maxDiscount: null,
+      } as any)
 
       await service.create(1, createBody({ cartItemIds: [1], voucherId: 1 }))
 
@@ -83,16 +88,19 @@ describe('OrderService — Edge Cases', () => {
         1,
         expect.anything(),
         items,
-        expect.arrayContaining([
-          expect.objectContaining({ discountAmount: Math.round((33333 * 33) / 100) }),
-        ]),
+        expect.arrayContaining([expect.objectContaining({ discountAmount: Math.round((33333 * 33) / 100) })]),
       )
     })
 
     it('should handle 0% PERCENTAGE voucher', async () => {
       const items = [createCartItem({ id: 1 })]
       setupCreate(items)
-      mockVoucherRepository.findById.mockResolvedValue({ id: 1, type: 'PERCENTAGE', value: 0, maxDiscount: null } as any)
+      mockVoucherRepository.findById.mockResolvedValue({
+        id: 1,
+        type: 'PERCENTAGE',
+        value: 0,
+        maxDiscount: null,
+      } as any)
 
       await service.create(1, createBody({ cartItemIds: [1], voucherId: 1 }))
 
@@ -107,7 +115,12 @@ describe('OrderService — Edge Cases', () => {
     it('should handle 100% PERCENTAGE voucher without maxDiscount', async () => {
       const items = [createCartItem({ id: 1, quantity: 1, sku: { ...createCartItem().sku, price: 50000 } })]
       setupCreate(items)
-      mockVoucherRepository.findById.mockResolvedValue({ id: 1, type: 'PERCENTAGE', value: 100, maxDiscount: null } as any)
+      mockVoucherRepository.findById.mockResolvedValue({
+        id: 1,
+        type: 'PERCENTAGE',
+        value: 100,
+        maxDiscount: null,
+      } as any)
 
       await service.create(1, createBody({ cartItemIds: [1], voucherId: 1 }))
 
@@ -122,7 +135,12 @@ describe('OrderService — Edge Cases', () => {
     it('should cap PERCENTAGE discount at maxDiscount when exceeded', async () => {
       const items = [createCartItem({ id: 1, quantity: 1, sku: { ...createCartItem().sku, price: 100000 } })]
       setupCreate(items)
-      mockVoucherRepository.findById.mockResolvedValue({ id: 1, type: 'PERCENTAGE', value: 50, maxDiscount: 30000 } as any)
+      mockVoucherRepository.findById.mockResolvedValue({
+        id: 1,
+        type: 'PERCENTAGE',
+        value: 50,
+        maxDiscount: 30000,
+      } as any)
 
       await service.create(1, createBody({ cartItemIds: [1], voucherId: 1 }))
 

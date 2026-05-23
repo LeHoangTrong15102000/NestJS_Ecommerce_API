@@ -99,9 +99,10 @@ const createTestData = {
     ...overrides,
   }),
 
-  messageResponse: (message: 'Delete successfully' = 'Delete successfully') => ({
-    message,
-  }) as const,
+  messageResponse: (message: 'Delete successfully' = 'Delete successfully') =>
+    ({
+      message,
+    }) as const,
 }
 
 describe('PermissionController', () => {

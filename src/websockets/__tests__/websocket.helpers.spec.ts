@@ -36,10 +36,7 @@ describe('WebSocket Helpers', () => {
         mockClient.emit.mockClear()
         emitError(mockClient, 'test_event', code, 'Test message')
 
-        expect(mockClient.emit).toHaveBeenCalledWith(
-          'error',
-          expect.objectContaining({ code }),
-        )
+        expect(mockClient.emit).toHaveBeenCalledWith('error', expect.objectContaining({ code }))
       }
     })
   })
@@ -72,9 +69,7 @@ describe('WebSocket Helpers', () => {
     it('should use default message when none provided', () => {
       emitUnauthorizedError(mockClient, 'send_message')
 
-      expect(mockClient.emit).toHaveBeenCalledWith('error',
-        expect.objectContaining({ message: 'Unauthorized' }),
-      )
+      expect(mockClient.emit).toHaveBeenCalledWith('error', expect.objectContaining({ message: 'Unauthorized' }))
     })
   })
 
@@ -82,7 +77,8 @@ describe('WebSocket Helpers', () => {
     it('should emit INTERNAL_ERROR with custom message', () => {
       emitInternalError(mockClient, 'process', 'Something broke')
 
-      expect(mockClient.emit).toHaveBeenCalledWith('error',
+      expect(mockClient.emit).toHaveBeenCalledWith(
+        'error',
         expect.objectContaining({
           code: 'INTERNAL_ERROR',
           message: 'Something broke',
@@ -93,7 +89,8 @@ describe('WebSocket Helpers', () => {
     it('should use default message when none provided', () => {
       emitInternalError(mockClient, 'process')
 
-      expect(mockClient.emit).toHaveBeenCalledWith('error',
+      expect(mockClient.emit).toHaveBeenCalledWith(
+        'error',
         expect.objectContaining({ message: 'Internal server error' }),
       )
     })
@@ -103,7 +100,8 @@ describe('WebSocket Helpers', () => {
     it('should emit NOT_FOUND with custom message', () => {
       emitNotFoundError(mockClient, 'get_conversation', 'Conversation not found')
 
-      expect(mockClient.emit).toHaveBeenCalledWith('error',
+      expect(mockClient.emit).toHaveBeenCalledWith(
+        'error',
         expect.objectContaining({
           code: 'NOT_FOUND',
           message: 'Conversation not found',
@@ -114,9 +112,7 @@ describe('WebSocket Helpers', () => {
     it('should use default message when none provided', () => {
       emitNotFoundError(mockClient, 'get_conversation')
 
-      expect(mockClient.emit).toHaveBeenCalledWith('error',
-        expect.objectContaining({ message: 'Resource not found' }),
-      )
+      expect(mockClient.emit).toHaveBeenCalledWith('error', expect.objectContaining({ message: 'Resource not found' }))
     })
   })
 })

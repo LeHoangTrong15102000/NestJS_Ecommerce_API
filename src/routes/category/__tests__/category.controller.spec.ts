@@ -488,7 +488,12 @@ describe('CategoryController', () => {
     })
 
     it('should match category create response structure', async () => {
-      const mockCategory = createMockCategory({ id: 10, name: 'New Category', createdAt: fixedDate, updatedAt: fixedDate })
+      const mockCategory = createMockCategory({
+        id: 10,
+        name: 'New Category',
+        createdAt: fixedDate,
+        updatedAt: fixedDate,
+      })
       mockCategoryService.create.mockResolvedValue(mockCategory)
       const result = await controller.create({ name: 'New Category', logo: null, parentCategoryId: null }, 1)
       expect(result).toMatchSnapshot()

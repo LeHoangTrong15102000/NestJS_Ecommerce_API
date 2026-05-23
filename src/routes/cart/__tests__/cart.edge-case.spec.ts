@@ -15,10 +15,7 @@ describe('CartService — Edge Cases', () => {
     } as any
 
     const module: TestingModule = await Test.createTestingModule({
-      providers: [
-        CartService,
-        { provide: CartRepo, useValue: mockCartRepo },
-      ],
+      providers: [CartService, { provide: CartRepo, useValue: mockCartRepo }],
     }).compile()
     service = module.get<CartService>(CartService)
   })

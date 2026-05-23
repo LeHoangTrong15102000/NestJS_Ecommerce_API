@@ -64,7 +64,10 @@ describe('ChatTypingHandler', () => {
         ChatTypingHandler,
         { provide: ConversationService, useValue: mockConversationService },
         { provide: ChatRedisService, useValue: mockRedisService },
-        { provide: getLoggerToken(ChatTypingHandler.name), useValue: { log: jest.fn(), error: jest.fn(), warn: jest.fn(), debug: jest.fn() } },
+        {
+          provide: getLoggerToken(ChatTypingHandler.name),
+          useValue: { log: jest.fn(), error: jest.fn(), warn: jest.fn(), debug: jest.fn() },
+        },
       ],
     }).compile()
 
