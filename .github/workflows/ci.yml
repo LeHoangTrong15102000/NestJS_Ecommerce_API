@@ -18,12 +18,15 @@ jobs:
   lint:
     name: Lint Code
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
           ref: ${{ github.head_ref || github.ref_name }}
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
@@ -98,16 +101,21 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Generate Prisma Client
+        env:
+          DATABASE_URL: postgresql://test_user:test_password@localhost:5432/test_db
+          DIRECT_URL: postgresql://test_user:test_password@localhost:5432/test_db
         run: npx prisma generate
 
       - name: Run database migrations
         env:
           DATABASE_URL: postgresql://test_user:test_password@localhost:5432/test_db
+          DIRECT_URL: postgresql://test_user:test_password@localhost:5432/test_db
         run: npx prisma migrate deploy
 
       - name: Run tests with coverage
         env:
           DATABASE_URL: postgresql://test_user:test_password@localhost:5432/test_db
+          DIRECT_URL: postgresql://test_user:test_password@localhost:5432/test_db
           REDIS_HOST: localhost
           REDIS_PORT: 6379
           NODE_ENV: test
@@ -147,6 +155,9 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Generate Prisma Client
+        env:
+          DATABASE_URL: postgresql://placeholder:placeholder@localhost:5432/placeholder
+          DIRECT_URL: postgresql://placeholder:placeholder@localhost:5432/placeholder
         run: npx prisma generate
 
       - name: Build
