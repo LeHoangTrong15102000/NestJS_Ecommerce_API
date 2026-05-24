@@ -17,7 +17,15 @@ describe('PrismaService', () => {
         PrismaService,
         {
           provide: getLoggerToken(PrismaService.name),
-          useValue: { info: jest.fn(), error: jest.fn(), warn: jest.fn(), debug: jest.fn(), trace: jest.fn(), setContext: jest.fn(), assign: jest.fn() },
+          useValue: {
+            info: jest.fn(),
+            error: jest.fn(),
+            warn: jest.fn(),
+            debug: jest.fn(),
+            trace: jest.fn(),
+            setContext: jest.fn(),
+            assign: jest.fn(),
+          },
         },
       ],
     }).compile()

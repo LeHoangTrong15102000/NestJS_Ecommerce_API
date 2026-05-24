@@ -47,7 +47,15 @@ describe('PaymentConsumer', () => {
         { provide: SharedPaymentRepository, useValue: mockSharedPaymentRepo },
         {
           provide: getLoggerToken(PaymentConsumer.name),
-          useValue: { info: jest.fn(), error: jest.fn(), warn: jest.fn(), debug: jest.fn(), trace: jest.fn(), setContext: jest.fn(), assign: jest.fn() },
+          useValue: {
+            info: jest.fn(),
+            error: jest.fn(),
+            warn: jest.fn(),
+            debug: jest.fn(),
+            trace: jest.fn(),
+            setContext: jest.fn(),
+            assign: jest.fn(),
+          },
         },
       ],
     }).compile()

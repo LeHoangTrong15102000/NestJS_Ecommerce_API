@@ -31,7 +31,15 @@ describe('RemoveRefreshTokenCronjob', () => {
         { provide: PrismaService, useValue: mockPrismaService },
         {
           provide: getLoggerToken(RemoveRefreshTokenCronjob.name),
-          useValue: { info: jest.fn(), error: jest.fn(), warn: jest.fn(), debug: jest.fn(), trace: jest.fn(), setContext: jest.fn(), assign: jest.fn() },
+          useValue: {
+            info: jest.fn(),
+            error: jest.fn(),
+            warn: jest.fn(),
+            debug: jest.fn(),
+            trace: jest.fn(),
+            setContext: jest.fn(),
+            assign: jest.fn(),
+          },
         },
       ],
     }).compile()
