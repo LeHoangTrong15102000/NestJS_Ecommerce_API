@@ -433,7 +433,11 @@ export class WishlistRepo {
   /**
    * Update collection
    */
-  async updateCollection(userId: number, collectionId: number, data: UpdateCollectionBodyType): Promise<WishlistCollectionType> {
+  async updateCollection(
+    userId: number,
+    collectionId: number,
+    data: UpdateCollectionBodyType,
+  ): Promise<WishlistCollectionType> {
     // If changing to public and no shareCode exists, generate one
     const updateData: Prisma.WishlistCollectionUpdateInput = { ...data }
     if (data.isPublic) {

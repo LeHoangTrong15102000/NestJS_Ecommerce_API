@@ -68,23 +68,21 @@ export class BrandTranslationRepo {
     },
     isHard?: boolean,
   ): Promise<BrandTranslationType> {
-    return (
-      isHard
-        ? this.prismaService.brandTranslation.delete({
-            where: {
-              id,
-            },
-          })
-        : this.prismaService.brandTranslation.update({
-            where: {
-              id,
-              deletedAt: null,
-            },
-            data: {
-              deletedAt: new Date(),
-              deletedById,
-            },
-          })
-    ) as unknown as Promise<BrandTranslationType>
+    return (isHard
+      ? this.prismaService.brandTranslation.delete({
+          where: {
+            id,
+          },
+        })
+      : this.prismaService.brandTranslation.update({
+          where: {
+            id,
+            deletedAt: null,
+          },
+          data: {
+            deletedAt: new Date(),
+            deletedById,
+          },
+        })) as unknown as Promise<BrandTranslationType>
   }
 }

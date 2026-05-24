@@ -62,23 +62,21 @@ export class LanguageRepo {
   }
 
   delete(id: string, isHard?: boolean): Promise<LanguageType> {
-    return (
-      isHard
-        ? this.prismaService.language.delete({
-            where: {
-              id,
-            },
-          })
-        : this.prismaService.language.update({
-            where: {
-              id,
-              deletedAt: null,
-            },
-            // Cập nhật cái Date vào thực hiện xóa mềm cho nó là được
-            data: {
-              deletedAt: new Date(),
-            },
-          })
-    ) as unknown as Promise<LanguageType>
+    return (isHard
+      ? this.prismaService.language.delete({
+          where: {
+            id,
+          },
+        })
+      : this.prismaService.language.update({
+          where: {
+            id,
+            deletedAt: null,
+          },
+          // Cập nhật cái Date vào thực hiện xóa mềm cho nó là được
+          data: {
+            deletedAt: new Date(),
+          },
+        })) as unknown as Promise<LanguageType>
   }
 }

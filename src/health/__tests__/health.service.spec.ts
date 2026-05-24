@@ -78,9 +78,7 @@ describe('HealthService', () => {
 
     it('should return status error when database is down', async () => {
       const { HealthCheckError } = await import('@nestjs/terminus')
-      mockPrismaIndicator.isHealthy.mockRejectedValue(
-        new HealthCheckError('db down', { database: { status: 'down' } }),
-      )
+      mockPrismaIndicator.isHealthy.mockRejectedValue(new HealthCheckError('db down', { database: { status: 'down' } }))
       mockRedisIndicator.isHealthy.mockResolvedValue({ redis: { status: 'up' } })
 
       const result = await service.checkAll()
@@ -93,9 +91,7 @@ describe('HealthService', () => {
     it('should return status error when Redis is down', async () => {
       const { HealthCheckError } = await import('@nestjs/terminus')
       mockPrismaIndicator.isHealthy.mockResolvedValue({ database: { status: 'up' } })
-      mockRedisIndicator.isHealthy.mockRejectedValue(
-        new HealthCheckError('redis down', { redis: { status: 'down' } }),
-      )
+      mockRedisIndicator.isHealthy.mockRejectedValue(new HealthCheckError('redis down', { redis: { status: 'down' } }))
 
       const result = await service.checkAll()
 

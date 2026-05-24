@@ -64,7 +64,9 @@ export class VoucherService {
     // Không cho phép edit voucher đã được sử dụng một số trường quan trọng
     if (existingVoucher.usedCount > 0) {
       const restrictedFields = ['type', 'value', 'minOrderValue', 'applicableProducts', 'excludedProducts']
-      const hasRestrictedChanges = restrictedFields.some((field) => (data as Record<string, unknown>)[field] !== undefined)
+      const hasRestrictedChanges = restrictedFields.some(
+        (field) => (data as Record<string, unknown>)[field] !== undefined,
+      )
 
       if (hasRestrictedChanges) {
         throw new HttpException(VOUCHER_ERRORS.CANNOT_EDIT_USED_VOUCHER, 400)

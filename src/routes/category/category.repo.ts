@@ -113,23 +113,21 @@ export class CategoryRepo {
     },
     isHard?: boolean,
   ): Promise<CategoryType> {
-    return (
-      isHard
-        ? this.prismaService.category.delete({
-            where: {
-              id,
-            },
-          })
-        : this.prismaService.category.update({
-            where: {
-              id,
-              deletedAt: null,
-            },
-            data: {
-              deletedAt: new Date(),
-              deletedById,
-            },
-          })
-    ) as unknown as Promise<CategoryType>
+    return (isHard
+      ? this.prismaService.category.delete({
+          where: {
+            id,
+          },
+        })
+      : this.prismaService.category.update({
+          where: {
+            id,
+            deletedAt: null,
+          },
+          data: {
+            deletedAt: new Date(),
+            deletedById,
+          },
+        })) as unknown as Promise<CategoryType>
   }
 }

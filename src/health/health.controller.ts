@@ -63,7 +63,11 @@ export class HealthController {
     summary: 'Liveness probe',
     description: 'Returns 200 immediately, confirming the process is running',
   })
-  @ApiResponse({ status: 200, description: 'Process is alive', schema: { type: 'object', properties: { status: { type: 'string', example: 'ok' } } } })
+  @ApiResponse({
+    status: 200,
+    description: 'Process is alive',
+    schema: { type: 'object', properties: { status: { type: 'string', example: 'ok' } } },
+  })
   async liveness(): Promise<{ status: string }> {
     return this.healthService.checkLiveness()
   }

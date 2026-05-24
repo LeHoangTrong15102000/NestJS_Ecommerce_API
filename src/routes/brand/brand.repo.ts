@@ -120,23 +120,21 @@ export class BrandRepo {
     },
     isHard?: boolean,
   ): Promise<BrandType> {
-    return (
-      isHard
-        ? this.prismaService.brand.delete({
-            where: {
-              id,
-            },
-          })
-        : this.prismaService.brand.update({
-            where: {
-              id,
-              deletedAt: null,
-            },
-            data: {
-              deletedAt: new Date(),
-              deletedById,
-            },
-          })
-    ) as unknown as Promise<BrandType>
+    return (isHard
+      ? this.prismaService.brand.delete({
+          where: {
+            id,
+          },
+        })
+      : this.prismaService.brand.update({
+          where: {
+            id,
+            deletedAt: null,
+          },
+          data: {
+            deletedAt: new Date(),
+            deletedById,
+          },
+        })) as unknown as Promise<BrandType>
   }
 }

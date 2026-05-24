@@ -1,10 +1,5 @@
 import { Injectable } from '@nestjs/common'
-import {
-  DiskHealthIndicator,
-  HealthCheckResult,
-  HealthCheckService,
-  MemoryHealthIndicator,
-} from '@nestjs/terminus'
+import { DiskHealthIndicator, HealthCheckResult, HealthCheckService, MemoryHealthIndicator } from '@nestjs/terminus'
 import { parse as parsePath } from 'path'
 import { BullMQHealthIndicator } from './indicators/bullmq.health-indicator'
 import { PrismaHealthIndicator } from './indicators/prisma.health-indicator'

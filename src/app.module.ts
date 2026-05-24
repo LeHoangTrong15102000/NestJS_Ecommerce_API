@@ -60,7 +60,10 @@ import { WebsocketModule } from 'src/websockets/websocket.module'
           }
           return crypto.randomUUID()
         },
-        customProps: (req: IncomingMessage & { id?: string }, res: { setHeader: (name: string, value: string) => void }) => {
+        customProps: (
+          req: IncomingMessage & { id?: string },
+          res: { setHeader: (name: string, value: string) => void },
+        ) => {
           if (req.id) {
             res.setHeader('x-request-id', req.id)
           }

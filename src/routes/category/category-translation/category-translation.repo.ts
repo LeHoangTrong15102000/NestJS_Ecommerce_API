@@ -68,23 +68,21 @@ export class CategoryTranslationRepo {
     },
     isHard?: boolean,
   ): Promise<CategoryTranslationType> {
-    return (
-      isHard
-        ? this.prismaService.categoryTranslation.delete({
-            where: {
-              id,
-            },
-          })
-        : this.prismaService.categoryTranslation.update({
-            where: {
-              id,
-              deletedAt: null,
-            },
-            data: {
-              deletedAt: new Date(),
-              deletedById,
-            },
-          })
-    ) as unknown as Promise<CategoryTranslationType>
+    return (isHard
+      ? this.prismaService.categoryTranslation.delete({
+          where: {
+            id,
+          },
+        })
+      : this.prismaService.categoryTranslation.update({
+          where: {
+            id,
+            deletedAt: null,
+          },
+          data: {
+            deletedAt: new Date(),
+            deletedById,
+          },
+        })) as unknown as Promise<CategoryTranslationType>
   }
 }

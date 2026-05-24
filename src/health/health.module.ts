@@ -9,12 +9,7 @@ import { RedisHealthIndicator } from './indicators/redis.health-indicator'
 @Module({
   imports: [TerminusModule],
   controllers: [HealthController],
-  providers: [
-    HealthService,
-    PrismaHealthIndicator,
-    RedisHealthIndicator,
-    BullMQHealthIndicator,
-  ],
+  providers: [HealthService, PrismaHealthIndicator, RedisHealthIndicator, BullMQHealthIndicator],
   exports: [HealthService],
 })
 export class HealthModule {}

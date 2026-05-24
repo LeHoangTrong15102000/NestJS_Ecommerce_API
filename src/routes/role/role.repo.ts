@@ -136,23 +136,21 @@ export class RoleRepo {
     },
     isHard?: boolean,
   ): Promise<RoleType> {
-    return (
-      isHard
-        ? this.prismaService.role.delete({
-            where: {
-              id,
-            },
-          })
-        : this.prismaService.role.update({
-            where: {
-              id,
-              deletedAt: null,
-            },
-            data: {
-              deletedAt: new Date(),
-              deletedById,
-            },
-          })
-    ) as unknown as Promise<RoleType>
+    return (isHard
+      ? this.prismaService.role.delete({
+          where: {
+            id,
+          },
+        })
+      : this.prismaService.role.update({
+          where: {
+            id,
+            deletedAt: null,
+          },
+          data: {
+            deletedAt: new Date(),
+            deletedById,
+          },
+        })) as unknown as Promise<RoleType>
   }
 }

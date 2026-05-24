@@ -71,10 +71,15 @@ export class ChatMessageHandler {
       })
 
       // Send offline notifications
-      await this.sendOfflineNotifications(server, validData.conversationId, {
-        ...message,
-        content: message.content ?? undefined,
-      }, client.userId)
+      await this.sendOfflineNotifications(
+        server,
+        validData.conversationId,
+        {
+          ...message,
+          content: message.content ?? undefined,
+        },
+        client.userId,
+      )
 
       this.logger.debug(`Message sent by user ${client.userId} in conversation ${validData.conversationId}`)
     } catch (error) {
