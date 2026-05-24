@@ -1,4 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing'
+import { getLoggerToken } from 'nestjs-pino'
 import { Socket } from 'socket.io'
 import { SharedUserRepository } from 'src/shared/repositories/shared-user.repo'
 import { ChatRedisService } from '../../services/chat-redis.service'
@@ -76,6 +77,10 @@ describe('ChatConnectionHandler', () => {
         ChatConnectionHandler,
         { provide: SharedUserRepository, useValue: mockUserRepo },
         { provide: ChatRedisService, useValue: mockRedisService },
+        {
+          provide: getLoggerToken(ChatConnectionHandler.name),
+          useValue: { info: jest.fn(), error: jest.fn(), warn: jest.fn(), debug: jest.fn(), trace: jest.fn(), setContext: jest.fn(), assign: jest.fn() },
+        },
       ],
     }).compile()
 

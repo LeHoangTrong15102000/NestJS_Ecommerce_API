@@ -1,4 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing'
+import { getLoggerToken } from 'nestjs-pino'
 import { Server } from 'socket.io'
 import { MessageService } from 'src/routes/conversation/message.service'
 import { ConversationService } from 'src/routes/conversation/conversation.service'
@@ -116,6 +117,10 @@ describe('ChatInteractionHandler', () => {
         { provide: MessageService, useValue: mockMessageService },
         { provide: ConversationService, useValue: mockConversationService },
         { provide: ConversationRepository, useValue: mockConversationRepo },
+        {
+          provide: getLoggerToken(ChatInteractionHandler.name),
+          useValue: { info: jest.fn(), error: jest.fn(), warn: jest.fn(), debug: jest.fn(), trace: jest.fn(), setContext: jest.fn(), assign: jest.fn() },
+        },
       ],
     }).compile()
 

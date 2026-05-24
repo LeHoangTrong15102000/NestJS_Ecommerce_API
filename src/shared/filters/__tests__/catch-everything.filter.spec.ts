@@ -2,6 +2,7 @@ import { ArgumentsHost, HttpException, HttpStatus } from '@nestjs/common'
 import { HttpAdapterHost } from '@nestjs/core'
 import { Test, TestingModule } from '@nestjs/testing'
 import { Prisma } from '@prisma/client'
+import { getLoggerToken } from 'nestjs-pino'
 import * as helpers from 'src/shared/helpers'
 import { CatchEverythingFilter } from '../catch-everything.filter'
 
@@ -102,6 +103,10 @@ describe('CatchEverythingFilter', () => {
         {
           provide: HttpAdapterHost,
           useValue: mockHttpAdapterHost,
+        },
+        {
+          provide: getLoggerToken(CatchEverythingFilter.name),
+          useValue: { info: jest.fn(), error: jest.fn(), warn: jest.fn(), debug: jest.fn(), trace: jest.fn(), setContext: jest.fn(), assign: jest.fn() },
         },
       ],
     }).compile()

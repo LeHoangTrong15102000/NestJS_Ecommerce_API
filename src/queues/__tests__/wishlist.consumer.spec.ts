@@ -1,5 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing'
 import { Job } from 'bullmq'
+import { getLoggerToken } from 'nestjs-pino'
 import { WishlistProducer } from 'src/routes/wishlist/wishlist.producer'
 import { WishlistRepo } from 'src/routes/wishlist/wishlist.repo'
 import { PRICE_CHECK_JOB_NAME, SEND_PRICE_ALERT_JOB_NAME } from 'src/shared/constants/queue.constant'
@@ -90,6 +91,10 @@ describe('WishlistConsumer', () => {
         { provide: WishlistRepo, useValue: mockWishlistRepo },
         { provide: WishlistProducer, useValue: mockWishlistProducer },
         { provide: EmailService, useValue: mockEmailService },
+        {
+          provide: getLoggerToken(WishlistConsumer.name),
+          useValue: { info: jest.fn(), error: jest.fn(), warn: jest.fn(), debug: jest.fn(), trace: jest.fn(), setContext: jest.fn(), assign: jest.fn() },
+        },
       ],
     }).compile()
 

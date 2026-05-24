@@ -2,6 +2,7 @@ import { CACHE_MANAGER } from '@nestjs/cache-manager'
 import { ExecutionContext, ForbiddenException, UnauthorizedException } from '@nestjs/common'
 import { Test, TestingModule } from '@nestjs/testing'
 import { Cache } from 'cache-manager'
+import { getLoggerToken } from 'nestjs-pino'
 import { REQUEST_ROLE_PERMISSIONS, REQUEST_USER_KEY } from 'src/shared/constants/auth.constant'
 import { PrismaService } from 'src/shared/services/prisma.service'
 import { TokenService } from 'src/shared/services/token.service'
@@ -116,6 +117,10 @@ describe('AccessTokenGuard', () => {
         { provide: TokenService, useValue: mockTokenService },
         { provide: PrismaService, useValue: mockPrismaService },
         { provide: CACHE_MANAGER, useValue: mockCacheManager },
+        {
+          provide: getLoggerToken(AccessTokenGuard.name),
+          useValue: { info: jest.fn(), error: jest.fn(), warn: jest.fn(), debug: jest.fn(), trace: jest.fn(), setContext: jest.fn(), assign: jest.fn() },
+        },
       ],
     }).compile()
 

@@ -1,4 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing'
+import { getLoggerToken } from 'nestjs-pino'
 import { PaymentRepo } from '../payment.repo'
 import { PaymentService } from '../payment.service'
 import { PaymentGateway } from '../../../websockets/payment.gateway'
@@ -33,6 +34,10 @@ describe('PaymentService — Edge Cases', () => {
         PaymentService,
         { provide: PaymentRepo, useValue: mockPaymentRepo },
         { provide: PaymentGateway, useValue: mockPaymentGateway },
+        {
+          provide: getLoggerToken(PaymentService.name),
+          useValue: { info: jest.fn(), error: jest.fn(), warn: jest.fn(), debug: jest.fn(), trace: jest.fn(), setContext: jest.fn(), assign: jest.fn() },
+        },
       ],
     }).compile()
 

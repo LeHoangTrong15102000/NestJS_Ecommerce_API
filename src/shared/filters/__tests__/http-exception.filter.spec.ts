@@ -1,7 +1,7 @@
 import { ArgumentsHost, HttpException, HttpStatus } from '@nestjs/common'
 import { BaseExceptionFilter } from '@nestjs/core'
 import { Test, TestingModule } from '@nestjs/testing'
-import { getLoggerToken, PinoLogger } from 'nestjs-pino'
+import { getLoggerToken } from 'nestjs-pino'
 import { HttpExceptionFilter } from '../http-exception.filter'
 
 /**
@@ -21,10 +21,13 @@ import { HttpExceptionFilter } from '../http-exception.filter'
  */
 
 const mockPinoLogger = {
-  log: jest.fn(),
+  info: jest.fn(),
   error: jest.fn(),
   warn: jest.fn(),
   debug: jest.fn(),
+  trace: jest.fn(),
+  setContext: jest.fn(),
+  assign: jest.fn(),
 }
 
 describe('HttpExceptionFilter', () => {
@@ -236,9 +239,10 @@ describe('HttpExceptionFilter', () => {
       // Arrange & Act
       const loggerInstance = (filter as any).logger
 
-      // Assert
-      expect(loggerInstance).toBeInstanceOf(PinoLogger)
-      // Logger context is set in constructor: @InjectPinoLogger(HttpExceptionFilter.name)
+      // Assert — in unit tests the logger is a mock; verify it has the expected interface
+      expect(loggerInstance).toBeDefined()
+      expect(loggerInstance.error).toBeDefined()
+      expect(loggerInstance.warn).toBeDefined()
     })
 
     it('should not log for regular HttpException', () => {

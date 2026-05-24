@@ -1,6 +1,7 @@
 import Anthropic from '@anthropic-ai/sdk'
 import { Test, TestingModule } from '@nestjs/testing'
 import { AIMessageRole } from '@prisma/client'
+import { getLoggerToken } from 'nestjs-pino'
 import { AIAssistantRepo } from '../ai-assistant.repo'
 import { AIAssistantService } from '../ai-assistant.service'
 
@@ -57,7 +58,14 @@ describe('AIAssistantService — Edge Cases', () => {
     } as any
 
     const module: TestingModule = await Test.createTestingModule({
-      providers: [AIAssistantService, { provide: AIAssistantRepo, useValue: mockRepo }],
+      providers: [
+        AIAssistantService,
+        { provide: AIAssistantRepo, useValue: mockRepo },
+        {
+          provide: getLoggerToken(AIAssistantService.name),
+          useValue: { info: jest.fn(), error: jest.fn(), warn: jest.fn(), debug: jest.fn(), trace: jest.fn(), setContext: jest.fn(), assign: jest.fn() },
+        },
+      ],
     }).compile()
     service = module.get<AIAssistantService>(AIAssistantService)
     ;(service as any).anthropic = mockAnthropicClient

@@ -1,4 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing'
+import { getLoggerToken } from 'nestjs-pino'
 import Redis from 'ioredis'
 import { ChatRedisService } from '../chat-redis.service'
 import { CHAT_REDIS } from '../../websocket.constants'
@@ -62,6 +63,10 @@ describe('ChatRedisService', () => {
         {
           provide: CHAT_REDIS,
           useValue: mockRedis,
+        },
+        {
+          provide: getLoggerToken(ChatRedisService.name),
+          useValue: { info: jest.fn(), error: jest.fn(), warn: jest.fn(), debug: jest.fn(), trace: jest.fn(), setContext: jest.fn(), assign: jest.fn() },
         },
       ],
     }).compile()
