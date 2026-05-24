@@ -1,7 +1,14 @@
 import { Injectable } from '@nestjs/common'
-import { InjectPinoLogger, PinoLogger } from 'nestjs-pino'
-import { PrismaService } from 'src/shared/services/prisma.service'
-import Redis from 'ioredis'
+import {
+  DiskHealthIndicator,
+  HealthCheckResult,
+  HealthCheckService,
+  MemoryHealthIndicator,
+} from '@nestjs/terminus'
+import { parse as parsePath } from 'path'
+import { BullMQHealthIndicator } from './indicators/bullmq.health-indicator'
+import { PrismaHealthIndicator } from './indicators/prisma.health-indicator'
+import { RedisHealthIndicator } from './indicators/redis.health-indicator'
 
 export interface ServiceStatus {
   status: 'up' | 'down'
@@ -21,78 +28,47 @@ export interface HealthCheckResponse {
 
 @Injectable()
 export class HealthService {
-  private redis: Redis
-
   constructor(
-    @InjectPinoLogger(HealthService.name) private readonly logger: PinoLogger,
-    private readonly prisma: PrismaService,
-  ) {
-    // Create dedicated Redis connection for health checks
-    const redisUrl = process.env.REDIS_URL || 'redis://localhost:6379'
-    this.redis = new Redis(redisUrl, {
-      maxRetriesPerRequest: 1,
-      connectTimeout: 2000,
-      lazyConnect: true,
-    })
+    private readonly health: HealthCheckService,
+    private readonly prismaIndicator: PrismaHealthIndicator,
+    private readonly redisIndicator: RedisHealthIndicator,
+    private readonly bullmqIndicator: BullMQHealthIndicator,
+    private readonly memory: MemoryHealthIndicator,
+    private readonly disk: DiskHealthIndicator,
+  ) {}
 
-    this.redis.on('error', (err) => {
-      this.logger.warn('Health check Redis connection error:', err.message)
-    })
+  async checkLiveness(): Promise<{ status: string }> {
+    return { status: 'ok' }
   }
 
-  async checkDatabase(): Promise<ServiceStatus> {
-    const startTime = Date.now()
+  async checkReadiness(): Promise<HealthCheckResult> {
+    return this.health.check([
+      () => this.prismaIndicator.isHealthy('database'),
+      () => this.redisIndicator.isHealthy('redis'),
+      () => this.bullmqIndicator.isHealthy('bullmq'),
+      () => this.memory.checkHeap('memory_heap', 300 * 1024 * 1024), // 300 MB
+      () => this.disk.checkStorage('storage', { path: parsePath(process.cwd()).root, thresholdPercent: 0.9 }),
+    ])
+  }
+
+  async checkAll(): Promise<HealthCheckResponse> {
+    const startDb = Date.now()
+    let databaseStatus: ServiceStatus
     try {
-      // Simple query to check database connectivity
-      await this.prisma.$queryRaw`SELECT 1`
-      const responseTime = Date.now() - startTime
-
-      return {
-        status: 'up',
-        responseTime,
-      }
-    } catch (error) {
-      const responseTime = Date.now() - startTime
-      this.logger.error('Database health check failed:', error)
-
-      return {
-        status: 'down',
-        responseTime,
-        error: error instanceof Error ? error.message : 'Unknown error',
-      }
+      await this.prismaIndicator.isHealthy('database')
+      databaseStatus = { status: 'up', responseTime: Date.now() - startDb }
+    } catch {
+      databaseStatus = { status: 'down', responseTime: Date.now() - startDb, error: 'Database unreachable' }
     }
-  }
 
-  async checkRedis(): Promise<ServiceStatus> {
-    const startTime = Date.now()
+    const startRedis = Date.now()
+    let redisStatus: ServiceStatus
     try {
-      // Ensure connection is established
-      if (this.redis.status !== 'ready') {
-        await this.redis.connect()
-      }
-
-      // Ping Redis with 1s timeout
-      await this.redis.ping()
-      const responseTime = Date.now() - startTime
-
-      return {
-        status: 'up',
-        responseTime,
-      }
-    } catch (error) {
-      const responseTime = Date.now() - startTime
-      this.logger.error('Redis health check failed:', error)
-
-      return {
-        status: 'down',
-        responseTime,
-        error: error instanceof Error ? error.message : 'Unknown error',
-      }
+      await this.redisIndicator.isHealthy('redis')
+      redisStatus = { status: 'up', responseTime: Date.now() - startRedis }
+    } catch {
+      redisStatus = { status: 'down', responseTime: Date.now() - startRedis, error: 'Redis unreachable' }
     }
-  }
-
-  async getHealthStatus(): Promise<HealthCheckResponse> {
-    const [databaseStatus, redisStatus] = await Promise.all([this.checkDatabase(), this.checkRedis()])
 
     const allHealthy = databaseStatus.status === 'up' && redisStatus.status === 'up'
 
@@ -105,10 +81,5 @@ export class HealthService {
         redis: redisStatus,
       },
     }
-  }
-
-  async onModuleDestroy() {
-    // Clean up Redis connection
-    await this.redis.quit()
   }
 }

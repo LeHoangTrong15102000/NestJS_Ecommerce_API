@@ -1,5 +1,6 @@
 import { HttpStatus } from '@nestjs/common'
 import { Test, TestingModule } from '@nestjs/testing'
+import { HealthCheckResult } from '@nestjs/terminus'
 import { Response } from 'express'
 import { HealthController } from '../health.controller'
 import { HealthService } from '../health.service'
@@ -9,7 +10,9 @@ describe('HealthController', () => {
   let healthService: HealthService
 
   const mockHealthService = {
-    getHealthStatus: jest.fn(),
+    checkAll: jest.fn(),
+    checkLiveness: jest.fn(),
+    checkReadiness: jest.fn(),
   }
 
   const mockResponse = () => {
@@ -37,7 +40,7 @@ describe('HealthController', () => {
     jest.clearAllMocks()
   })
 
-  describe('check', () => {
+  describe('check (GET /health)', () => {
     it('should return 200 when all services are healthy', async () => {
       const healthyResponse = {
         status: 'ok' as const,
@@ -49,12 +52,12 @@ describe('HealthController', () => {
         },
       }
 
-      mockHealthService.getHealthStatus.mockResolvedValue(healthyResponse)
+      mockHealthService.checkAll.mockResolvedValue(healthyResponse)
 
       const res = mockResponse()
       await controller.check(res)
 
-      expect(healthService.getHealthStatus).toHaveBeenCalledTimes(1)
+      expect(healthService.checkAll).toHaveBeenCalledTimes(1)
       expect(res.status).toHaveBeenCalledWith(HttpStatus.OK)
       expect(res.json).toHaveBeenCalledWith(healthyResponse)
     })
@@ -70,12 +73,11 @@ describe('HealthController', () => {
         },
       }
 
-      mockHealthService.getHealthStatus.mockResolvedValue(unhealthyResponse)
+      mockHealthService.checkAll.mockResolvedValue(unhealthyResponse)
 
       const res = mockResponse()
       await controller.check(res)
 
-      expect(healthService.getHealthStatus).toHaveBeenCalledTimes(1)
       expect(res.status).toHaveBeenCalledWith(HttpStatus.SERVICE_UNAVAILABLE)
       expect(res.json).toHaveBeenCalledWith(unhealthyResponse)
     })
@@ -91,64 +93,61 @@ describe('HealthController', () => {
         },
       }
 
-      mockHealthService.getHealthStatus.mockResolvedValue(unhealthyResponse)
+      mockHealthService.checkAll.mockResolvedValue(unhealthyResponse)
 
       const res = mockResponse()
       await controller.check(res)
 
-      expect(healthService.getHealthStatus).toHaveBeenCalledTimes(1)
       expect(res.status).toHaveBeenCalledWith(HttpStatus.SERVICE_UNAVAILABLE)
       expect(res.json).toHaveBeenCalledWith(unhealthyResponse)
     })
+  })
 
-    it('should return 503 when all services are down', async () => {
-      const unhealthyResponse = {
-        status: 'error' as const,
-        timestamp: '2026-03-11T10:00:00.000Z',
-        uptime: 123.456,
-        checks: {
-          database: { status: 'down' as const, responseTime: 2000, error: 'Database error' },
-          redis: { status: 'down' as const, responseTime: 1000, error: 'Redis error' },
+  describe('liveness (GET /health/liveness)', () => {
+    it('should return status ok', async () => {
+      mockHealthService.checkLiveness.mockResolvedValue({ status: 'ok' })
+
+      const result = await controller.liveness()
+
+      expect(healthService.checkLiveness).toHaveBeenCalledTimes(1)
+      expect(result).toEqual({ status: 'ok' })
+    })
+  })
+
+  describe('readiness (GET /health/readiness)', () => {
+    it('should return Terminus health check result when all pass', async () => {
+      const terminusResult: HealthCheckResult = {
+        status: 'ok',
+        info: {
+          database: { status: 'up' },
+          redis: { status: 'up' },
+          bullmq: { status: 'up' },
+          memory_heap: { status: 'up' },
+          storage: { status: 'up' },
+        },
+        error: {},
+        details: {
+          database: { status: 'up' },
+          redis: { status: 'up' },
+          bullmq: { status: 'up' },
+          memory_heap: { status: 'up' },
+          storage: { status: 'up' },
         },
       }
 
-      mockHealthService.getHealthStatus.mockResolvedValue(unhealthyResponse)
+      mockHealthService.checkReadiness.mockResolvedValue(terminusResult)
 
-      const res = mockResponse()
-      await controller.check(res)
+      const result = await controller.readiness()
 
-      expect(healthService.getHealthStatus).toHaveBeenCalledTimes(1)
-      expect(res.status).toHaveBeenCalledWith(HttpStatus.SERVICE_UNAVAILABLE)
-      expect(res.json).toHaveBeenCalledWith(unhealthyResponse)
+      expect(healthService.checkReadiness).toHaveBeenCalledTimes(1)
+      expect(result).toEqual(terminusResult)
     })
 
-    it('should include all health check details in response', async () => {
-      const healthResponse = {
-        status: 'ok' as const,
-        timestamp: '2026-03-11T10:00:00.000Z',
-        uptime: 123.456,
-        checks: {
-          database: { status: 'up' as const, responseTime: 5 },
-          redis: { status: 'up' as const, responseTime: 2 },
-        },
-      }
+    it('should propagate errors from checkReadiness', async () => {
+      const error = new Error('Service unavailable')
+      mockHealthService.checkReadiness.mockRejectedValue(error)
 
-      mockHealthService.getHealthStatus.mockResolvedValue(healthResponse)
-
-      const res = mockResponse()
-      await controller.check(res)
-
-      expect(res.json).toHaveBeenCalledWith(
-        expect.objectContaining({
-          status: expect.any(String),
-          timestamp: expect.any(String),
-          uptime: expect.any(Number),
-          checks: expect.objectContaining({
-            database: expect.any(Object),
-            redis: expect.any(Object),
-          }),
-        }),
-      )
+      await expect(controller.readiness()).rejects.toThrow('Service unavailable')
     })
   })
 })

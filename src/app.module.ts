@@ -5,11 +5,15 @@ import { Logger, Module } from '@nestjs/common'
 import { APP_FILTER, APP_GUARD, APP_INTERCEPTOR, APP_PIPE } from '@nestjs/core'
 import { ScheduleModule } from '@nestjs/schedule'
 import { ThrottlerModule } from '@nestjs/throttler'
+import { IncomingMessage } from 'http'
 import { AcceptLanguageResolver, I18nModule, QueryResolver } from 'nestjs-i18n'
+import { LoggerModule } from 'nestjs-pino'
 import { ZodSerializerInterceptor } from 'nestjs-zod'
 import path from 'path'
+import pino from 'pino'
 import { RemoveRefreshTokenCronjob } from 'src/cronjobs/remove-refresh-token.cronjob'
 import { WishlistPriceCheckCronjob } from 'src/cronjobs/wishlist-price-check.cronjob'
+import { HealthModule } from 'src/health/health.module'
 import { PaymentConsumer } from 'src/queues/payment.consumer'
 import { WishlistConsumer } from 'src/queues/wishlist.consumer'
 import { AddressModule } from 'src/routes/address/address.module'
@@ -34,23 +38,39 @@ import { RoleModule } from 'src/routes/role/role.module'
 import { UserModule } from 'src/routes/user/user.module'
 import { VoucherModule } from 'src/routes/voucher/voucher.module'
 import { WishlistModule } from 'src/routes/wishlist/wishlist.module'
-import { HealthModule } from 'src/health/health.module'
 import envConfig from 'src/shared/config'
 import { CatchEverythingFilter } from 'src/shared/filters/catch-everything.filter'
 import { HttpExceptionFilter } from 'src/shared/filters/http-exception.filter'
 import { AuthenticationGuard } from 'src/shared/guards/authentication.guard'
 import { ThrottlerBehindProxyGuard } from 'src/shared/guards/throttler-behind-proxy.guard'
+import { MetricsInterceptor } from 'src/shared/metrics/metrics.interceptor'
+import { MetricsModule } from 'src/shared/metrics/metrics.module'
 import CustomZodValidationPipe from 'src/shared/pipes/custom-zod-validation.pipe'
 import { SharedModule } from 'src/shared/shared.module'
 import { WebsocketModule } from 'src/websockets/websocket.module'
-
-import { LoggerModule } from 'nestjs-pino'
-import pino from 'pino'
 
 @Module({
   imports: [
     LoggerModule.forRoot({
       pinoHttp: {
+        genReqId: (req: IncomingMessage) => {
+          const incoming = req.headers['x-request-id']
+          if (incoming) {
+            return Array.isArray(incoming) ? incoming[0] : incoming
+          }
+          return crypto.randomUUID()
+        },
+        customProps: (req: IncomingMessage & { id?: string }, res: { setHeader: (name: string, value: string) => void }) => {
+          if (req.id) {
+            res.setHeader('x-request-id', req.id)
+          }
+          return { reqId: req.id }
+        },
+        customLogLevel: (_req: IncomingMessage, res: { statusCode: number }, _err: Error | undefined) => {
+          if (res.statusCode >= 500) return 'error'
+          if (res.statusCode >= 400) return 'warn'
+          return 'info'
+        },
         serializers: {
           req(req: pino.SerializedRequest) {
             return {
@@ -66,20 +86,17 @@ import pino from 'pino'
             }
           },
         },
-        // stream: pino.destination({
-        //   dest: path.resolve('logs/app.log'),
-        //   sync: false, // Asynchronous logging
-        //   mkdir: true, // Create the directory if it doesn't exist
-        // }), // In ra terminal thay vì ghi file. Nếu muốn đẹp hơn, dùng pino-pretty
-        // transport: {
-        //   target: 'pino-pretty',
-        //   options: {
-        //     colorize: true,
-        //     translateTime: 'SYS:standard',
-        //     singleLine: false,
-        //   },
-        // },
-        // stream: pino.destination(1),
+        ...(process.env.NODE_ENV === 'development'
+          ? {
+              transport: {
+                target: 'pino-pretty',
+                options: {
+                  colorize: true,
+                  singleLine: false,
+                },
+              },
+            }
+          : {}),
       },
     }),
     // Redis Cache - using Redis Cloud
@@ -166,6 +183,7 @@ import pino from 'pino'
     }),
     WebsocketModule,
     SharedModule,
+    MetricsModule,
     HealthModule,
     AuthModule,
     LanguageModule,
@@ -201,6 +219,11 @@ import pino from 'pino'
     {
       provide: APP_INTERCEPTOR,
       useClass: ZodSerializerInterceptor,
+    },
+    // Global metrics interceptor — records HTTP request counts, durations, and in-flight gauge
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: MetricsInterceptor,
     },
     // Filters - NestJS executes filters in REVERSE order of registration
     // CatchEverythingFilter registered FIRST → executes LAST (fallback for non-HTTP exceptions including Prisma errors)

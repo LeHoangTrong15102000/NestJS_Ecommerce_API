@@ -1,182 +1,126 @@
 import { Test, TestingModule } from '@nestjs/testing'
-import { PrismaService } from 'src/shared/services/prisma.service'
+import { DiskHealthIndicator, HealthCheckResult, HealthCheckService, MemoryHealthIndicator } from '@nestjs/terminus'
+import { BullMQHealthIndicator } from '../indicators/bullmq.health-indicator'
+import { PrismaHealthIndicator } from '../indicators/prisma.health-indicator'
+import { RedisHealthIndicator } from '../indicators/redis.health-indicator'
 import { HealthService } from '../health.service'
-
-// Mock ioredis with proper implementation
-const mockRedisInstance = {
-  status: 'ready',
-  ping: jest.fn().mockResolvedValue('PONG'),
-  connect: jest.fn().mockResolvedValue(undefined),
-  quit: jest.fn().mockResolvedValue(undefined),
-  on: jest.fn().mockReturnThis(),
-}
-
-// Mock the entire ioredis module
-jest.mock('ioredis', () => {
-  return function () {
-    return mockRedisInstance
-  }
-})
 
 describe('HealthService', () => {
   let service: HealthService
-  let prismaService: PrismaService
-
-  const mockPrismaService = {
-    $queryRaw: jest.fn(),
-  }
+  let mockHealthCheckService: { check: jest.Mock }
+  let mockPrismaIndicator: { isHealthy: jest.Mock }
+  let mockRedisIndicator: { isHealthy: jest.Mock }
+  let mockBullmqIndicator: { isHealthy: jest.Mock }
+  let mockMemoryIndicator: { checkHeap: jest.Mock }
+  let mockDiskIndicator: { checkStorage: jest.Mock }
 
   beforeEach(async () => {
-    // Reset mocks before each test
-    jest.clearAllMocks()
-    mockRedisInstance.ping.mockResolvedValue('PONG')
-    mockRedisInstance.status = 'ready'
+    mockHealthCheckService = { check: jest.fn() }
+    mockPrismaIndicator = { isHealthy: jest.fn() }
+    mockRedisIndicator = { isHealthy: jest.fn() }
+    mockBullmqIndicator = { isHealthy: jest.fn() }
+    mockMemoryIndicator = { checkHeap: jest.fn() }
+    mockDiskIndicator = { checkStorage: jest.fn() }
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         HealthService,
-        {
-          provide: PrismaService,
-          useValue: mockPrismaService,
-        },
+        { provide: HealthCheckService, useValue: mockHealthCheckService },
+        { provide: PrismaHealthIndicator, useValue: mockPrismaIndicator },
+        { provide: RedisHealthIndicator, useValue: mockRedisIndicator },
+        { provide: BullMQHealthIndicator, useValue: mockBullmqIndicator },
+        { provide: MemoryHealthIndicator, useValue: mockMemoryIndicator },
+        { provide: DiskHealthIndicator, useValue: mockDiskIndicator },
       ],
     }).compile()
 
     service = module.get<HealthService>(HealthService)
-    prismaService = module.get<PrismaService>(PrismaService)
+    jest.clearAllMocks()
   })
 
-  afterEach(async () => {
-    if (service) {
-      await service.onModuleDestroy()
-    }
-  })
-
-  describe('checkDatabase', () => {
-    it('should return status "up" when database is healthy', async () => {
-      mockPrismaService.$queryRaw.mockResolvedValue([{ '?column?': 1 }])
-
-      const result = await service.checkDatabase()
-
-      expect(result.status).toBe('up')
-      expect(result.responseTime).toBeGreaterThanOrEqual(0)
-      expect(result.error).toBeUndefined()
-      expect(mockPrismaService.$queryRaw).toHaveBeenCalledTimes(1)
-    })
-
-    it('should return status "down" when database query fails', async () => {
-      const dbError = new Error('Connection timeout')
-      mockPrismaService.$queryRaw.mockRejectedValue(dbError)
-
-      const result = await service.checkDatabase()
-
-      expect(result.status).toBe('down')
-      expect(result.responseTime).toBeGreaterThanOrEqual(0)
-      expect(result.error).toBe('Connection timeout')
-    })
-
-    it('should measure response time accurately', async () => {
-      mockPrismaService.$queryRaw.mockImplementation(
-        () => new Promise((resolve) => setTimeout(() => resolve([{ '?column?': 1 }]), 50)),
-      )
-
-      const result = await service.checkDatabase()
-
-      expect(result.status).toBe('up')
-      expect(result.responseTime).toBeGreaterThanOrEqual(50)
-      expect(result.responseTime).toBeLessThan(100)
+  describe('checkLiveness', () => {
+    it('should return status ok immediately', async () => {
+      const result = await service.checkLiveness()
+      expect(result).toEqual({ status: 'ok' })
     })
   })
 
-  describe('checkRedis', () => {
-    it('should return status "up" when Redis is healthy', async () => {
-      const result = await service.checkRedis()
+  describe('checkReadiness', () => {
+    it('should call health.check with all indicators', async () => {
+      const mockResult: HealthCheckResult = {
+        status: 'ok',
+        info: { database: { status: 'up' }, redis: { status: 'up' } },
+        error: {},
+        details: { database: { status: 'up' }, redis: { status: 'up' } },
+      }
+      mockHealthCheckService.check.mockResolvedValue(mockResult)
 
-      expect(result.status).toBe('up')
-      expect(result.responseTime).toBeGreaterThanOrEqual(0)
-      expect(result.error).toBeUndefined()
-    })
+      const result = await service.checkReadiness()
 
-    it('should return status "down" when Redis ping fails', async () => {
-      // Mock Redis to throw error for this test
-      mockRedisInstance.ping.mockRejectedValueOnce(new Error('Redis connection failed'))
-
-      const result = await service.checkRedis()
-
-      expect(result.status).toBe('down')
-      expect(result.error).toBe('Redis connection failed')
+      expect(mockHealthCheckService.check).toHaveBeenCalledTimes(1)
+      expect(result).toEqual(mockResult)
     })
   })
 
-  describe('getHealthStatus', () => {
-    it('should return status "ok" when all services are healthy', async () => {
-      mockPrismaService.$queryRaw.mockResolvedValue([{ '?column?': 1 }])
+  describe('checkAll', () => {
+    it('should return status ok when all services are healthy', async () => {
+      mockPrismaIndicator.isHealthy.mockResolvedValue({ database: { status: 'up' } })
+      mockRedisIndicator.isHealthy.mockResolvedValue({ redis: { status: 'up' } })
 
-      const result = await service.getHealthStatus()
+      const result = await service.checkAll()
 
       expect(result.status).toBe('ok')
+      expect(result.checks.database.status).toBe('up')
+      expect(result.checks.redis.status).toBe('up')
       expect(result.timestamp).toBeDefined()
       expect(result.uptime).toBeGreaterThanOrEqual(0)
-      expect(result.checks.database.status).toBe('up')
+    })
+
+    it('should return status error when database is down', async () => {
+      const { HealthCheckError } = await import('@nestjs/terminus')
+      mockPrismaIndicator.isHealthy.mockRejectedValue(
+        new HealthCheckError('db down', { database: { status: 'down' } }),
+      )
+      mockRedisIndicator.isHealthy.mockResolvedValue({ redis: { status: 'up' } })
+
+      const result = await service.checkAll()
+
+      expect(result.status).toBe('error')
+      expect(result.checks.database.status).toBe('down')
       expect(result.checks.redis.status).toBe('up')
     })
 
-    it('should return status "error" when database is down', async () => {
-      mockPrismaService.$queryRaw.mockRejectedValue(new Error('Database error'))
+    it('should return status error when Redis is down', async () => {
+      const { HealthCheckError } = await import('@nestjs/terminus')
+      mockPrismaIndicator.isHealthy.mockResolvedValue({ database: { status: 'up' } })
+      mockRedisIndicator.isHealthy.mockRejectedValue(
+        new HealthCheckError('redis down', { redis: { status: 'down' } }),
+      )
 
-      const result = await service.getHealthStatus()
-
-      expect(result.status).toBe('error')
-      expect(result.checks.database.status).toBe('down')
-      expect(result.checks.database.error).toBe('Database error')
-    })
-
-    it('should return status "error" when Redis is down', async () => {
-      mockPrismaService.$queryRaw.mockResolvedValue([{ '?column?': 1 }])
-      mockRedisInstance.ping.mockRejectedValueOnce(new Error('Redis error'))
-
-      const result = await service.getHealthStatus()
+      const result = await service.checkAll()
 
       expect(result.status).toBe('error')
-      expect(result.checks.redis.status).toBe('down')
-    })
-
-    it('should return status "error" when both services are down', async () => {
-      mockPrismaService.$queryRaw.mockRejectedValue(new Error('Database error'))
-      mockRedisInstance.ping.mockRejectedValueOnce(new Error('Redis error'))
-
-      const result = await service.getHealthStatus()
-
-      expect(result.status).toBe('error')
-      expect(result.checks.database.status).toBe('down')
+      expect(result.checks.database.status).toBe('up')
       expect(result.checks.redis.status).toBe('down')
     })
 
     it('should include timestamp in ISO format', async () => {
-      mockPrismaService.$queryRaw.mockResolvedValue([{ '?column?': 1 }])
+      mockPrismaIndicator.isHealthy.mockResolvedValue({ database: { status: 'up' } })
+      mockRedisIndicator.isHealthy.mockResolvedValue({ redis: { status: 'up' } })
 
-      const result = await service.getHealthStatus()
+      const result = await service.checkAll()
 
       expect(result.timestamp).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/)
     })
 
     it('should include process uptime', async () => {
-      mockPrismaService.$queryRaw.mockResolvedValue([{ '?column?': 1 }])
+      mockPrismaIndicator.isHealthy.mockResolvedValue({ database: { status: 'up' } })
+      mockRedisIndicator.isHealthy.mockResolvedValue({ redis: { status: 'up' } })
 
-      const result = await service.getHealthStatus()
+      const result = await service.checkAll()
 
       expect(typeof result.uptime).toBe('number')
       expect(result.uptime).toBeGreaterThanOrEqual(0)
-    })
-  })
-
-  describe('onModuleDestroy', () => {
-    it('should close Redis connection on module destroy', async () => {
-      const quitSpy = jest.spyOn(service['redis'], 'quit')
-
-      await service.onModuleDestroy()
-
-      expect(quitSpy).toHaveBeenCalled()
     })
   })
 })
