@@ -156,9 +156,7 @@ describe('Error Response Consistency E2E', () => {
       await UserFactory.create({ email })
 
       // Request OTP first (required for registration)
-      await request(app.getHttpServer())
-        .post('/auth/otp')
-        .send({ email, type: 'REGISTER' })
+      await request(app.getHttpServer()).post('/auth/otp').send({ email, type: 'REGISTER' })
 
       const prismaClient = global.__GLOBAL_PRISMA__!
       const verificationCode = await prismaClient.verificationCode.findUnique({
@@ -248,9 +246,7 @@ describe('Error Response Consistency E2E', () => {
     })
 
     it('order endpoint errors have consistent shape', async () => {
-      const res = await request(app.getHttpServer())
-        .get('/orders/999999')
-        .set('Authorization', `Bearer ${clientToken}`)
+      const res = await request(app.getHttpServer()).get('/orders/999999').set('Authorization', `Bearer ${clientToken}`)
 
       expect(res.body).toHaveProperty('statusCode')
       expect(res.body).toHaveProperty('message')
@@ -258,9 +254,7 @@ describe('Error Response Consistency E2E', () => {
     })
 
     it('payment endpoint errors have consistent shape', async () => {
-      const res = await request(app.getHttpServer())
-        .get('/orders')
-        .set('Authorization', `Bearer ${clientToken}`)
+      const res = await request(app.getHttpServer()).get('/orders').set('Authorization', `Bearer ${clientToken}`)
 
       // Even success responses should be well-formed
       expect(res.body).toBeDefined()

@@ -39,8 +39,10 @@ export const VoucherFactory = {
     const now = new Date()
     const isExpired = overrides.expired === true
 
-    const startDate = overrides.startDate ?? (isExpired ? new Date(now.getTime() - 60 * 86400000) : new Date(now.getTime() - 86400000))
-    const endDate = overrides.endDate ?? (isExpired ? new Date(now.getTime() - 86400000) : new Date(now.getTime() + 30 * 86400000))
+    const startDate =
+      overrides.startDate ?? (isExpired ? new Date(now.getTime() - 60 * 86400000) : new Date(now.getTime() - 86400000))
+    const endDate =
+      overrides.endDate ?? (isExpired ? new Date(now.getTime() - 86400000) : new Date(now.getTime() + 30 * 86400000))
 
     const usageLimit = overrides.usageLimit !== undefined ? overrides.usageLimit : 100
     const usedCount = overrides.fullyUsed ? (usageLimit ?? 100) : 0

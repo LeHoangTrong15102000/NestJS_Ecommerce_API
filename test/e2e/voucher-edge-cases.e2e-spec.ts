@@ -277,7 +277,11 @@ describe('Voucher Edge Cases E2E', () => {
 
       const activeVoucher = await VoucherFactory.create({ code: 'ACTIVE_V', createdById: adminId })
       const expiredVoucher = await VoucherFactory.createExpired({ code: 'EXPIRED_V', createdById: adminId })
-      const fullyUsedVoucher = await VoucherFactory.createFullyUsed({ code: 'USED_V', usageLimit: 5, createdById: adminId })
+      const fullyUsedVoucher = await VoucherFactory.createFullyUsed({
+        code: 'USED_V',
+        usageLimit: 5,
+        createdById: adminId,
+      })
 
       const active = await prismaClient.voucher.findUnique({ where: { code: 'ACTIVE_V' } })
       const expired = await prismaClient.voucher.findUnique({ where: { code: 'EXPIRED_V' } })

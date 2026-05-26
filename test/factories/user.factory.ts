@@ -34,7 +34,11 @@ export const UserFactory = {
         email,
         name: overrides.name ?? email.split('@')[0],
         password: hashedPassword,
-        phoneNumber: overrides.phoneNumber ?? `09${Math.floor(Math.random() * 100000000).toString().padStart(8, '0')}`,
+        phoneNumber:
+          overrides.phoneNumber ??
+          `09${Math.floor(Math.random() * 100000000)
+            .toString()
+            .padStart(8, '0')}`,
         roleId: overrides.roleId ?? 2, // CLIENT role
         status: overrides.status ?? 'ACTIVE',
         totpSecret: overrides.totpSecret ?? null,
