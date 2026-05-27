@@ -485,7 +485,10 @@ export class AuthService {
 
   // --- OAuth Authorization Code Exchange ---
   // In-memory store for short-lived authorization codes (TTL: 60 seconds)
-  private readonly authorizationCodes = new Map<string, { tokens: { accessToken: string; refreshToken: string }; expiresAt: number }>()
+  private readonly authorizationCodes = new Map<
+    string,
+    { tokens: { accessToken: string; refreshToken: string }; expiresAt: number }
+  >()
 
   async createAuthorizationCode(tokens: { accessToken: string; refreshToken: string }): Promise<string> {
     const code = randomBytes(32).toString('hex')
