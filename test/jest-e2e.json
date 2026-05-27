@@ -20,5 +20,7 @@
   "setupFilesAfterEnv": ["<rootDir>/test/setup.ts"],
   "testTimeout": 60000,
   "verbose": true,
-  "maxWorkers": 1
+  "maxWorkers": 1,
+  "forceExit": true,
+  "detectOpenHandles": true
 }

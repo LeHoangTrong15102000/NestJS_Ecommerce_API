@@ -6,6 +6,9 @@ const config: Config = {
   testEnvironment: 'node',
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'json', 'node'],
 
+  // Use V8 coverage provider — dramatically lower memory than babel instrumentation
+  coverageProvider: 'v8',
+
   // Test discovery - loại bỏ integration tests khỏi mặc định
   testRegex: '.*\\.spec\\.ts$',
   testPathIgnorePatterns: ['/node_modules/', '/dist/', 'test/integration/', 'test/e2e/'],
@@ -112,11 +115,8 @@ const config: Config = {
   forceExit: true,
   detectOpenHandles: true,
 
-  // Parallel execution - giảm workers để tránh memory overflow
-  maxWorkers: process.env.CI ? 1 : '50%', // Use 50% of cores locally, 1 in CI to avoid OOM
-
-  // Restart worker khi memory vượt ngưỡng (giúp GC giải phóng memory trong CI)
-  workerIdleMemoryLimit: process.env.CI ? '512MB' : undefined,
+  // Parallel execution - single worker in CI to reduce memory pressure
+  maxWorkers: process.env.CI ? 1 : '50%',
 
   // Verbose output for debugging
   verbose: false,

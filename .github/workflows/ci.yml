@@ -146,7 +146,7 @@ jobs:
           MUX_TOKEN_SECRET: test_mux_token_secret_ci
           MUX_WEBHOOK_ENDPOINT: test_mux_webhook_endpoint_ci
           MUX_SIGNING_SECRET: test_mux_signing_secret_ci
-        run: pnpm run test:cov
+        run: pnpm run test:cov -- --runInBand
 
       - name: Upload coverage reports
         uses: codecov/codecov-action@v4
