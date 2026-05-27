@@ -230,7 +230,7 @@ import { RateLimitModule } from 'src/rate-limit/rate-limit.module'
     // Guards - RateLimitGuard FIRST (rate limit), then AuthenticationGuard (auth)
     {
       provide: APP_GUARD,
-      useClass: RateLimitGuard,
+      useExisting: RateLimitGuard,
     },
     {
       provide: APP_GUARD,

@@ -34,7 +34,7 @@ describe('User Management E2E', () => {
   })
 
   afterAll(async () => {
-    await app.close()
+    await app?.close()
   })
 
   describe('User CRUD Operations', () => {

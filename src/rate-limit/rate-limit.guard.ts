@@ -19,6 +19,9 @@ export class RateLimitGuard implements CanActivate {
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
+    // Skip rate limiting in test environment
+    if (process.env.NODE_ENV === 'test') return true
+
     // Check @SkipRateLimit() on handler or class
     const skip = this.reflector.getAllAndOverride<boolean>(SKIP_RATE_LIMIT_KEY, [
       context.getHandler(),

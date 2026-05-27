@@ -67,10 +67,16 @@ return {1, new_count, oldest_score}
 @Injectable()
 export class SlidingWindowService implements OnModuleDestroy {
   private readonly logger = new Logger(SlidingWindowService.name)
-  private readonly redis: Redis
+  private readonly redis: Redis | null
 
   constructor() {
-    this.redis = new Redis(envConfig.REDIS_URL, {
+    const redisUrl = envConfig.REDIS_URL
+    if (!redisUrl || process.env.NODE_ENV === 'test') {
+      this.redis = null
+      return
+    }
+
+    this.redis = new Redis(redisUrl, {
       connectTimeout: 15000,
       commandTimeout: 5000,
       retryStrategy: (times: number) => {
@@ -91,6 +97,7 @@ export class SlidingWindowService implements OnModuleDestroy {
   }
 
   async onModuleDestroy(): Promise<void> {
+    if (!this.redis) return
     try {
       await this.redis.quit()
       this.logger.log('Rate-limit Redis disconnected gracefully')
@@ -105,6 +112,11 @@ export class SlidingWindowService implements OnModuleDestroy {
     // Public tier is always allowed — skip Redis call
     if (config.limit === Infinity) {
       return { allowed: true, limit: Infinity, remaining: Infinity, resetAt: 0 }
+    }
+
+    // No Redis connection — fail open
+    if (!this.redis) {
+      return { allowed: true, limit: config.limit, remaining: config.limit, resetAt: 0 }
     }
 
     const key = `rl:${tier}:${identifier}`

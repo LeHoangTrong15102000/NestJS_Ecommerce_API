@@ -57,7 +57,7 @@ describe('Error Response Consistency E2E', () => {
   })
 
   afterAll(async () => {
-    await app.close()
+    await app?.close()
   })
 
   beforeEach(async () => {

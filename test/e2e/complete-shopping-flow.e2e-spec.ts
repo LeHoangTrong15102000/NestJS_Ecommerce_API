@@ -116,7 +116,7 @@ describe('Complete Shopping Flow E2E', () => {
   })
 
   afterAll(async () => {
-    await app.close()
+    await app?.close()
   })
 
   async function setupTestData() {
