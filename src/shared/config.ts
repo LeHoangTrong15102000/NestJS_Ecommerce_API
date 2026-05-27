@@ -77,6 +77,17 @@ const configSchema = z.object({
   MUX_TOKEN_SECRET: z.string().min(1),
   MUX_WEBHOOK_ENDPOINT: z.string().min(1),
   MUX_SIGNING_SECRET: z.string().min(1),
+
+  // API Gateway
+  INTERNAL_API_KEY: z.string().optional(),
+  SWAGGER_ENABLED: z
+    .string()
+    .optional()
+    .transform((val) => val !== 'false'),
+  API_DEPRECATION_REDIRECT: z
+    .string()
+    .optional()
+    .transform((val) => val === 'true'),
 })
 
 const configServer = configSchema.safeParse(process.env)

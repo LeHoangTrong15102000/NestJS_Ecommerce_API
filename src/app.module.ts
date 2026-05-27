@@ -1,10 +1,9 @@
 import { createKeyv } from '@keyv/redis'
 import { BullModule } from '@nestjs/bullmq'
 import { CacheModule } from '@nestjs/cache-manager'
-import { Logger, Module } from '@nestjs/common'
+import { Logger, MiddlewareConsumer, Module, NestModule } from '@nestjs/common'
 import { APP_FILTER, APP_GUARD, APP_INTERCEPTOR, APP_PIPE } from '@nestjs/core'
 import { ScheduleModule } from '@nestjs/schedule'
-import { ThrottlerModule } from '@nestjs/throttler'
 import { IncomingMessage } from 'http'
 import { AcceptLanguageResolver, I18nModule, QueryResolver } from 'nestjs-i18n'
 import { LoggerModule } from 'nestjs-pino'
@@ -42,12 +41,14 @@ import envConfig from 'src/shared/config'
 import { CatchEverythingFilter } from 'src/shared/filters/catch-everything.filter'
 import { HttpExceptionFilter } from 'src/shared/filters/http-exception.filter'
 import { AuthenticationGuard } from 'src/shared/guards/authentication.guard'
-import { ThrottlerBehindProxyGuard } from 'src/shared/guards/throttler-behind-proxy.guard'
+import { DeprecationMiddleware } from 'src/shared/middleware/deprecation.middleware'
 import { MetricsInterceptor } from 'src/shared/metrics/metrics.interceptor'
 import { MetricsModule } from 'src/shared/metrics/metrics.module'
 import CustomZodValidationPipe from 'src/shared/pipes/custom-zod-validation.pipe'
 import { SharedModule } from 'src/shared/shared.module'
 import { WebsocketModule } from 'src/websockets/websocket.module'
+import { RateLimitGuard } from 'src/rate-limit/rate-limit.guard'
+import { RateLimitModule } from 'src/rate-limit/rate-limit.module'
 
 @Module({
   imports: [
@@ -170,20 +171,7 @@ import { WebsocketModule } from 'src/websockets/websocket.module'
       resolvers: [{ use: QueryResolver, options: ['lang'] }, AcceptLanguageResolver],
       typesOutputPath: path.resolve('src/generated/i18n.generated.ts'),
     }),
-    ThrottlerModule.forRoot({
-      throttlers: [
-        {
-          name: 'short',
-          ttl: 60000, // 1 minute
-          limit: process.env.NODE_ENV === 'test' ? 1000000 : 30,
-        },
-        {
-          name: 'long',
-          ttl: 120000, // 2 minutes
-          limit: process.env.NODE_ENV === 'test' ? 1000000 : 60,
-        },
-      ],
-    }),
+    RateLimitModule,
     WebsocketModule,
     SharedModule,
     MetricsModule,
@@ -239,10 +227,10 @@ import { WebsocketModule } from 'src/websockets/websocket.module'
       provide: APP_FILTER,
       useClass: HttpExceptionFilter,
     },
-    // Guards - ThrottlerBehindProxyGuard FIRST (rate limit), then AuthenticationGuard (auth)
+    // Guards - RateLimitGuard FIRST (rate limit), then AuthenticationGuard (auth)
     {
       provide: APP_GUARD,
-      useClass: ThrottlerBehindProxyGuard,
+      useClass: RateLimitGuard,
     },
     {
       provide: APP_GUARD,
@@ -258,4 +246,8 @@ import { WebsocketModule } from 'src/websockets/websocket.module'
     WishlistPriceCheckCronjob, // Daily price check cron job
   ],
 })
-export class AppModule {}
+export class AppModule implements NestModule {
+  configure(consumer: MiddlewareConsumer): void {
+    consumer.apply(DeprecationMiddleware).forRoutes('*')
+  }
+}

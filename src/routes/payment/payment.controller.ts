@@ -6,7 +6,9 @@ import { Auth } from 'src/shared/decorators/auth.decorator'
 import { WebhookPaymentBodyDTO } from 'src/routes/payment/payment.dto'
 import { AuthType } from 'src/shared/constants/auth.constant'
 import { ApiSecurity } from '@nestjs/swagger'
+import { RateLimit } from 'src/rate-limit/decorators/rate-limit.decorator'
 
+@RateLimit('write')
 @Controller('payment')
 @ApiSecurity('payment-api-key')
 export class PaymentController {

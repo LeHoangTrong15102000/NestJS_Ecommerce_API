@@ -1,17 +1,17 @@
-import { Controller, Get, Res } from '@nestjs/common'
+import { Controller, Get, Res, VERSION_NEUTRAL } from '@nestjs/common'
 import { ApiExcludeEndpoint } from '@nestjs/swagger'
-import { SkipThrottle } from '@nestjs/throttler'
 import { Response } from 'express'
 import { IsPublic } from 'src/shared/decorators/auth.decorator'
+import { SkipRateLimit } from 'src/rate-limit/decorators/skip-rate-limit.decorator'
 import { MetricsService } from './metrics.service'
 
-@Controller()
+@Controller({ version: VERSION_NEUTRAL })
 export class MetricsController {
   constructor(private readonly metricsService: MetricsService) {}
 
   @Get('metrics')
   @IsPublic()
-  @SkipThrottle({ short: true, long: true })
+  @SkipRateLimit()
   @ApiExcludeEndpoint()
   async getMetrics(@Res() res: Response): Promise<void> {
     const metrics = await this.metricsService.getMetrics()

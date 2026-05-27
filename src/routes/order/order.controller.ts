@@ -12,7 +12,9 @@ import {
 } from 'src/routes/order/order.dto'
 import { OrderService } from 'src/routes/order/order.service'
 import { ActiveUser } from 'src/shared/decorators/active-user.decorator'
+import { RateLimit } from 'src/rate-limit/decorators/rate-limit.decorator'
 
+@RateLimit('write')
 @Controller('orders')
 export class OrderController {
   constructor(private readonly orderService: OrderService) {}

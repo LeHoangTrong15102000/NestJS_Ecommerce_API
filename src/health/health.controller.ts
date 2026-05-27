@@ -1,12 +1,14 @@
-import { Controller, Get, HttpStatus, Res } from '@nestjs/common'
+import { Controller, Get, HttpStatus, Res, VERSION_NEUTRAL } from '@nestjs/common'
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger'
 import { HealthCheckResult } from '@nestjs/terminus'
 import { Response } from 'express'
 import { IsPublic } from 'src/shared/decorators/auth.decorator'
+import { SkipRateLimit } from 'src/rate-limit/decorators/skip-rate-limit.decorator'
 import { HealthService } from './health.service'
 
 @ApiTags('Health')
-@Controller('health')
+@SkipRateLimit()
+@Controller({ path: 'health', version: VERSION_NEUTRAL })
 export class HealthController {
   constructor(private readonly healthService: HealthService) {}
 

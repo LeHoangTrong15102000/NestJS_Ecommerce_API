@@ -1,18 +1,39 @@
-import { Logger } from '@nestjs/common'
+import { CallHandler, ExecutionContext, Logger, NestInterceptor, VersioningType } from '@nestjs/common'
 import { NestFactory } from '@nestjs/core'
 import { NestExpressApplication } from '@nestjs/platform-express'
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger'
 import helmet from 'helmet'
 import { Logger as PinoLogger } from 'nestjs-pino'
 import { cleanupOpenApiDoc } from 'nestjs-zod'
+import { Observable } from 'rxjs'
 import { WebsocketAdapter } from 'src/websockets/websocket.adapter'
 import { AppModule } from './app.module'
+
+/**
+ * Global interceptor that adds an X-API-Version header to every response.
+ */
+class ApiVersionInterceptor implements NestInterceptor {
+  intercept(_context: ExecutionContext, next: CallHandler): Observable<unknown> {
+    const response = _context.switchToHttp().getResponse()
+    response.setHeader('X-API-Version', '1')
+    return next.handle()
+  }
+}
 
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule, {
     bufferLogs: true,
   })
   app.useLogger(app.get(PinoLogger))
+
+  // URI versioning — all routes accessible at /v1/; defaultVersion means no @Version() needed on controllers
+  app.enableVersioning({
+    type: VersioningType.URI,
+    defaultVersion: '1',
+  })
+
+  // Add X-API-Version header to every response
+  app.useGlobalInterceptors(new ApiVersionInterceptor())
 
   // Configure CORS with proper restrictions
   const allowedOrigins = process.env.ALLOWED_ORIGINS?.split(',').filter(Boolean) || []
@@ -57,39 +78,43 @@ async function bootstrap() {
   app.set('trust proxy', process.env.NODE_ENV === 'production' ? 1 : 'loopback')
 
   // Swagger/OpenAPI - nestjs-zod v5 hỗ trợ Zod V4 đầy đủ qua cleanupOpenApiDoc()
-  const documentBuilder = new DocumentBuilder()
-    .setTitle('Ecommerce API')
-    .setDescription('The API for the ecommerce application')
-    .setVersion('1.0')
-    .addServer(`http://localhost:${process.env.PORT ?? 3000}`, 'Local Development')
+  // Disabled in production when SWAGGER_ENABLED=false
+  const swaggerEnabled = process.env.SWAGGER_ENABLED !== 'false'
+  if (swaggerEnabled) {
+    const documentBuilder = new DocumentBuilder()
+      .setTitle('Ecommerce API')
+      .setDescription('The API for the ecommerce application')
+      .setVersion('1.0')
+      .addServer(`http://localhost:${process.env.PORT ?? 3000}`, 'Local Development')
 
-  if (process.env.NODE_ENV === 'production' && process.env.API_URL) {
-    documentBuilder.addServer(process.env.API_URL, 'Production')
-  }
+    if (process.env.NODE_ENV === 'production' && process.env.API_URL) {
+      documentBuilder.addServer(process.env.API_URL, 'Production')
+    }
 
-  const config = documentBuilder
-    .addBearerAuth()
-    .addApiKey(
-      {
-        name: 'authorization',
-        type: 'apiKey',
+    const config = documentBuilder
+      .addBearerAuth()
+      .addApiKey(
+        {
+          name: 'authorization',
+          type: 'apiKey',
+        },
+        'payment-api-key',
+      )
+      .build()
+
+    const document = SwaggerModule.createDocument(app, config, {
+      operationIdFactory: (controllerKey: string, methodKey: string) => methodKey,
+    })
+
+    // cleanupOpenApiDoc() xử lý OpenAPI schemas được tạo từ nestjs-zod DTOs (Zod V4 compatible)
+    const cleanedDocument = cleanupOpenApiDoc(document)
+
+    SwaggerModule.setup('api', app, cleanedDocument, {
+      swaggerOptions: {
+        persistAuthorization: true,
       },
-      'payment-api-key',
-    )
-    .build()
-
-  const document = SwaggerModule.createDocument(app, config, {
-    operationIdFactory: (controllerKey: string, methodKey: string) => methodKey,
-  })
-
-  // cleanupOpenApiDoc() xử lý OpenAPI schemas được tạo từ nestjs-zod DTOs (Zod V4 compatible)
-  const cleanedDocument = cleanupOpenApiDoc(document)
-
-  SwaggerModule.setup('api', app, cleanedDocument, {
-    swaggerOptions: {
-      persistAuthorization: true,
-    },
-  })
+    })
+  }
   try {
     const websocketAdapter = new WebsocketAdapter(app)
     await websocketAdapter.connectToRedis()

@@ -13,7 +13,9 @@ import {
 import { ActiveUser } from 'src/shared/decorators/active-user.decorator'
 import { MessageResDTO } from 'src/shared/dtos/response.dto'
 import { AccessTokenPayload } from 'src/shared/types/jwt.type'
+import { RateLimit } from 'src/rate-limit/decorators/rate-limit.decorator'
 
+@RateLimit('write')
 @Controller('manage-product/products')
 export class ManageProductController {
   constructor(private readonly manageProductService: ManageProductService) {}
