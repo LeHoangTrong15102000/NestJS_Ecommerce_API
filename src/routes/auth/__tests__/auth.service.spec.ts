@@ -771,10 +771,9 @@ describe('AuthService', () => {
 
       mockTokenService.verifyRefreshToken.mockRejectedValue(unexpectedError)
 
-      // Act & Assert - Thực hiện test và kiểm tra lỗi fallback (throw class constructor)
-      await expect(service.refreshToken(validRefreshTokenData)).rejects.toThrow(
-        "Class constructor UnauthorizedException cannot be invoked without 'new'",
-      )
+      // Act & Assert - Thực hiện test và kiểm tra lỗi fallback
+      await expect(service.refreshToken(validRefreshTokenData)).rejects.toThrow(UnauthorizedException)
+      await expect(service.refreshToken(validRefreshTokenData)).rejects.toThrow('An unexpected error occurred')
     })
   })
 

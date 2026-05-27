@@ -5,6 +5,7 @@ import { InjectPinoLogger, PinoLogger } from 'nestjs-pino'
 import { ZodResponse } from 'nestjs-zod'
 import {
   DisableTwoFactorBodyDTO,
+  ExchangeCodeBodyDTO,
   ForgotPasswordBodyDTO,
   GetAuthorizationUrlResDTO,
   LoginBodyDTO,
@@ -103,9 +104,11 @@ export class AuthController {
     try {
       const data = await this.googleService.googleCallback({ code, state })
 
-      return res.redirect(
-        `${envConfig.GOOGLE_CLIENT_REDIRECT_URI}?accessToken=${data.accessToken}&refreshToken=${data.refreshToken}`,
-      )
+      // Security: Never expose tokens in URL query params (logged by proxies/CDN/browser history).
+      // Use a short-lived authorization code that the client exchanges via POST for tokens.
+      const authCode = await this.authService.createAuthorizationCode(data)
+
+      return res.redirect(`${envConfig.GOOGLE_CLIENT_REDIRECT_URI}?code=${authCode}`)
     } catch (error) {
       this.logger.error({ err: error }, 'Google callback failed')
       const errorMessage =
@@ -113,8 +116,17 @@ export class AuthController {
           ? error.message
           : 'Đã xảy ra lỗi khi đăng nhập bằng google, vui lòng thử lại bằng cách khác'
 
-      return res.redirect(`${envConfig.GOOGLE_CLIENT_REDIRECT_URI}?errorMessage=${errorMessage}`)
+      return res.redirect(`${envConfig.GOOGLE_CLIENT_REDIRECT_URI}?errorMessage=${encodeURIComponent(errorMessage)}`)
     }
+  }
+
+  @RateLimit('auth')
+  @Post('google/exchange-code')
+  @ZodResponse({ type: LoginResDTO })
+  @IsPublic()
+  @ApiOperation({ summary: 'Exchange Google OAuth authorization code for tokens' })
+  exchangeGoogleCode(@Body() body: ExchangeCodeBodyDTO) {
+    return this.authService.exchangeAuthorizationCode(body.code)
   }
 
   @RateLimit('auth')
@@ -134,6 +146,7 @@ export class AuthController {
   }
 
   @Post('2fa/disable')
+  @HttpCode(HttpStatus.OK)
   @ZodResponse({ type: MessageResDTO })
   @ApiOperation({ summary: 'Disable two-factor authentication' })
   disableTwoFactorAuth(@Body() body: DisableTwoFactorBodyDTO, @ActiveUser('userId') userId: number) {

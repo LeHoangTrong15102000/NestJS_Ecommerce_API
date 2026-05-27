@@ -200,3 +200,11 @@ export type ForgotPasswordBodyType = z.infer<typeof ForgotPasswordBodySchema>
 export type EnableTwoFactorBodyType = z.infer<typeof EnableTwoFactorBodySchema>
 export type DisableTwoFactorBodyType = z.infer<typeof DisableTwoFactorBodySchema>
 export type TwoFactorEnableResType = z.infer<typeof TwoFactorEnableResSchema>
+
+export const ExchangeCodeBodySchema = z
+  .object({
+    code: z.string().min(1).max(128),
+  })
+  .strict()
+
+export type ExchangeCodeBodyType = z.infer<typeof ExchangeCodeBodySchema>

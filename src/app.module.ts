@@ -4,7 +4,7 @@ import { CacheModule } from '@nestjs/cache-manager'
 import { Logger, MiddlewareConsumer, Module, NestModule } from '@nestjs/common'
 import { APP_FILTER, APP_GUARD, APP_INTERCEPTOR, APP_PIPE } from '@nestjs/core'
 import { ScheduleModule } from '@nestjs/schedule'
-import { IncomingMessage } from 'http'
+import { IncomingMessage, ServerResponse } from 'http'
 import { AcceptLanguageResolver, I18nModule, QueryResolver } from 'nestjs-i18n'
 import { LoggerModule } from 'nestjs-pino'
 import { ZodSerializerInterceptor } from 'nestjs-zod'
@@ -61,13 +61,7 @@ import { RateLimitModule } from 'src/rate-limit/rate-limit.module'
           }
           return crypto.randomUUID()
         },
-        customProps: (
-          req: IncomingMessage & { id?: string },
-          res: { setHeader: (name: string, value: string) => void },
-        ) => {
-          if (req.id) {
-            res.setHeader('x-request-id', req.id)
-          }
+        customProps: (req: IncomingMessage & { id?: string }) => {
           return { reqId: req.id }
         },
         customLogLevel: (_req: IncomingMessage, res: { statusCode: number }, _err: Error | undefined) => {
@@ -248,6 +242,17 @@ import { RateLimitModule } from 'src/rate-limit/rate-limit.module'
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer): void {
-    consumer.apply(DeprecationMiddleware).forRoutes('*')
+    consumer
+      .apply(
+        // Echo x-request-id in response (pino-http assigns req.id before NestJS middleware runs)
+        (req: IncomingMessage & { id?: string }, res: ServerResponse, next: () => void) => {
+          if (req.id) {
+            res.setHeader('x-request-id', req.id)
+          }
+          next()
+        },
+        DeprecationMiddleware,
+      )
+      .forRoutes('*')
   }
 }

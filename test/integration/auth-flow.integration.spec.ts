@@ -464,7 +464,7 @@ describe('Auth Flow Integration', () => {
         .post('/auth/2fa/disable')
         .set('Authorization', `Bearer ${accessToken}`)
         .send({ totpCode })
-        .expect(201)
+        .expect(200)
 
       // Assert: Verify response
       expect(response.body).toMatchObject({
@@ -495,7 +495,7 @@ describe('Auth Flow Integration', () => {
         .post('/auth/2fa/disable')
         .set('Authorization', `Bearer ${accessToken}`)
         .send({ code: otpCode })
-        .expect(201)
+        .expect(200)
 
       // Assert: Verify response
       expect(response.body.message).toBeDefined()

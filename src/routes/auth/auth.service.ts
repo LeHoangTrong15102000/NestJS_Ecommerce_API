@@ -1,4 +1,5 @@
 import { HttpException, Injectable, UnauthorizedException } from '@nestjs/common'
+import { randomBytes } from 'crypto'
 import { generateOTP, isNotFoundPrismaError, isUniqueConstraintPrismaError } from 'src/shared/helpers'
 import { MESSAGES } from 'src/shared/constants/app.constant'
 import { HashingService } from 'src/shared/services/hashing.service'
@@ -70,6 +71,10 @@ export class AuthService {
     // Kiểm tra expiresAt của mã OTP
     if (new Date(verificationCode.expiresAt) <= new Date()) {
       throw OTPExpiredException
+    }
+    // Security: Validate the submitted code matches the stored code
+    if (verificationCode.code !== code) {
+      throw InvalidOTPException
     }
 
     //  return về verification Code phòng cái trường hợp mà chúng ta cần dùng
@@ -271,7 +276,7 @@ export class AuthService {
       throw error
     }
     // Còn không thì có cho nó throw ra UnauthorizedException như bên dưới này là được
-    throw UnauthorizedException
+    throw new UnauthorizedException('An unexpected error occurred')
   }
 
   // Xử lý RefreshToken có hết hạn
@@ -453,15 +458,21 @@ export class AuthService {
         throw InvalidTOTPException
       }
     } else if (code) {
-      const verificationCode = await this.authRepository.findUniqueVerificationCode({
+      // Validate the OTP code value, not just existence
+      await this.validateVerificationCode({
+        email: user.email,
+        code,
+        type: TypeOfVerificationCode.DISABLE_2FA,
+      })
+      // Delete the used verification code to prevent replay
+      await this.authRepository.deleteVerificationCode({
         email_type: {
           email: user.email,
           type: TypeOfVerificationCode.DISABLE_2FA,
         },
       })
-      if (!verificationCode) {
-        throw InvalidOTPException
-      }
+    } else {
+      throw InvalidTOTPAndCodeException
     }
 
     // 3. Nếu đã kiểm tra hợp lệ rồi thì chúng ta sẽ tiến hành xóa secret ở bên trong database thành null
@@ -470,5 +481,33 @@ export class AuthService {
     return {
       message: MESSAGES.DISABLE_2FA_SUCCESS,
     }
+  }
+
+  // --- OAuth Authorization Code Exchange ---
+  // In-memory store for short-lived authorization codes (TTL: 60 seconds)
+  private readonly authorizationCodes = new Map<string, { tokens: { accessToken: string; refreshToken: string }; expiresAt: number }>()
+
+  async createAuthorizationCode(tokens: { accessToken: string; refreshToken: string }): Promise<string> {
+    const code = randomBytes(32).toString('hex')
+    this.authorizationCodes.set(code, {
+      tokens,
+      expiresAt: Date.now() + 60_000, // 60 seconds TTL
+    })
+    return code
+  }
+
+  async exchangeAuthorizationCode(code: string): Promise<{ accessToken: string; refreshToken: string }> {
+    const entry = this.authorizationCodes.get(code)
+    // Always delete the code (one-time use)
+    this.authorizationCodes.delete(code)
+
+    if (!entry) {
+      throw new UnauthorizedException('Invalid or expired authorization code')
+    }
+    if (Date.now() > entry.expiresAt) {
+      throw new UnauthorizedException('Authorization code has expired')
+    }
+
+    return entry.tokens
   }
 }

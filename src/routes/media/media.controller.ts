@@ -52,21 +52,30 @@ export class MediaController {
   @Get('static/:filename')
   @IsPublic()
   serveFile(@Param('filename') filename: string, @Res() res: Response) {
-    // console.log(filename)
-    // Truyền vào cái đường dẫn mà dẫn đến cái  file đó là được -> Thì là sự kết hợp của UPLOAD_DIR và filename
+    // Security: Prevent path traversal — reject filenames containing directory separators
+    if (filename.includes('/') || filename.includes('\\') || filename.includes('..')) {
+      const notfound = new NotFoundException('File not found')
+      return res.status(notfound.getStatus()).json(notfound.getResponse())
+    }
+
+    const filePath = path.resolve(UPLOAD_DIR, filename)
+    // Verify resolved path is still within UPLOAD_DIR (defense in depth)
+    if (!filePath.startsWith(path.resolve(UPLOAD_DIR))) {
+      const notfound = new NotFoundException('File not found')
+      return res.status(notfound.getStatus()).json(notfound.getResponse())
+    }
+
     const notfound = new NotFoundException('File not found')
-    return res.sendFile(path.resolve(UPLOAD_DIR, filename), (error) => {
+    return res.sendFile(filePath, (error) => {
       if (error) {
-        // Trả về như này cho nó quy chuẩn lại lỗi trả về
         res.status(notfound.getStatus()).json(notfound.getResponse())
       }
     })
   }
 
-  // getPresignedUrl
+  // getPresignedUrl — requires authentication to prevent anonymous uploads
   @Post('images/upload/presigned-url')
   @ZodResponse({ type: PresignedUploadFileResDTO })
-  @IsPublic()
   async createPresignedUrl(@Body() body: PresignedUploadFileBodyDTO) {
     return this.mediaService.getPresignedUrl(body)
   }

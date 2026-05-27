@@ -85,6 +85,8 @@ describe('AuthController', () => {
       forgotPassword: jest.fn(),
       enableTwoFactorAuth: jest.fn(),
       disableTwoFactorAuth: jest.fn(),
+      createAuthorizationCode: jest.fn(),
+      exchangeAuthorizationCode: jest.fn(),
     } as any
 
     // Mock GoogleService
@@ -735,23 +737,26 @@ describe('AuthController', () => {
   // ============================================
 
   describe('🔙 GET /auth/google/callback', () => {
-    it('Nên handle Google callback thành công và redirect với tokens', async () => {
+    it('Nên handle Google callback thành công và redirect với authorization code', async () => {
       // Arrange: Chuẩn bị dữ liệu callback
       const code = 'google-auth-code-123'
       const state = 'base64-encoded-state'
       const mockTokens = createMockTokens()
       const mockResponse = createMockResponse()
       mockGoogleService.googleCallback.mockResolvedValue(mockTokens)
+      mockAuthService.createAuthorizationCode.mockResolvedValue('auth-code-xyz')
 
       // Act: Thực hiện callback
       await controller.googleCallback(code, state, mockResponse as Response)
 
-      // Assert: Verify redirect được gọi với tokens
+      // Assert: Verify redirect được gọi với authorization code (not raw tokens)
       expect(mockGoogleService.googleCallback).toHaveBeenCalledWith({ code, state })
+      expect(mockAuthService.createAuthorizationCode).toHaveBeenCalledWith(mockTokens)
       expect(mockResponse.redirect).toHaveBeenCalled()
       const redirectUrl = (mockResponse.redirect as jest.Mock).mock.calls[0][0]
-      expect(redirectUrl).toContain('accessToken=mock-access-token-123')
-      expect(redirectUrl).toContain('refreshToken=mock-refresh-token-456')
+      expect(redirectUrl).toContain('code=auth-code-xyz')
+      expect(redirectUrl).not.toContain('accessToken')
+      expect(redirectUrl).not.toContain('refreshToken')
     })
 
     it('Nên redirect với error message khi có lỗi', async () => {
@@ -769,7 +774,7 @@ describe('AuthController', () => {
       expect(mockResponse.redirect).toHaveBeenCalled()
       const redirectUrl = (mockResponse.redirect as jest.Mock).mock.calls[0][0]
       expect(redirectUrl).toContain('errorMessage=')
-      expect(redirectUrl).toContain('Invalid authorization code')
+      expect(decodeURIComponent(redirectUrl)).toContain('Invalid authorization code')
     })
 
     it('Nên handle generic error và redirect', async () => {
@@ -786,7 +791,7 @@ describe('AuthController', () => {
       expect(mockResponse.redirect).toHaveBeenCalled()
       const redirectUrl = (mockResponse.redirect as jest.Mock).mock.calls[0][0]
       expect(redirectUrl).toContain('errorMessage=')
-      expect(redirectUrl).toContain('Đã xảy ra lỗi')
+      expect(decodeURIComponent(redirectUrl)).toContain('Đã xảy ra lỗi')
     })
 
     it('Nên pass code và state to GoogleService', async () => {
@@ -807,7 +812,7 @@ describe('AuthController', () => {
       })
     })
 
-    it('Nên format redirect URL correctly với tokens', async () => {
+    it('Nên format redirect URL correctly với authorization code', async () => {
       // Arrange: Chuẩn bị dữ liệu
       const mockTokens = createMockTokens({
         accessToken: 'access-123',
@@ -815,13 +820,16 @@ describe('AuthController', () => {
       })
       const mockResponse = createMockResponse()
       mockGoogleService.googleCallback.mockResolvedValue(mockTokens)
+      mockAuthService.createAuthorizationCode.mockResolvedValue('short-lived-code')
 
       // Act: Thực hiện callback
       await controller.googleCallback('code', 'state', mockResponse as Response)
 
-      // Assert: Verify redirect URL format
+      // Assert: Verify redirect URL contains code, not raw tokens
       const redirectUrl = (mockResponse.redirect as jest.Mock).mock.calls[0][0]
-      expect(redirectUrl).toMatch(/\?accessToken=.+&refreshToken=.+/)
+      expect(redirectUrl).toMatch(/\?code=short-lived-code/)
+      expect(redirectUrl).not.toContain('accessToken')
+      expect(redirectUrl).not.toContain('refreshToken')
     })
   })
 

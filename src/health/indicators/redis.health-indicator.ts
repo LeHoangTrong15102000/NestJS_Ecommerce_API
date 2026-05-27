@@ -1,10 +1,10 @@
-import { Injectable } from '@nestjs/common'
+import { Injectable, OnModuleDestroy } from '@nestjs/common'
 import { HealthCheckError, HealthIndicator, HealthIndicatorResult } from '@nestjs/terminus'
 import Redis from 'ioredis'
 import envConfig from 'src/shared/config'
 
 @Injectable()
-export class RedisHealthIndicator extends HealthIndicator {
+export class RedisHealthIndicator extends HealthIndicator implements OnModuleDestroy {
   private readonly client: Redis
 
   constructor() {
