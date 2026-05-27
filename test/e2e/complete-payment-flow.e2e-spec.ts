@@ -49,7 +49,11 @@ describe('Complete Payment Flow E2E', () => {
   })
 
   afterAll(async () => {
-    await app?.close()
+    try {
+      await app?.close()
+    } catch {
+      // Ignore cleanup errors during test teardown
+    }
   })
 
   beforeEach(async () => {

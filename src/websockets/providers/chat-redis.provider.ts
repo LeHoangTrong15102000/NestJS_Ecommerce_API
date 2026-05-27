@@ -73,10 +73,14 @@ export class ChatRedisShutdownService implements OnModuleDestroy {
 
   async onModuleDestroy(): Promise<void> {
     try {
-      await this.redis.quit()
-      this.logger.info('Chat Redis disconnected gracefully')
-    } catch (error) {
-      this.logger.error('Error disconnecting Chat Redis:', error)
+      if (this.redis.status === 'ready' || this.redis.status === 'connecting') {
+        await this.redis.quit()
+        this.logger.info('Chat Redis disconnected gracefully')
+      } else {
+        this.redis.disconnect()
+      }
+    } catch {
+      // Ignore cleanup errors during shutdown
     }
   }
 }

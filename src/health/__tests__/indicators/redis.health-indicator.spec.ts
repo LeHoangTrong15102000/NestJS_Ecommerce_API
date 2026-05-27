@@ -7,6 +7,7 @@ const mockRedisInstance = {
   ping: jest.fn().mockResolvedValue('PONG'),
   connect: jest.fn().mockResolvedValue(undefined),
   quit: jest.fn().mockResolvedValue(undefined),
+  disconnect: jest.fn(),
   on: jest.fn().mockReturnThis(),
 }
 

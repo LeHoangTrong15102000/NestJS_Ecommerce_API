@@ -16,6 +16,14 @@ describe('AppController (e2e)', () => {
     await app.init()
   })
 
+  afterEach(async () => {
+    try {
+      await app?.close()
+    } catch {
+      // Ignore cleanup errors during test teardown
+    }
+  })
+
   it('/ (GET)', () => {
     return request(app.getHttpServer()).get('/').expect(200).expect('Hello World!')
   })

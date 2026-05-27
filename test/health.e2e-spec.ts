@@ -17,7 +17,11 @@ describe('Health Endpoint (e2e)', () => {
   })
 
   afterAll(async () => {
-    await app.close()
+    try {
+      await app?.close()
+    } catch {
+      // Ignore cleanup errors during test teardown
+    }
   })
 
   describe('GET /health', () => {

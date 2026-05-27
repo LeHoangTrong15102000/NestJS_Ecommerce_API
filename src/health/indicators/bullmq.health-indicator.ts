@@ -40,6 +40,14 @@ export class BullMQHealthIndicator extends HealthIndicator {
   }
 
   async onModuleDestroy(): Promise<void> {
-    await this.client.quit()
+    try {
+      if (this.client.status === 'ready' || this.client.status === 'connecting') {
+        await this.client.quit()
+      } else {
+        this.client.disconnect()
+      }
+    } catch {
+      // Ignore cleanup errors during shutdown
+    }
   }
 }
