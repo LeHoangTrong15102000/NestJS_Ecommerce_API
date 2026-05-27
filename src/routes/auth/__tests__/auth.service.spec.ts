@@ -1326,4 +1326,43 @@ describe('AuthService', () => {
       })
     })
   })
+
+  describe('createAuthorizationCode', () => {
+    it('should return a 64-char hex code', async () => {
+      const tokens = { accessToken: 'at', refreshToken: 'rt' }
+      const code = await service.createAuthorizationCode(tokens)
+      expect(code).toHaveLength(64)
+      expect(/^[0-9a-f]+$/.test(code)).toBe(true)
+    })
+  })
+
+  describe('exchangeAuthorizationCode', () => {
+    it('should return tokens for a valid code', async () => {
+      const tokens = { accessToken: 'at', refreshToken: 'rt' }
+      const code = await service.createAuthorizationCode(tokens)
+      const result = await service.exchangeAuthorizationCode(code)
+      expect(result).toEqual(tokens)
+    })
+
+    it('should throw on invalid code', async () => {
+      await expect(service.exchangeAuthorizationCode('invalid')).rejects.toThrow(UnauthorizedException)
+    })
+
+    it('should throw on reused code (one-time use)', async () => {
+      const tokens = { accessToken: 'at', refreshToken: 'rt' }
+      const code = await service.createAuthorizationCode(tokens)
+      await service.exchangeAuthorizationCode(code)
+      await expect(service.exchangeAuthorizationCode(code)).rejects.toThrow(UnauthorizedException)
+    })
+
+    it('should throw on expired code', async () => {
+      const tokens = { accessToken: 'at', refreshToken: 'rt' }
+      const code = await service.createAuthorizationCode(tokens)
+      // Manually expire the code
+      const map = (service as any).authorizationCodes as Map<string, { tokens: any; expiresAt: number }>
+      const entry = map.get(code)!
+      entry.expiresAt = Date.now() - 1000
+      await expect(service.exchangeAuthorizationCode(code)).rejects.toThrow(UnauthorizedException)
+    })
+  })
 })
