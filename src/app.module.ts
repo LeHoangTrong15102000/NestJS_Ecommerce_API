@@ -234,7 +234,7 @@ import { RateLimitModule } from 'src/rate-limit/rate-limit.module'
     },
     {
       provide: APP_GUARD,
-      useClass: AuthenticationGuard,
+      useExisting: AuthenticationGuard,
     },
     // Queue Architecture: Producers live in feature modules (order, payment, wishlist) co-located
     // with the business logic that enqueues jobs. Consumers live here in src/queues/ as standalone
