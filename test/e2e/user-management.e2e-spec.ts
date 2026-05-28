@@ -1,7 +1,9 @@
+import { CACHE_MANAGER } from '@nestjs/cache-manager'
 import { INestApplication } from '@nestjs/common'
 import { Test, TestingModule } from '@nestjs/testing'
 import request from 'supertest'
 import { AppModule } from '../../src/app.module'
+import { EmailService } from '../../src/shared/services/email.service'
 import { HashingService } from '../../src/shared/services/hashing.service'
 import { PrismaService } from '../../src/shared/services/prisma.service'
 import { TokenService } from '../../src/shared/services/token.service'
@@ -13,12 +15,26 @@ describe('User Management E2E', () => {
   let hashingService: HashingService
   let tokenService: TokenService
 
+  const mockEmailService = {
+    sendEmail: jest.fn().mockResolvedValue({ error: null }),
+    sendOTP: jest.fn().mockResolvedValue({ error: null }),
+  }
+  const mockCacheManager = {
+    get: jest.fn().mockResolvedValue(null),
+    set: jest.fn().mockResolvedValue(undefined),
+    del: jest.fn().mockResolvedValue(undefined),
+  }
+
   beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
       imports: [AppModule],
     })
       .overrideProvider(PrismaService)
       .useValue(global.__GLOBAL_PRISMA__)
+      .overrideProvider(EmailService)
+      .useValue(mockEmailService)
+      .overrideProvider(CACHE_MANAGER)
+      .useValue(mockCacheManager)
       .compile()
 
     app = moduleFixture.createNestApplication()
@@ -285,7 +301,13 @@ describe('User Management E2E', () => {
 
       it('should prevent user from updating themselves', async () => {
         const updateData = {
+          email: 'admin@test.com',
           name: 'Self Update',
+          phoneNumber: '0123456789',
+          password: 'password123',
+          roleId: 1,
+          status: 'ACTIVE',
+          avatar: null,
         }
 
         await request(app.getHttpServer())

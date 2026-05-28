@@ -138,6 +138,7 @@ describe('Product Catalog Flow E2E', () => {
           images: ['galaxy.jpg'],
           variants: [{ name: 'Color', options: ['Black', 'White'] }],
           categories: [categoryId],
+          publishedAt: null,
           skus: [
             { value: 'Black', price: 25000000, stock: 100, image: 'black.jpg' },
             { value: 'White', price: 25000000, stock: 80, image: 'white.jpg' },

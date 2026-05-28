@@ -382,7 +382,7 @@ describe('Complete Shopping Flow E2E', () => {
       expect(finalCartResponse.body.data).toBeInstanceOf(Array)
       // Cart should be empty or not contain the ordered item
       const hasOrderedItem = finalCartResponse.body.data.some((shop: any) =>
-        shop.items.some((item: any) => item.id === cartItemId),
+        (shop.cartItems || []).some((item: any) => item.id === cartItemId),
       )
       expect(hasOrderedItem).toBe(false)
 
@@ -564,7 +564,7 @@ describe('Complete Shopping Flow E2E', () => {
 
       expect(finalCartResponse.body.data).toBeInstanceOf(Array)
       const hasItem = finalCartResponse.body.data.some((shop: any) =>
-        shop.items.some((item: any) => item.id === cartItemId),
+        (shop.cartItems || []).some((item: any) => item.id === cartItemId),
       )
       expect(hasItem).toBe(false)
     })
