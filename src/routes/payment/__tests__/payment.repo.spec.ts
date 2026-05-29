@@ -126,7 +126,7 @@ describe('PaymentRepo', () => {
         const result = await repo.receiver(webhookPayload)
 
         // Assert
-        expect(result).toBe(10) // userId
+        expect(result).toEqual({ paymentId: 100, userId: 10 })
         expect(mockPrismaService.paymentTransaction.findUnique).toHaveBeenCalledWith({
           where: { id: webhookPayload.id },
         })
@@ -338,7 +338,7 @@ describe('PaymentRepo', () => {
         const result = await repo.receiver(webhookPayload)
 
         // Assert
-        expect(result).toBe(10)
+        expect(result).toEqual({ paymentId: 100, userId: 10 })
         expect(mockPrismaService.paymentTransaction.create).toHaveBeenCalledWith(
           expect.objectContaining({
             data: expect.objectContaining({
@@ -365,7 +365,7 @@ describe('PaymentRepo', () => {
         const result = await repo.receiver(webhookPayload)
 
         // Assert - Should still work with fallback parsing
-        expect(result).toBe(10)
+        expect(result).toEqual({ paymentId: 100, userId: 10 })
         expect(mockPrismaService.paymentTransaction.create).toHaveBeenCalled()
       })
 
@@ -386,7 +386,7 @@ describe('PaymentRepo', () => {
         const result = await repo.receiver(webhookPayload)
 
         // Assert - Should use date-fns parse() fallback
-        expect(result).toBe(10)
+        expect(result).toEqual({ paymentId: 100, userId: 10 })
         expect(mockPrismaService.paymentTransaction.create).toHaveBeenCalledWith(
           expect.objectContaining({
             data: expect.objectContaining({
@@ -425,7 +425,7 @@ describe('PaymentRepo', () => {
 
         const result = await repo.receiver(webhookPayload)
 
-        expect(result).toBe(10)
+        expect(result).toEqual({ paymentId: 100, userId: 10 })
       })
 
       it('should set amountOut for transferType "out"', async () => {
@@ -482,7 +482,7 @@ describe('PaymentRepo', () => {
 
         const result = await repo.receiver(webhookPayload)
 
-        expect(result).toBe(10)
+        expect(result).toEqual({ paymentId: 100, userId: 10 })
       })
 
       it('should remove scheduled cancellation job on successful payment', async () => {
