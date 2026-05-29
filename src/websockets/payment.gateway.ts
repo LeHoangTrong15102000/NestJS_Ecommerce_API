@@ -9,6 +9,8 @@ export class PaymentGateway {
 
   @SubscribeMessage('send-money')
   handleEvent(@MessageBody() data: string): string {
+    // Guard: server may be undefined when HTTP adapter is not attached (e.g. some E2E configs)
+    if (!this.server) return data
     this.server.emit('receive-money', {
       data: `Money: ${data}`,
     })
@@ -16,6 +18,8 @@ export class PaymentGateway {
   }
 
   emitPaymentSuccess(userId: number): void {
+    // Guard: server may be undefined when HTTP adapter is not attached (e.g. some E2E configs)
+    if (!this.server) return
     this.server.to(generateRoomUserId(userId)).emit('payment', {
       status: 'success',
     })

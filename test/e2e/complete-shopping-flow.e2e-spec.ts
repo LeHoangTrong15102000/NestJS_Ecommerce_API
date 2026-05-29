@@ -348,7 +348,7 @@ describe('Complete Shopping Flow E2E', () => {
           code: `DH${paymentId}`,
           content: `Thanh toan don hang DH${paymentId}`,
           transferType: 'in',
-          transferAmount: 100000,
+          transferAmount: Number(order!.totalAmount),
           accumulated: 1000000,
           subAccount: null,
           referenceCode: 'REF' + Math.floor(Math.random() * 1000000),

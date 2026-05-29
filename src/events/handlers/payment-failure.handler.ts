@@ -15,10 +15,13 @@ export class PaymentFailureHandler {
   @OnEvent('payment.failed', { async: true })
   async handle(event: PaymentFailedEvent): Promise<void> {
     try {
-      this.paymentGateway.server.to(generateRoomUserId(event.userId)).emit('payment', {
-        status: 'failed',
-        reason: event.reason,
-      })
+      // Guard: server may be undefined when HTTP adapter is not attached (e.g. some E2E configs)
+      if (this.paymentGateway.server) {
+        this.paymentGateway.server.to(generateRoomUserId(event.userId)).emit('payment', {
+          status: 'failed',
+          reason: event.reason,
+        })
+      }
       this.logger.info({ eventId: event.eventId, userId: event.userId }, 'Payment failure notification sent')
     } catch (error) {
       // Handlers never throw — log and continue
