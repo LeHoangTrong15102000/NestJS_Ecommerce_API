@@ -86,10 +86,7 @@ describe('PaymentConsumer', () => {
 
         expect(mockSharedPaymentRepo.cancelPaymentAndOrder).toHaveBeenCalledWith(paymentId)
         expect(result).toEqual({ success: true, paymentId })
-        expect(mockEventEmitter.emit).toHaveBeenCalledWith(
-          'payment.failed',
-          expect.any(PaymentFailedEvent),
-        )
+        expect(mockEventEmitter.emit).toHaveBeenCalledWith('payment.failed', expect.any(PaymentFailedEvent))
         expect(mockEventEmitter.emit).toHaveBeenCalledWith(
           'payment.failed',
           expect.objectContaining({ paymentId, userId: 1 }),

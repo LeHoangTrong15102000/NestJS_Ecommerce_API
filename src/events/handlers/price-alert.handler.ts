@@ -30,9 +30,7 @@ export class PriceAlertHandler {
 
       // Get all wishlist items for this product that have price drop notifications enabled
       const items = await this.wishlistRepo.getItemsForPriceCheck()
-      const affectedItems = items.filter(
-        (item) => item.product?.id === event.productId && item.notifyOnPriceDrops,
-      )
+      const affectedItems = items.filter((item) => item.product?.id === event.productId && item.notifyOnPriceDrops)
 
       if (affectedItems.length === 0) {
         return
@@ -73,10 +71,7 @@ export class PriceAlertHandler {
       }
     } catch (error) {
       // Handlers never throw — log and continue
-      this.logger.error(
-        { error, eventId: event.eventId },
-        'Failed to process product price changed event',
-      )
+      this.logger.error({ error, eventId: event.eventId }, 'Failed to process product price changed event')
     }
   }
 }

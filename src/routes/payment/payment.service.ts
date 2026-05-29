@@ -19,10 +19,7 @@ export class PaymentService {
       const { userId, paymentId } = await this.paymentRepo.receiver(body)
 
       // Emit domain event — decoupled from WebSocket notification
-      this.eventEmitter.emit(
-        'payment.completed',
-        new PaymentCompletedEvent(paymentId, userId),
-      )
+      this.eventEmitter.emit('payment.completed', new PaymentCompletedEvent(paymentId, userId))
 
       return {
         message: MESSAGES.PAYMENT_RECEIVED,

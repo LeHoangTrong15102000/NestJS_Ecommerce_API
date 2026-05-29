@@ -24,12 +24,7 @@ import { WishlistModule } from 'src/routes/wishlist/wishlist.module'
     WebsocketModule,
     WishlistModule,
   ],
-  providers: [
-    PaymentNotificationHandler,
-    PaymentFailureHandler,
-    UserWelcomeHandler,
-    PriceAlertHandler,
-  ],
+  providers: [PaymentNotificationHandler, PaymentFailureHandler, UserWelcomeHandler, PriceAlertHandler],
   exports: [EventEmitterModule],
 })
 export class EventBusModule {}

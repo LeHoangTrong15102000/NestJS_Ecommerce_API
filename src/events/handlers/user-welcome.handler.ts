@@ -28,10 +28,7 @@ export class UserWelcomeHandler {
       this.logger.info({ eventId: event.eventId, userId: event.userId }, 'Welcome email sent')
     } catch (error) {
       // Handlers never throw — log and continue
-      this.logger.error(
-        { error, eventId: event.eventId },
-        'Failed to send welcome email',
-      )
+      this.logger.error({ error, eventId: event.eventId }, 'Failed to send welcome email')
     }
   }
 }

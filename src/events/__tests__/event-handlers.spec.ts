@@ -309,9 +309,7 @@ describe('PriceAlertHandler', () => {
 
   it('should not enqueue when notifyOnPriceDrops is false', async () => {
     const event = new ProductPriceChangedEvent(99, 100000, 80000)
-    mockWishlistRepo.getItemsForPriceCheck.mockResolvedValue([
-      createWishlistItem({ notifyOnPriceDrops: false }),
-    ])
+    mockWishlistRepo.getItemsForPriceCheck.mockResolvedValue([createWishlistItem({ notifyOnPriceDrops: false })])
 
     await handler.handle(event)
 

@@ -22,10 +22,7 @@ export class PaymentFailureHandler {
       this.logger.info({ eventId: event.eventId, userId: event.userId }, 'Payment failure notification sent')
     } catch (error) {
       // Handlers never throw — log and continue
-      this.logger.error(
-        { error, eventId: event.eventId },
-        'Failed to send payment failure notification',
-      )
+      this.logger.error({ error, eventId: event.eventId }, 'Failed to send payment failure notification')
     }
   }
 }

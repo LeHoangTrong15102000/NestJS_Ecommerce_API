@@ -246,10 +246,7 @@ describe('PaymentService', () => {
         await service.receiver(webhookPayload)
 
         // Assert
-        expect(mockEventEmitter.emit).toHaveBeenCalledWith(
-          'payment.completed',
-          expect.objectContaining({ userId: 0 }),
-        )
+        expect(mockEventEmitter.emit).toHaveBeenCalledWith('payment.completed', expect.objectContaining({ userId: 0 }))
       })
 
       it('should handle very large transaction amounts', async () => {
@@ -322,10 +319,7 @@ describe('PaymentService', () => {
         await service.receiver(webhookPayload)
 
         // Assert - still emits, validation is repo's responsibility
-        expect(mockEventEmitter.emit).toHaveBeenCalledWith(
-          'payment.completed',
-          expect.objectContaining({ userId: -1 }),
-        )
+        expect(mockEventEmitter.emit).toHaveBeenCalledWith('payment.completed', expect.objectContaining({ userId: -1 }))
       })
     })
   })
@@ -357,9 +351,7 @@ describe('PaymentService', () => {
 
       // Assert
       const emittedEvent = (mockEventEmitter.emit as jest.Mock).mock.calls[0][1]
-      expect(emittedEvent.eventId).toMatch(
-        /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/,
-      )
+      expect(emittedEvent.eventId).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/)
     })
 
     it('should emit event with occurredAt as a Date', async () => {
