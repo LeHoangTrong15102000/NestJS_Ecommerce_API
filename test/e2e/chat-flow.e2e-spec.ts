@@ -168,10 +168,12 @@ describe('Chat Flow E2E', () => {
     })
 
     it('should send and retrieve messages in group', async () => {
+      const user3 = await createTestUser('user3@test.com', 'password123', 2, prisma, hashingService, tokenService)
+
       const convRes = await request(app.getHttpServer())
         .post('/conversations/group')
         .set('Authorization', `Bearer ${user1Token}`)
-        .send({ name: 'Chat Group', memberIds: [user2Id] })
+        .send({ name: 'Chat Group', memberIds: [user2Id, user3.userId] })
         .expect(201)
 
       const conversationId = convRes.body.id

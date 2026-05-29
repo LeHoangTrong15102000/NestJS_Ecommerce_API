@@ -1,9 +1,9 @@
 import { Test, TestingModule } from '@nestjs/testing'
+import { EventEmitter2 } from '@nestjs/event-emitter'
 import { getLoggerToken } from 'nestjs-pino'
 import { WebhookPaymentBodyType } from '../payment.model'
 import { PaymentRepo } from '../payment.repo'
 import { PaymentService } from '../payment.service'
-import { PaymentGateway } from 'src/websockets/payment.gateway'
 
 /**
  * PAYMENT SERVICE UNIT TESTS
@@ -13,7 +13,7 @@ import { PaymentGateway } from 'src/websockets/payment.gateway'
  *
  * Test Coverage:
  * - Webhook receiver processing
- * - WebSocket notification to user via PaymentGateway
+ * - Domain event emission via EventEmitter2 (replaces direct PaymentGateway call)
  * - Error handling
  * - Integration với PaymentRepo
  */
@@ -21,7 +21,7 @@ import { PaymentGateway } from 'src/websockets/payment.gateway'
 describe('PaymentService', () => {
   let service: PaymentService
   let mockPaymentRepo: jest.Mocked<PaymentRepo>
-  let mockPaymentGateway: jest.Mocked<PaymentGateway>
+  let mockEventEmitter: jest.Mocked<EventEmitter2>
 
   // Test data factory
   const createWebhookPayload = (overrides = {}): WebhookPaymentBodyType => ({
@@ -41,21 +41,21 @@ describe('PaymentService', () => {
   })
 
   beforeEach(async () => {
-    // Mock PaymentRepo
+    // Mock PaymentRepo — receiver now returns { userId, paymentId }
     mockPaymentRepo = {
       receiver: jest.fn(),
     } as any
 
-    // Mock PaymentGateway
-    mockPaymentGateway = {
-      emitPaymentSuccess: jest.fn(),
+    // Mock EventEmitter2 — replaces direct PaymentGateway dependency
+    mockEventEmitter = {
+      emit: jest.fn(),
     } as any
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         PaymentService,
         { provide: PaymentRepo, useValue: mockPaymentRepo },
-        { provide: PaymentGateway, useValue: mockPaymentGateway },
+        { provide: EventEmitter2, useValue: mockEventEmitter },
         {
           provide: getLoggerToken(PaymentService.name),
           useValue: {
@@ -83,12 +83,11 @@ describe('PaymentService', () => {
   // ============================================
 
   describe('receiver', () => {
-    describe('✅ Success Cases', () => {
-      it('should process webhook payment and emit WebSocket event to user room', async () => {
+    describe('Success Cases', () => {
+      it('should process webhook payment and emit payment.completed domain event', async () => {
         // Arrange
         const webhookPayload = createWebhookPayload()
-        const userId = 10
-        mockPaymentRepo.receiver.mockResolvedValue(userId)
+        mockPaymentRepo.receiver.mockResolvedValue({ userId: 10, paymentId: 100 })
 
         // Act
         const result = await service.receiver(webhookPayload)
@@ -99,17 +98,23 @@ describe('PaymentService', () => {
         expect(mockPaymentRepo.receiver).toHaveBeenCalledTimes(1)
       })
 
-      it('should emit payment success event to correct user room', async () => {
+      it('should emit payment.completed event with correct paymentId and userId', async () => {
         // Arrange
         const webhookPayload = createWebhookPayload()
-        const userId = 10
-        mockPaymentRepo.receiver.mockResolvedValue(userId)
+        mockPaymentRepo.receiver.mockResolvedValue({ userId: 10, paymentId: 100 })
 
         // Act
         await service.receiver(webhookPayload)
 
         // Assert
-        expect(mockPaymentGateway.emitPaymentSuccess).toHaveBeenCalledWith(10)
+        expect(mockEventEmitter.emit).toHaveBeenCalledWith(
+          'payment.completed',
+          expect.objectContaining({
+            paymentId: 100,
+            userId: 10,
+            eventName: 'payment.completed',
+          }),
+        )
       })
 
       it('should handle payment for different users correctly', async () => {
@@ -117,22 +122,32 @@ describe('PaymentService', () => {
         const webhookPayload1 = createWebhookPayload({ id: 111 })
         const webhookPayload2 = createWebhookPayload({ id: 222 })
 
-        mockPaymentRepo.receiver.mockResolvedValueOnce(10).mockResolvedValueOnce(20)
+        mockPaymentRepo.receiver
+          .mockResolvedValueOnce({ userId: 10, paymentId: 101 })
+          .mockResolvedValueOnce({ userId: 20, paymentId: 102 })
 
         // Act
         await service.receiver(webhookPayload1)
         await service.receiver(webhookPayload2)
 
         // Assert
-        expect(mockPaymentGateway.emitPaymentSuccess).toHaveBeenNthCalledWith(1, 10)
-        expect(mockPaymentGateway.emitPaymentSuccess).toHaveBeenNthCalledWith(2, 20)
-        expect(mockPaymentGateway.emitPaymentSuccess).toHaveBeenCalledTimes(2)
+        expect(mockEventEmitter.emit).toHaveBeenNthCalledWith(
+          1,
+          'payment.completed',
+          expect.objectContaining({ userId: 10, paymentId: 101 }),
+        )
+        expect(mockEventEmitter.emit).toHaveBeenNthCalledWith(
+          2,
+          'payment.completed',
+          expect.objectContaining({ userId: 20, paymentId: 102 }),
+        )
+        expect(mockEventEmitter.emit).toHaveBeenCalledTimes(2)
       })
 
       it('should return success message after processing', async () => {
         // Arrange
         const webhookPayload = createWebhookPayload()
-        mockPaymentRepo.receiver.mockResolvedValue(10)
+        mockPaymentRepo.receiver.mockResolvedValue({ userId: 10, paymentId: 100 })
 
         // Act
         const result = await service.receiver(webhookPayload)
@@ -144,7 +159,7 @@ describe('PaymentService', () => {
       })
     })
 
-    describe('❌ Error Cases', () => {
+    describe('Error Cases', () => {
       it('should propagate error from PaymentRepo', async () => {
         // Arrange
         const webhookPayload = createWebhookPayload()
@@ -156,31 +171,28 @@ describe('PaymentService', () => {
         expect(mockPaymentRepo.receiver).toHaveBeenCalledWith(webhookPayload)
       })
 
-      it('should not emit WebSocket event if repo throws error', async () => {
+      it('should not emit domain event if repo throws error', async () => {
         // Arrange
         const webhookPayload = createWebhookPayload()
         mockPaymentRepo.receiver.mockRejectedValue(new Error('Payment processing failed'))
 
         // Act & Assert
         await expect(service.receiver(webhookPayload)).rejects.toThrow()
-        expect(mockPaymentGateway.emitPaymentSuccess).not.toHaveBeenCalled()
+        expect(mockEventEmitter.emit).not.toHaveBeenCalled()
       })
 
-      it('should handle WebSocket emission error gracefully', async () => {
+      it('should handle timeout-like errors from repo', async () => {
         // Arrange
         const webhookPayload = createWebhookPayload()
-        const userId = 10
-        mockPaymentRepo.receiver.mockResolvedValue(userId)
-        mockPaymentGateway.emitPaymentSuccess.mockImplementation(() => {
-          throw new Error('WebSocket error')
-        })
+        mockPaymentRepo.receiver.mockRejectedValue(new Error('Connection timeout'))
 
         // Act & Assert
-        await expect(service.receiver(webhookPayload)).rejects.toThrow('WebSocket error')
+        await expect(service.receiver(webhookPayload)).rejects.toThrow('Connection timeout')
+        expect(mockEventEmitter.emit).not.toHaveBeenCalled()
       })
     })
 
-    describe('🔄 Integration Tests', () => {
+    describe('Integration Tests', () => {
       it('should process complete payment flow', async () => {
         // Arrange
         const webhookPayload = createWebhookPayload({
@@ -188,15 +200,17 @@ describe('PaymentService', () => {
           transferAmount: 1500000,
           gateway: 'MB Bank',
         })
-        const userId = 15
-        mockPaymentRepo.receiver.mockResolvedValue(userId)
+        mockPaymentRepo.receiver.mockResolvedValue({ userId: 15, paymentId: 200 })
 
         // Act
         const result = await service.receiver(webhookPayload)
 
         // Assert - Verify complete flow
         expect(mockPaymentRepo.receiver).toHaveBeenCalledWith(webhookPayload)
-        expect(mockPaymentGateway.emitPaymentSuccess).toHaveBeenCalledWith(15)
+        expect(mockEventEmitter.emit).toHaveBeenCalledWith(
+          'payment.completed',
+          expect.objectContaining({ userId: 15, paymentId: 200 }),
+        )
         expect(result).toEqual({ message: 'Payment received successfully' })
       })
 
@@ -207,7 +221,10 @@ describe('PaymentService', () => {
           createWebhookPayload({ id: 2 }),
           createWebhookPayload({ id: 3 }),
         ]
-        mockPaymentRepo.receiver.mockResolvedValueOnce(10).mockResolvedValueOnce(11).mockResolvedValueOnce(12)
+        mockPaymentRepo.receiver
+          .mockResolvedValueOnce({ userId: 10, paymentId: 1 })
+          .mockResolvedValueOnce({ userId: 11, paymentId: 2 })
+          .mockResolvedValueOnce({ userId: 12, paymentId: 3 })
 
         // Act
         const results = await Promise.all(webhooks.map((webhook) => service.receiver(webhook)))
@@ -215,21 +232,24 @@ describe('PaymentService', () => {
         // Assert
         expect(results).toHaveLength(3)
         expect(mockPaymentRepo.receiver).toHaveBeenCalledTimes(3)
-        expect(mockPaymentGateway.emitPaymentSuccess).toHaveBeenCalledTimes(3)
+        expect(mockEventEmitter.emit).toHaveBeenCalledTimes(3)
       })
     })
 
-    describe('📊 Edge Cases', () => {
+    describe('Edge Cases', () => {
       it('should handle userId = 0', async () => {
         // Arrange
         const webhookPayload = createWebhookPayload()
-        mockPaymentRepo.receiver.mockResolvedValue(0)
+        mockPaymentRepo.receiver.mockResolvedValue({ userId: 0, paymentId: 100 })
 
         // Act
         await service.receiver(webhookPayload)
 
         // Assert
-        expect(mockPaymentGateway.emitPaymentSuccess).toHaveBeenCalledWith(0)
+        expect(mockEventEmitter.emit).toHaveBeenCalledWith(
+          'payment.completed',
+          expect.objectContaining({ userId: 0 }),
+        )
       })
 
       it('should handle very large transaction amounts', async () => {
@@ -237,7 +257,7 @@ describe('PaymentService', () => {
         const webhookPayload = createWebhookPayload({
           transferAmount: 999999999999,
         })
-        mockPaymentRepo.receiver.mockResolvedValue(10)
+        mockPaymentRepo.receiver.mockResolvedValue({ userId: 10, paymentId: 100 })
 
         // Act
         const result = await service.receiver(webhookPayload)
@@ -253,7 +273,7 @@ describe('PaymentService', () => {
           content: 'Thanh toán đơn hàng #123 - Khách hàng: Nguyễn Văn A',
           description: 'Chuyển khoản có ký tự đặc biệt: @#$%^&*()',
         })
-        mockPaymentRepo.receiver.mockResolvedValue(10)
+        mockPaymentRepo.receiver.mockResolvedValue({ userId: 10, paymentId: 100 })
 
         // Act
         const result = await service.receiver(webhookPayload)
@@ -269,7 +289,7 @@ describe('PaymentService', () => {
           code: null,
           accountNumber: null,
         })
-        mockPaymentRepo.receiver.mockResolvedValue(10)
+        mockPaymentRepo.receiver.mockResolvedValue({ userId: 10, paymentId: 100 })
 
         // Act
         const result = await service.receiver(webhookPayload)
@@ -282,7 +302,7 @@ describe('PaymentService', () => {
       it('should handle duplicate webhook with same transaction id', async () => {
         // Arrange - same payload sent twice
         const webhookPayload = createWebhookPayload({ id: 12345 })
-        mockPaymentRepo.receiver.mockResolvedValueOnce(10)
+        mockPaymentRepo.receiver.mockResolvedValueOnce({ userId: 10, paymentId: 100 })
         mockPaymentRepo.receiver.mockRejectedValueOnce(new Error('Duplicate transaction'))
 
         // Act - first call succeeds
@@ -296,55 +316,63 @@ describe('PaymentService', () => {
       it('should handle repo returning negative userId', async () => {
         // Arrange
         const webhookPayload = createWebhookPayload()
-        mockPaymentRepo.receiver.mockResolvedValue(-1)
+        mockPaymentRepo.receiver.mockResolvedValue({ userId: -1, paymentId: 100 })
 
         // Act
         await service.receiver(webhookPayload)
 
         // Assert - still emits, validation is repo's responsibility
-        expect(mockPaymentGateway.emitPaymentSuccess).toHaveBeenCalledWith(-1)
-      })
-
-      it('should handle timeout-like errors from repo', async () => {
-        // Arrange
-        const webhookPayload = createWebhookPayload()
-        mockPaymentRepo.receiver.mockRejectedValue(new Error('Connection timeout'))
-
-        // Act & Assert
-        await expect(service.receiver(webhookPayload)).rejects.toThrow('Connection timeout')
-        expect(mockPaymentGateway.emitPaymentSuccess).not.toHaveBeenCalled()
+        expect(mockEventEmitter.emit).toHaveBeenCalledWith(
+          'payment.completed',
+          expect.objectContaining({ userId: -1 }),
+        )
       })
     })
   })
 
   // ============================================
-  // WEBSOCKET INTEGRATION TESTS
+  // EVENT EMISSION TESTS
   // ============================================
 
-  describe('WebSocket Integration', () => {
-    it('should delegate WebSocket emission to PaymentGateway', async () => {
+  describe('Event Emission', () => {
+    it('should emit exactly one event per receiver call', async () => {
       // Arrange
       const webhookPayload = createWebhookPayload()
-      const userId = 10
-      mockPaymentRepo.receiver.mockResolvedValue(userId)
+      mockPaymentRepo.receiver.mockResolvedValue({ userId: 10, paymentId: 100 })
 
       // Act
       await service.receiver(webhookPayload)
 
       // Assert
-      expect(mockPaymentGateway.emitPaymentSuccess).toHaveBeenCalledWith(10)
+      expect(mockEventEmitter.emit).toHaveBeenCalledTimes(1)
     })
 
-    it('should emit for each receiver call', async () => {
+    it('should emit event with a valid eventId (UUID format)', async () => {
       // Arrange
       const webhookPayload = createWebhookPayload()
-      mockPaymentRepo.receiver.mockResolvedValue(10)
+      mockPaymentRepo.receiver.mockResolvedValue({ userId: 10, paymentId: 100 })
 
       // Act
       await service.receiver(webhookPayload)
 
       // Assert
-      expect(mockPaymentGateway.emitPaymentSuccess).toHaveBeenCalledTimes(1)
+      const emittedEvent = (mockEventEmitter.emit as jest.Mock).mock.calls[0][1]
+      expect(emittedEvent.eventId).toMatch(
+        /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/,
+      )
+    })
+
+    it('should emit event with occurredAt as a Date', async () => {
+      // Arrange
+      const webhookPayload = createWebhookPayload()
+      mockPaymentRepo.receiver.mockResolvedValue({ userId: 10, paymentId: 100 })
+
+      // Act
+      await service.receiver(webhookPayload)
+
+      // Assert
+      const emittedEvent = (mockEventEmitter.emit as jest.Mock).mock.calls[0][1]
+      expect(emittedEvent.occurredAt).toBeInstanceOf(Date)
     })
   })
 })

@@ -1,4 +1,5 @@
 import { HttpException, Injectable, UnauthorizedException } from '@nestjs/common'
+import { EventEmitter2 } from '@nestjs/event-emitter'
 import { randomBytes } from 'crypto'
 import { generateOTP, isNotFoundPrismaError, isUniqueConstraintPrismaError } from 'src/shared/helpers'
 import { MESSAGES } from 'src/shared/constants/app.constant'
@@ -36,6 +37,7 @@ import {
 import { TwoFactorService } from 'src/shared/services/2fa.service'
 import { InvalidPasswordException } from 'src/shared/error'
 import { SharedRoleRepository } from 'src/shared/repositories/shared-role.repo'
+import { UserRegisteredEvent } from 'src/events/definitions'
 
 @Injectable()
 export class AuthService {
@@ -47,6 +49,7 @@ export class AuthService {
     private readonly emailService: EmailService,
     private readonly twoFactorService: TwoFactorService,
     private readonly sharedRoleRepository: SharedRoleRepository,
+    private readonly eventEmitter: EventEmitter2,
   ) {}
 
   async validateVerificationCode({
@@ -106,6 +109,9 @@ export class AuthService {
           },
         }),
       ])
+
+      // Emit domain event for post-registration side effects (welcome email, etc.)
+      this.eventEmitter.emit('user.registered', new UserRegisteredEvent(user.id, user.email))
 
       return user
     } catch (error) {

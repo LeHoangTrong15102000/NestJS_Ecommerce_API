@@ -1,4 +1,5 @@
 import { ForbiddenException } from '@nestjs/common'
+import { EventEmitter2 } from '@nestjs/event-emitter'
 import { Test, TestingModule } from '@nestjs/testing'
 import { I18nContext } from 'nestjs-i18n'
 import { ManageProductService } from 'src/routes/product/manage-product.service'
@@ -24,6 +25,7 @@ const mockIsNotFoundPrismaError = isNotFoundPrismaError as jest.MockedFunction<t
 describe('ManageProductService', () => {
   let service: ManageProductService
   let productRepo: jest.Mocked<ProductRepo>
+  let mockEventEmitter: { emit: jest.Mock }
 
   // Test data factory
   const createTestData = {
@@ -147,6 +149,8 @@ describe('ManageProductService', () => {
       delete: jest.fn(),
     }
 
+    mockEventEmitter = { emit: jest.fn() }
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         ManageProductService,
@@ -154,6 +158,7 @@ describe('ManageProductService', () => {
           provide: ProductRepo,
           useValue: mockProductRepo,
         },
+        { provide: EventEmitter2, useValue: mockEventEmitter },
       ],
     }).compile()
 
@@ -569,6 +574,74 @@ describe('ManageProductService', () => {
           roleNameRequest: RoleName.Client,
         }),
       ).rejects.toThrow(otherError)
+    })
+
+    it('should emit product.price-changed event when basePrice changes', async () => {
+      // Arrange
+      const mockProduct = createTestData.product({ createdById: 1, basePrice: 100000 })
+      const updateData = createTestData.updateProductData({ basePrice: 200000 })
+      const mockUpdatedProduct = createTestData.product({ createdById: 1, basePrice: 200000 })
+      productRepo.findById.mockResolvedValue(mockProduct as any)
+      productRepo.update.mockResolvedValue(mockUpdatedProduct as any)
+
+      // Act
+      await service.update({
+        productId: 1,
+        data: updateData as any,
+        updatedById: 1,
+        roleNameRequest: RoleName.Client,
+      })
+
+      // Assert
+      expect(mockEventEmitter.emit).toHaveBeenCalledWith(
+        'product.price-changed',
+        expect.objectContaining({
+          productId: 1,
+          oldPrice: 100000,
+          newPrice: 200000,
+          eventName: 'product.price-changed',
+        }),
+      )
+    })
+
+    it('should not emit price-changed event when basePrice is unchanged', async () => {
+      // Arrange
+      const mockProduct = createTestData.product({ createdById: 1, basePrice: 100000 })
+      const updateData = createTestData.updateProductData({ basePrice: 100000 })
+      const mockUpdatedProduct = createTestData.product({ createdById: 1, basePrice: 100000 })
+      productRepo.findById.mockResolvedValue(mockProduct as any)
+      productRepo.update.mockResolvedValue(mockUpdatedProduct as any)
+
+      // Act
+      await service.update({
+        productId: 1,
+        data: updateData as any,
+        updatedById: 1,
+        roleNameRequest: RoleName.Client,
+      })
+
+      // Assert
+      expect(mockEventEmitter.emit).not.toHaveBeenCalled()
+    })
+
+    it('should not emit price-changed event when basePrice is not in update data', async () => {
+      // Arrange
+      const mockProduct = createTestData.product({ createdById: 1, basePrice: 100000 })
+      const { basePrice: _omitted, ...updateDataWithoutPrice } = createTestData.updateProductData()
+      const mockUpdatedProduct = createTestData.product({ createdById: 1 })
+      productRepo.findById.mockResolvedValue(mockProduct as any)
+      productRepo.update.mockResolvedValue(mockUpdatedProduct as any)
+
+      // Act
+      await service.update({
+        productId: 1,
+        data: updateDataWithoutPrice as any,
+        updatedById: 1,
+        roleNameRequest: RoleName.Client,
+      })
+
+      // Assert
+      expect(mockEventEmitter.emit).not.toHaveBeenCalled()
     })
   })
 

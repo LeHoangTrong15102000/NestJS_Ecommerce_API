@@ -49,6 +49,7 @@ import { SharedModule } from 'src/shared/shared.module'
 import { WebsocketModule } from 'src/websockets/websocket.module'
 import { RateLimitGuard } from 'src/rate-limit/rate-limit.guard'
 import { RateLimitModule } from 'src/rate-limit/rate-limit.module'
+import { EventBusModule } from 'src/events/event-bus.module'
 
 @Module({
   imports: [
@@ -166,6 +167,7 @@ import { RateLimitModule } from 'src/rate-limit/rate-limit.module'
       typesOutputPath: path.resolve('src/generated/i18n.generated.ts'),
     }),
     RateLimitModule,
+    EventBusModule,
     WebsocketModule,
     SharedModule,
     MetricsModule,

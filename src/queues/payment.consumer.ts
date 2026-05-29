@@ -4,16 +4,19 @@
 // workers. Queue and job name constants are centralized in src/shared/constants/queue.constant.ts.
 import { Processor, WorkerHost } from '@nestjs/bullmq'
 import { Injectable } from '@nestjs/common'
+import { EventEmitter2 } from '@nestjs/event-emitter'
 import { InjectPinoLogger, PinoLogger } from 'nestjs-pino'
 import { Job } from 'bullmq'
 import { CANCEL_PAYMENT_JOB_NAME, PAYMENT_QUEUE_NAME } from 'src/shared/constants/queue.constant'
 import { SharedPaymentRepository } from 'src/shared/repositories/shared-payment.repo'
+import { PaymentFailedEvent } from 'src/events/definitions'
 
 @Processor(PAYMENT_QUEUE_NAME)
 export class PaymentConsumer extends WorkerHost {
   constructor(
     @InjectPinoLogger(PaymentConsumer.name) private readonly logger: PinoLogger,
     private readonly sharedPaymentRepo: SharedPaymentRepository,
+    private readonly eventEmitter: EventEmitter2,
   ) {
     super()
   }
@@ -26,8 +29,15 @@ export class PaymentConsumer extends WorkerHost {
         case CANCEL_PAYMENT_JOB_NAME: {
           const paymentId = job.data.paymentId
           this.logger.info(`Cancelling payment with ID: ${paymentId}`)
-          await this.sharedPaymentRepo.cancelPaymentAndOrder(paymentId)
+          const { userId } = await this.sharedPaymentRepo.cancelPaymentAndOrder(paymentId)
           this.logger.info(`Successfully cancelled payment with ID: ${paymentId}`)
+
+          // Emit domain event — decoupled from WebSocket notification
+          this.eventEmitter.emit(
+            'payment.failed',
+            new PaymentFailedEvent(paymentId, userId, 'Payment timeout — cancelled after 24 hours'),
+          )
+
           return { success: true, paymentId }
         }
         default: {

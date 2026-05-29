@@ -9,7 +9,7 @@ import { PrismaService } from 'src/shared/services/prisma.service'
 export class SharedPaymentRepository {
   constructor(private readonly prismaService: PrismaService) {}
 
-  async cancelPaymentAndOrder(paymentId: number) {
+  async cancelPaymentAndOrder(paymentId: number): Promise<{ userId: number }> {
     const payment = await this.prismaService.payment.findUnique({
       where: {
         id: paymentId,
@@ -26,6 +26,7 @@ export class SharedPaymentRepository {
       throw Error('Payment not found')
     }
     const { orders } = payment
+    const userId = orders[0]?.userId ?? 0
     const productSKUSnapshots = orders.map((order) => order.items).flat()
     await this.prismaService.$transaction(async (tx) => {
       const updateOrder$ = tx.order.updateMany({
@@ -68,5 +69,7 @@ export class SharedPaymentRepository {
       })
       return await Promise.all([updateOrder$, updateSkus$, updatePayment$])
     })
+
+    return { userId }
   }
 }

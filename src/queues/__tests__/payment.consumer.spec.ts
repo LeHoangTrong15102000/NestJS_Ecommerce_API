@@ -1,9 +1,11 @@
 import { Test, TestingModule } from '@nestjs/testing'
+import { EventEmitter2 } from '@nestjs/event-emitter'
 import { Job } from 'bullmq'
 import { getLoggerToken } from 'nestjs-pino'
 import { PaymentConsumer } from '../payment.consumer'
 import { SharedPaymentRepository } from 'src/shared/repositories/shared-payment.repo'
 import { CANCEL_PAYMENT_JOB_NAME } from 'src/shared/constants/queue.constant'
+import { PaymentFailedEvent } from 'src/events/definitions'
 
 /**
  * PAYMENT CONSUMER UNIT TESTS
@@ -17,6 +19,7 @@ import { CANCEL_PAYMENT_JOB_NAME } from 'src/shared/constants/queue.constant'
 describe('PaymentConsumer', () => {
   let consumer: PaymentConsumer
   let mockSharedPaymentRepo: jest.Mocked<SharedPaymentRepository>
+  let mockEventEmitter: jest.Mocked<EventEmitter2>
 
   const createMockJob = (name: string, data: any): Job =>
     ({
@@ -41,10 +44,15 @@ describe('PaymentConsumer', () => {
       cancelPaymentAndOrder: jest.fn(),
     } as any
 
+    mockEventEmitter = {
+      emit: jest.fn(),
+    } as any
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         PaymentConsumer,
         { provide: SharedPaymentRepository, useValue: mockSharedPaymentRepo },
+        { provide: EventEmitter2, useValue: mockEventEmitter },
         {
           provide: getLoggerToken(PaymentConsumer.name),
           useValue: {
@@ -72,12 +80,20 @@ describe('PaymentConsumer', () => {
       it('should cancel payment and order successfully', async () => {
         const paymentId = 1
         const job = createMockJob(CANCEL_PAYMENT_JOB_NAME, { paymentId })
-        mockSharedPaymentRepo.cancelPaymentAndOrder.mockResolvedValue(undefined)
+        mockSharedPaymentRepo.cancelPaymentAndOrder.mockResolvedValue({ userId: 1 })
 
         const result = await consumer.process(job)
 
         expect(mockSharedPaymentRepo.cancelPaymentAndOrder).toHaveBeenCalledWith(paymentId)
         expect(result).toEqual({ success: true, paymentId })
+        expect(mockEventEmitter.emit).toHaveBeenCalledWith(
+          'payment.failed',
+          expect.any(PaymentFailedEvent),
+        )
+        expect(mockEventEmitter.emit).toHaveBeenCalledWith(
+          'payment.failed',
+          expect.objectContaining({ paymentId, userId: 1 }),
+        )
       })
 
       it('should handle different payment IDs', async () => {
@@ -85,7 +101,7 @@ describe('PaymentConsumer', () => {
 
         for (const paymentId of paymentIds) {
           const job = createMockJob(CANCEL_PAYMENT_JOB_NAME, { paymentId })
-          mockSharedPaymentRepo.cancelPaymentAndOrder.mockResolvedValue(undefined)
+          mockSharedPaymentRepo.cancelPaymentAndOrder.mockResolvedValue({ userId: 1 })
 
           const result = await consumer.process(job)
 
@@ -127,7 +143,7 @@ describe('PaymentConsumer', () => {
       it('should return success result with paymentId on success', async () => {
         const paymentId = 1
         const job = createMockJob(CANCEL_PAYMENT_JOB_NAME, { paymentId })
-        mockSharedPaymentRepo.cancelPaymentAndOrder.mockResolvedValue(undefined)
+        mockSharedPaymentRepo.cancelPaymentAndOrder.mockResolvedValue({ userId: 1 })
 
         const result = await consumer.process(job)
 
@@ -138,7 +154,7 @@ describe('PaymentConsumer', () => {
 
       it('should extract paymentId from job data correctly', async () => {
         const job = createMockJob(CANCEL_PAYMENT_JOB_NAME, { paymentId: 42 })
-        mockSharedPaymentRepo.cancelPaymentAndOrder.mockResolvedValue(undefined)
+        mockSharedPaymentRepo.cancelPaymentAndOrder.mockResolvedValue({ userId: 1 })
 
         await consumer.process(job)
 
@@ -152,7 +168,7 @@ describe('PaymentConsumer', () => {
           extraField: 'ignored',
           anotherField: 123,
         })
-        mockSharedPaymentRepo.cancelPaymentAndOrder.mockResolvedValue(undefined)
+        mockSharedPaymentRepo.cancelPaymentAndOrder.mockResolvedValue({ userId: 1 })
 
         const result = await consumer.process(job)
 
@@ -162,7 +178,7 @@ describe('PaymentConsumer', () => {
 
       it('should call repository method exactly once per job', async () => {
         const job = createMockJob(CANCEL_PAYMENT_JOB_NAME, { paymentId: 1 })
-        mockSharedPaymentRepo.cancelPaymentAndOrder.mockResolvedValue(undefined)
+        mockSharedPaymentRepo.cancelPaymentAndOrder.mockResolvedValue({ userId: 1 })
 
         await consumer.process(job)
 
@@ -171,7 +187,7 @@ describe('PaymentConsumer', () => {
 
       it('should handle zero payment ID', async () => {
         const job = createMockJob(CANCEL_PAYMENT_JOB_NAME, { paymentId: 0 })
-        mockSharedPaymentRepo.cancelPaymentAndOrder.mockResolvedValue(undefined)
+        mockSharedPaymentRepo.cancelPaymentAndOrder.mockResolvedValue({ userId: 1 })
 
         const result = await consumer.process(job)
 
@@ -182,7 +198,7 @@ describe('PaymentConsumer', () => {
       it('should handle large payment ID', async () => {
         const largeId = 2147483647 // Max 32-bit integer
         const job = createMockJob(CANCEL_PAYMENT_JOB_NAME, { paymentId: largeId })
-        mockSharedPaymentRepo.cancelPaymentAndOrder.mockResolvedValue(undefined)
+        mockSharedPaymentRepo.cancelPaymentAndOrder.mockResolvedValue({ userId: 1 })
 
         const result = await consumer.process(job)
 
@@ -216,7 +232,7 @@ describe('PaymentConsumer', () => {
       it('should process job regardless of attempt count', async () => {
         const job = createMockJob(CANCEL_PAYMENT_JOB_NAME, { paymentId: 1 })
         job.attemptsMade = 3
-        mockSharedPaymentRepo.cancelPaymentAndOrder.mockResolvedValue(undefined)
+        mockSharedPaymentRepo.cancelPaymentAndOrder.mockResolvedValue({ userId: 1 })
 
         const result = await consumer.process(job)
 
@@ -227,7 +243,7 @@ describe('PaymentConsumer', () => {
       it('should process job with any job ID', async () => {
         const job = createMockJob(CANCEL_PAYMENT_JOB_NAME, { paymentId: 1 })
         job.id = 'custom-job-id-999'
-        mockSharedPaymentRepo.cancelPaymentAndOrder.mockResolvedValue(undefined)
+        mockSharedPaymentRepo.cancelPaymentAndOrder.mockResolvedValue({ userId: 1 })
 
         const result = await consumer.process(job)
 
@@ -242,7 +258,7 @@ describe('PaymentConsumer', () => {
           createMockJob(CANCEL_PAYMENT_JOB_NAME, { paymentId: 2 }),
           createMockJob(CANCEL_PAYMENT_JOB_NAME, { paymentId: 3 }),
         ]
-        mockSharedPaymentRepo.cancelPaymentAndOrder.mockResolvedValue(undefined)
+        mockSharedPaymentRepo.cancelPaymentAndOrder.mockResolvedValue({ userId: 1 })
 
         for (const job of jobs) {
           await consumer.process(job)
@@ -259,7 +275,7 @@ describe('PaymentConsumer', () => {
         const job2 = createMockJob(CANCEL_PAYMENT_JOB_NAME, { paymentId: 2 })
 
         mockSharedPaymentRepo.cancelPaymentAndOrder
-          .mockResolvedValueOnce(undefined)
+          .mockResolvedValueOnce({ userId: 1 })
           .mockRejectedValueOnce(new Error('Failed'))
 
         await consumer.process(job1)
@@ -272,7 +288,7 @@ describe('PaymentConsumer', () => {
     describe('edge cases', () => {
       it('should handle null paymentId gracefully', async () => {
         const job = createMockJob(CANCEL_PAYMENT_JOB_NAME, { paymentId: null })
-        mockSharedPaymentRepo.cancelPaymentAndOrder.mockResolvedValue(undefined)
+        mockSharedPaymentRepo.cancelPaymentAndOrder.mockResolvedValue({ userId: 1 })
 
         const result = await consumer.process(job)
 
@@ -282,7 +298,7 @@ describe('PaymentConsumer', () => {
 
       it('should handle undefined paymentId', async () => {
         const job = createMockJob(CANCEL_PAYMENT_JOB_NAME, { paymentId: undefined })
-        mockSharedPaymentRepo.cancelPaymentAndOrder.mockResolvedValue(undefined)
+        mockSharedPaymentRepo.cancelPaymentAndOrder.mockResolvedValue({ userId: 1 })
 
         const result = await consumer.process(job)
 
@@ -292,7 +308,7 @@ describe('PaymentConsumer', () => {
 
       it('should handle empty job data', async () => {
         const job = createMockJob(CANCEL_PAYMENT_JOB_NAME, {})
-        mockSharedPaymentRepo.cancelPaymentAndOrder.mockResolvedValue(undefined)
+        mockSharedPaymentRepo.cancelPaymentAndOrder.mockResolvedValue({ userId: 1 })
 
         const result = await consumer.process(job)
 

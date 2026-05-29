@@ -1,13 +1,13 @@
 import { Test, TestingModule } from '@nestjs/testing'
+import { EventEmitter2 } from '@nestjs/event-emitter'
 import { getLoggerToken } from 'nestjs-pino'
 import { PaymentRepo } from '../payment.repo'
 import { PaymentService } from '../payment.service'
-import { PaymentGateway } from '../../../websockets/payment.gateway'
 
 describe('PaymentService — Edge Cases', () => {
   let service: PaymentService
   let mockPaymentRepo: jest.Mocked<PaymentRepo>
-  let mockPaymentGateway: jest.Mocked<PaymentGateway>
+  let mockEventEmitter: jest.Mocked<EventEmitter2>
 
   const createWebhookBody = (overrides = {}) => ({
     gateway: 'SEPAY',
@@ -27,13 +27,13 @@ describe('PaymentService — Edge Cases', () => {
 
   beforeEach(async () => {
     mockPaymentRepo = { receiver: jest.fn() } as any
-    mockPaymentGateway = { emitPaymentSuccess: jest.fn() } as any
+    mockEventEmitter = { emit: jest.fn() } as any
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         PaymentService,
         { provide: PaymentRepo, useValue: mockPaymentRepo },
-        { provide: PaymentGateway, useValue: mockPaymentGateway },
+        { provide: EventEmitter2, useValue: mockEventEmitter },
         {
           provide: getLoggerToken(PaymentService.name),
           useValue: {
@@ -55,14 +55,17 @@ describe('PaymentService — Edge Cases', () => {
   afterEach(() => jest.clearAllMocks())
 
   describe('receiver — success path', () => {
-    it('should process webhook, emit WebSocket event, and return success message', async () => {
+    it('should process webhook, emit domain event, and return success message', async () => {
       const body = createWebhookBody()
-      mockPaymentRepo.receiver.mockResolvedValue(42)
+      mockPaymentRepo.receiver.mockResolvedValue({ userId: 42, paymentId: 100 })
 
       const result = await service.receiver(body)
 
       expect(mockPaymentRepo.receiver).toHaveBeenCalledWith(body)
-      expect(mockPaymentGateway.emitPaymentSuccess).toHaveBeenCalledWith(42)
+      expect(mockEventEmitter.emit).toHaveBeenCalledWith(
+        'payment.completed',
+        expect.objectContaining({ userId: 42, paymentId: 100 }),
+      )
       expect(result).toEqual({ message: 'Payment received successfully' })
     })
   })
@@ -74,7 +77,7 @@ describe('PaymentService — Edge Cases', () => {
       mockPaymentRepo.receiver.mockRejectedValue(error)
 
       await expect(service.receiver(body)).rejects.toThrow('Transaction already exists')
-      expect(mockPaymentGateway.emitPaymentSuccess).not.toHaveBeenCalled()
+      expect(mockEventEmitter.emit).not.toHaveBeenCalled()
     })
 
     it('should re-throw non-Error from repo and log without stack', async () => {
@@ -82,15 +85,15 @@ describe('PaymentService — Edge Cases', () => {
       mockPaymentRepo.receiver.mockRejectedValue('string error')
 
       await expect(service.receiver(body)).rejects.toBe('string error')
-      expect(mockPaymentGateway.emitPaymentSuccess).not.toHaveBeenCalled()
+      expect(mockEventEmitter.emit).not.toHaveBeenCalled()
     })
 
-    it('should not emit WebSocket event when repo throws', async () => {
+    it('should not emit domain event when repo throws', async () => {
       const body = createWebhookBody()
       mockPaymentRepo.receiver.mockRejectedValue(new Error('Cannot find payment'))
 
       await expect(service.receiver(body)).rejects.toThrow()
-      expect(mockPaymentGateway.emitPaymentSuccess).not.toHaveBeenCalled()
+      expect(mockEventEmitter.emit).not.toHaveBeenCalled()
     })
 
     it('should re-throw BadRequestException for price mismatch', async () => {

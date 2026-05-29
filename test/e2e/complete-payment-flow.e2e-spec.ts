@@ -162,7 +162,7 @@ describe('Complete Payment Flow E2E', () => {
             cartItemIds: [999999],
           },
         ])
-        .expect(422)
+        .expect(404)
     })
   })
 

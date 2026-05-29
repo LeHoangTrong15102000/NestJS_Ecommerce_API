@@ -1,5 +1,6 @@
 import { UnauthorizedException } from '@nestjs/common'
 import { JsonWebTokenError } from '@nestjs/jwt'
+import { EventEmitter2 } from '@nestjs/event-emitter'
 import { Test, TestingModule } from '@nestjs/testing'
 import { TypeOfVerificationCode } from '../../../shared/constants/auth.constant'
 import { InvalidPasswordException } from '../../../shared/error'
@@ -124,6 +125,7 @@ describe('AuthService — Edge Cases', () => {
         { provide: TwoFactorService, useValue: mockTwoFactorService },
         { provide: SharedUserRepository, useValue: mockSharedUserRepo },
         { provide: SharedRoleRepository, useValue: mockSharedRoleRepo },
+        { provide: EventEmitter2, useValue: { emit: jest.fn() } },
       ],
     }).compile()
     service = module.get<AuthService>(AuthService)

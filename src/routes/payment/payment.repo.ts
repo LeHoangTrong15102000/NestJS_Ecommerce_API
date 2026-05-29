@@ -28,7 +28,7 @@ export class PaymentRepo {
     return result
   }
 
-  async receiver(body: WebhookPaymentBodyType): Promise<number> {
+  async receiver(body: WebhookPaymentBodyType): Promise<{ userId: number; paymentId: number }> {
     // 1. Thêm thông tin giao dịch vào DB
     // Tham khảo: https://docs.sepay.vn/lap-trinh-webhooks.html
     let amountIn = 0
@@ -46,7 +46,7 @@ export class PaymentRepo {
     if (paymentTransaction) {
       throw new BadRequestException('Transaction already exists')
     }
-    const userId = await this.prismaService.$transaction(async (tx) => {
+    const result = await this.prismaService.$transaction(async (tx) => {
       // Parse transactionDate - support both ISO format and 'yyyy-MM-dd HH:mm:ss' format
       let transactionDate: Date
       try {
@@ -136,9 +136,9 @@ export class PaymentRepo {
         }),
         this.paymentProducer.removeJob(paymentId),
       ])
-      return userId
+      return { userId, paymentId }
     })
 
-    return userId
+    return result
   }
 }

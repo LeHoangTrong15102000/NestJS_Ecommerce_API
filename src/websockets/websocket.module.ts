@@ -8,5 +8,6 @@ import { ChatModule } from './chat.module'
 @Module({
   imports: [ChatModule],
   providers: [PaymentGateway, EnhancedChatGateway],
+  exports: [PaymentGateway],
 })
 export class WebsocketModule {}

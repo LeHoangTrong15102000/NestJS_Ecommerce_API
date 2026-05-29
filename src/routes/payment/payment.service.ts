@@ -1,8 +1,9 @@
 import { Injectable } from '@nestjs/common'
+import { EventEmitter2 } from '@nestjs/event-emitter'
 import { InjectPinoLogger, PinoLogger } from 'nestjs-pino'
 import { PaymentRepo } from 'src/routes/payment/payment.repo'
 import { WebhookPaymentBodyType } from 'src/routes/payment/payment.model'
-import { PaymentGateway } from 'src/websockets/payment.gateway'
+import { PaymentCompletedEvent } from 'src/events/definitions'
 import { MESSAGES } from 'src/shared/constants/app.constant'
 
 @Injectable()
@@ -10,13 +11,18 @@ export class PaymentService {
   constructor(
     @InjectPinoLogger(PaymentService.name) private readonly logger: PinoLogger,
     private readonly paymentRepo: PaymentRepo,
-    private readonly paymentGateway: PaymentGateway,
+    private readonly eventEmitter: EventEmitter2,
   ) {}
 
   async receiver(body: WebhookPaymentBodyType) {
     try {
-      const userId = await this.paymentRepo.receiver(body)
-      this.paymentGateway.emitPaymentSuccess(userId)
+      const { userId, paymentId } = await this.paymentRepo.receiver(body)
+
+      // Emit domain event — decoupled from WebSocket notification
+      this.eventEmitter.emit(
+        'payment.completed',
+        new PaymentCompletedEvent(paymentId, userId),
+      )
 
       return {
         message: MESSAGES.PAYMENT_RECEIVED,

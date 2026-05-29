@@ -1,4 +1,5 @@
 import { ForbiddenException, Injectable } from '@nestjs/common'
+import { EventEmitter2 } from '@nestjs/event-emitter'
 import { ProductRepo } from 'src/routes/product/product.repo'
 import {
   CreateProductBodyType,
@@ -11,10 +12,14 @@ import { isNotFoundPrismaError } from 'src/shared/helpers'
 import { I18nContext } from 'nestjs-i18n'
 import { RoleName } from 'src/shared/constants/role.constant'
 import { MESSAGES } from 'src/shared/constants/app.constant'
+import { ProductPriceChangedEvent } from 'src/events/definitions'
 
 @Injectable()
 export class ManageProductService {
-  constructor(private productRepo: ProductRepo) {}
+  constructor(
+    private productRepo: ProductRepo,
+    private readonly eventEmitter: EventEmitter2,
+  ) {}
 
   /**
    * Kiểm tra nếu người dùng không phải là người tạo sản phẩm hoặc admin thì không cho tiếp tục
@@ -110,6 +115,15 @@ export class ManageProductService {
         updatedById,
         data,
       })
+
+      // Emit domain event if base price changed
+      if (data.basePrice !== undefined && data.basePrice !== product.basePrice) {
+        this.eventEmitter.emit(
+          'product.price-changed',
+          new ProductPriceChangedEvent(productId, product.basePrice, data.basePrice),
+        )
+      }
+
       return updatedProduct
     } catch (error) {
       if (isNotFoundPrismaError(error)) {

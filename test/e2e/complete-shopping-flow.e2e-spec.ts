@@ -3,6 +3,7 @@ import { INestApplication } from '@nestjs/common'
 import { Test, TestingModule } from '@nestjs/testing'
 import request from 'supertest'
 import { AppModule } from '../../src/app.module'
+import envConfig from '../../src/shared/config'
 import { OrderStatus } from '../../src/shared/constants/order.constant'
 import { EmailService } from '../../src/shared/services/email.service'
 import { PrismaService } from '../../src/shared/services/prisma.service'
@@ -338,7 +339,7 @@ describe('Complete Shopping Flow E2E', () => {
 
       const paymentWebhookResponse = await request(app.getHttpServer())
         .post('/payment/receiver')
-        .set('Authorization', `Bearer ${process.env.PAYMENT_API_KEY || 'kmkjasdasd12312*@%%!dndan'}`)
+        .set('Authorization', `Bearer ${envConfig.PAYMENT_API_KEY}`)
         .send({
           id: Math.floor(Math.random() * 1000000),
           gateway: 'MB Bank',
