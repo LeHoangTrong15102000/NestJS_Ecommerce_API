@@ -1,0 +1,522 @@
+{
+  "generatedAt": "2026-06-01T12:05:54.108Z",
+  "totalErrors": 72,
+  "modules": [
+    {
+      "module": "address",
+      "file": "src/routes/address/address.error.ts",
+      "errors": [
+        {
+          "name": "ADDRESS_ERRORS.ADDRESS_NOT_FOUND",
+          "errorCode": "ADDRESS_NOT_FOUND",
+          "httpStatus": 404,
+          "message": "Địa chỉ không tồn tại"
+        },
+        {
+          "name": "ADDRESS_ERRORS.ADDRESS_ACCESS_DENIED",
+          "errorCode": "ADDRESS_ACCESS_DENIED",
+          "httpStatus": 403,
+          "message": "Bạn không có quyền truy cập địa chỉ này"
+        },
+        {
+          "name": "ADDRESS_ERRORS.CANNOT_DELETE_DEFAULT_ADDRESS",
+          "errorCode": "CANNOT_DELETE_DEFAULT_ADDRESS",
+          "httpStatus": 400,
+          "message": "Không thể xóa địa chỉ mặc định. Vui lòng đặt địa chỉ khác làm mặc định trước"
+        },
+        {
+          "name": "ADDRESS_ERRORS.MAX_ADDRESSES_EXCEEDED",
+          "errorCode": "MAX_ADDRESSES_EXCEEDED",
+          "httpStatus": 400,
+          "message": "Bạn đã đạt giới hạn tối đa số lượng địa chỉ (10 địa chỉ)"
+        },
+        {
+          "name": "ADDRESS_ERRORS.INVALID_ADDRESS_DATA",
+          "errorCode": "INVALID_ADDRESS_DATA",
+          "httpStatus": 400,
+          "message": "Dữ liệu địa chỉ không hợp lệ"
+        },
+        {
+          "name": "ADDRESS_ERRORS.CANNOT_SET_INACTIVE_AS_DEFAULT",
+          "errorCode": "CANNOT_SET_INACTIVE_AS_DEFAULT",
+          "httpStatus": 400,
+          "message": "Không thể đặt địa chỉ không hoạt động làm mặc định"
+        },
+        {
+          "name": "ADDRESS_ERRORS.PROVINCE_DISTRICT_MISMATCH",
+          "errorCode": "PROVINCE_DISTRICT_MISMATCH",
+          "httpStatus": 400,
+          "message": "Quận/huyện không thuộc tỉnh/thành đã chọn"
+        },
+        {
+          "name": "ADDRESS_ERRORS.DISTRICT_WARD_MISMATCH",
+          "errorCode": "DISTRICT_WARD_MISMATCH",
+          "httpStatus": 400,
+          "message": "Phường/xã không thuộc quận/huyện đã chọn"
+        }
+      ]
+    },
+    {
+      "module": "auth",
+      "file": "src/routes/auth/auth.error.ts",
+      "errors": [
+        {
+          "name": "InvalidOTPException",
+          "errorCode": "InvalidOTPException",
+          "httpStatus": 422,
+          "message": "Error.InvalidOTP"
+        },
+        {
+          "name": "OTPExpiredException",
+          "errorCode": "OTPExpiredException",
+          "httpStatus": 422,
+          "message": "Error.OTPExpired"
+        },
+        {
+          "name": "FailedToSendOTPException",
+          "errorCode": "FailedToSendOTPException",
+          "httpStatus": 422,
+          "message": "Error.FailedToSendOTP"
+        },
+        {
+          "name": "EmailAlreadyExistsException",
+          "errorCode": "EmailAlreadyExistsException",
+          "httpStatus": 422,
+          "message": "Error.EmailAlreadyExists"
+        },
+        {
+          "name": "EmailNotFoundException",
+          "errorCode": "EmailNotFoundException",
+          "httpStatus": 422,
+          "message": "Error.EmailNotFound"
+        },
+        {
+          "name": "TOTPAlreadyEnabledException",
+          "errorCode": "TOTPAlreadyEnabledException",
+          "httpStatus": 422,
+          "message": "Error.TOTPAlreadyEnabled"
+        },
+        {
+          "name": "TOTPNotEnabledException",
+          "errorCode": "TOTPNotEnabledException",
+          "httpStatus": 422,
+          "message": "Error.TOTPNotEnabled"
+        },
+        {
+          "name": "InvalidTOTPAndCodeException",
+          "errorCode": "InvalidTOTPAndCodeException",
+          "httpStatus": 422,
+          "message": "Error.InvalidTOTPAndCode"
+        },
+        {
+          "name": "InvalidTOTPException",
+          "errorCode": "InvalidTOTPException",
+          "httpStatus": 422,
+          "message": "Error.InvalidTOTP"
+        },
+        {
+          "name": "RefreshTokenAlreadyUsedException",
+          "errorCode": "RefreshTokenAlreadyUsedException",
+          "httpStatus": 401,
+          "message": "Error.RefreshTokenAlreadyUsed"
+        },
+        {
+          "name": "UnauthorizedAccessException",
+          "errorCode": "UnauthorizedAccessException",
+          "httpStatus": 401,
+          "message": "Error.UnauthorizedAccess"
+        }
+      ]
+    },
+    {
+      "module": "brand-translation",
+      "file": "src/routes/brand/brand-translation/brand-translation.error.ts",
+      "errors": [
+        {
+          "name": "BrandTranslationAlreadyExistsException",
+          "errorCode": "BrandTranslationAlreadyExistsException",
+          "httpStatus": 422,
+          "message": "Error.BrandTranslationAlreadyExists"
+        }
+      ]
+    },
+    {
+      "module": "cart",
+      "file": "src/routes/cart/cart.error.ts",
+      "errors": [
+        {
+          "name": "NotFoundSKUException",
+          "errorCode": "NotFoundSKUException",
+          "httpStatus": 404,
+          "message": "Error.SKU.NotFound"
+        },
+        {
+          "name": "OutOfStockSKUException",
+          "errorCode": "OutOfStockSKUException",
+          "httpStatus": 400,
+          "message": "Error.SKU.OutOfStock"
+        },
+        {
+          "name": "ProductNotFoundException",
+          "errorCode": "ProductNotFoundException",
+          "httpStatus": 404,
+          "message": "Error.Product.NotFound"
+        },
+        {
+          "name": "NotFoundCartItemException",
+          "errorCode": "NotFoundCartItemException",
+          "httpStatus": 404,
+          "message": "Error.CartItem.NotFound"
+        },
+        {
+          "name": "InvalidQuantityException",
+          "errorCode": "InvalidQuantityException",
+          "httpStatus": 400,
+          "message": "Error.CartItem.InvalidQuantity"
+        }
+      ]
+    },
+    {
+      "module": "category-translation",
+      "file": "src/routes/category/category-translation/category-translation.error.ts",
+      "errors": [
+        {
+          "name": "CategoryTranslationAlreadyExistsException",
+          "errorCode": "CategoryTranslationAlreadyExistsException",
+          "httpStatus": 422,
+          "message": "Error.CategoryTranslationAlreadyExists"
+        }
+      ]
+    },
+    {
+      "module": "language",
+      "file": "src/routes/language/language.error.ts",
+      "errors": [
+        {
+          "name": "LanguageAlreadyExistsException",
+          "errorCode": "LanguageAlreadyExistsException",
+          "httpStatus": 422,
+          "message": "Error.LanguageAlreadyExists"
+        }
+      ]
+    },
+    {
+      "module": "order",
+      "file": "src/routes/order/order.error.ts",
+      "errors": [
+        {
+          "name": "OrderNotFoundException",
+          "errorCode": "OrderNotFoundException",
+          "httpStatus": 404,
+          "message": "Error.OrderNotFound"
+        },
+        {
+          "name": "ProductNotFoundException",
+          "errorCode": "ProductNotFoundException",
+          "httpStatus": 404,
+          "message": "Error.ProductNotFound"
+        },
+        {
+          "name": "OutOfStockSKUException",
+          "errorCode": "OutOfStockSKUException",
+          "httpStatus": 400,
+          "message": "Error.OutOfStockSKU"
+        },
+        {
+          "name": "NotFoundCartItemException",
+          "errorCode": "NotFoundCartItemException",
+          "httpStatus": 404,
+          "message": "Error.NotFoundCartItem"
+        },
+        {
+          "name": "SKUNotBelongToShopException",
+          "errorCode": "SKUNotBelongToShopException",
+          "httpStatus": 400,
+          "message": "Error.SKUNotBelongToShop"
+        },
+        {
+          "name": "CannotCancelOrderException",
+          "errorCode": "CannotCancelOrderException",
+          "httpStatus": 400,
+          "message": "Error.CannotCancelOrder"
+        }
+      ]
+    },
+    {
+      "module": "permission",
+      "file": "src/routes/permission/permission.error.ts",
+      "errors": [
+        {
+          "name": "PermissionAlreadyExistsException",
+          "errorCode": "PermissionAlreadyExistsException",
+          "httpStatus": 422,
+          "message": "Error.PermissionAlreadyExists"
+        }
+      ]
+    },
+    {
+      "module": "product-translation",
+      "file": "src/routes/product/product-translation/product-translation.error.ts",
+      "errors": [
+        {
+          "name": "ProductTranslationAlreadyExistsException",
+          "errorCode": "ProductTranslationAlreadyExistsException",
+          "httpStatus": 422,
+          "message": "Error.ProductTranslationAlreadyExists"
+        }
+      ]
+    },
+    {
+      "module": "role",
+      "file": "src/routes/role/role.error.ts",
+      "errors": [
+        {
+          "name": "RoleAlreadyExistsException",
+          "errorCode": "RoleAlreadyExistsException",
+          "httpStatus": 422,
+          "message": "Error.RoleAlreadyExists"
+        },
+        {
+          "name": "ProhibitedActionOnBaseRoleException",
+          "errorCode": "ProhibitedActionOnBaseRoleException",
+          "httpStatus": 403,
+          "message": "Error.ProhibitedActionOnBaseRole"
+        }
+      ]
+    },
+    {
+      "module": "shared",
+      "file": "src/shared/error.ts",
+      "errors": [
+        {
+          "name": "InvalidPasswordException",
+          "errorCode": "InvalidPasswordException",
+          "httpStatus": 422,
+          "message": "Error.InvalidPassword"
+        },
+        {
+          "name": "NotFoundRecordException",
+          "errorCode": "NotFoundRecordException",
+          "httpStatus": 404,
+          "message": "Error.NotFound"
+        }
+      ]
+    },
+    {
+      "module": "user",
+      "file": "src/routes/user/user.error.ts",
+      "errors": [
+        {
+          "name": "UserAlreadyExistsException",
+          "errorCode": "UserAlreadyExistsException",
+          "httpStatus": 422,
+          "message": "Error.UserAlreadyExists"
+        },
+        {
+          "name": "RoleNotFoundException",
+          "errorCode": "RoleNotFoundException",
+          "httpStatus": 422,
+          "message": "Error.RoleNotFound"
+        },
+        {
+          "name": "CannotUpdateAdminUserException",
+          "errorCode": "CannotUpdateAdminUserException",
+          "httpStatus": 403,
+          "message": "Error.CannotUpdateAdminUser"
+        },
+        {
+          "name": "CannotDeleteAdminUserException",
+          "errorCode": "CannotDeleteAdminUserException",
+          "httpStatus": 403,
+          "message": "Error.CannotDeleteAdminUser"
+        },
+        {
+          "name": "CannotSetAdminRoleToUserException",
+          "errorCode": "CannotSetAdminRoleToUserException",
+          "httpStatus": 403,
+          "message": "Error.CannotSetAdminRoleToUser"
+        },
+        {
+          "name": "CannotUpdateOrDeleteYourselfException",
+          "errorCode": "CannotUpdateOrDeleteYourselfException",
+          "httpStatus": 403,
+          "message": "Error.CannotUpdateOrDeleteYourself"
+        }
+      ]
+    },
+    {
+      "module": "voucher",
+      "file": "src/routes/voucher/voucher.error.ts",
+      "errors": [
+        {
+          "name": "VOUCHER_ERRORS.VOUCHER_NOT_FOUND",
+          "errorCode": "VOUCHER_NOT_FOUND",
+          "httpStatus": 404,
+          "message": "Voucher không tồn tại"
+        },
+        {
+          "name": "VOUCHER_ERRORS.VOUCHER_CODE_NOT_FOUND",
+          "errorCode": "VOUCHER_CODE_NOT_FOUND",
+          "httpStatus": 404,
+          "message": "Mã voucher không tồn tại"
+        },
+        {
+          "name": "VOUCHER_ERRORS.VOUCHER_ACCESS_DENIED",
+          "errorCode": "VOUCHER_ACCESS_DENIED",
+          "httpStatus": 403,
+          "message": "Bạn không có quyền truy cập voucher này"
+        },
+        {
+          "name": "VOUCHER_ERRORS.VOUCHER_CODE_EXISTS",
+          "errorCode": "VOUCHER_CODE_EXISTS",
+          "httpStatus": 400,
+          "message": "Mã voucher đã tồn tại"
+        },
+        {
+          "name": "VOUCHER_ERRORS.INVALID_VOUCHER_DATES",
+          "errorCode": "INVALID_VOUCHER_DATES",
+          "httpStatus": 400,
+          "message": "Ngày bắt đầu phải trước ngày kết thúc"
+        },
+        {
+          "name": "VOUCHER_ERRORS.INVALID_PERCENTAGE_VALUE",
+          "errorCode": "INVALID_PERCENTAGE_VALUE",
+          "httpStatus": 400,
+          "message": "Giá trị giảm giá theo % phải từ 1-100"
+        },
+        {
+          "name": "VOUCHER_ERRORS.VOUCHER_ALREADY_COLLECTED",
+          "errorCode": "VOUCHER_ALREADY_COLLECTED",
+          "httpStatus": 400,
+          "message": "Bạn đã lưu voucher này rồi"
+        },
+        {
+          "name": "VOUCHER_ERRORS.VOUCHER_USAGE_LIMIT_EXCEEDED",
+          "errorCode": "VOUCHER_USAGE_LIMIT_EXCEEDED",
+          "httpStatus": 400,
+          "message": "Voucher đã hết lượt sử dụng"
+        },
+        {
+          "name": "VOUCHER_ERRORS.VOUCHER_EXPIRED",
+          "errorCode": "VOUCHER_EXPIRED",
+          "httpStatus": 400,
+          "message": "Voucher đã hết hạn"
+        },
+        {
+          "name": "VOUCHER_ERRORS.VOUCHER_NOT_STARTED",
+          "errorCode": "VOUCHER_NOT_STARTED",
+          "httpStatus": 400,
+          "message": "Voucher chưa có hiệu lực"
+        },
+        {
+          "name": "VOUCHER_ERRORS.VOUCHER_INACTIVE",
+          "errorCode": "VOUCHER_INACTIVE",
+          "httpStatus": 400,
+          "message": "Voucher đã bị vô hiệu hóa"
+        },
+        {
+          "name": "VOUCHER_ERRORS.VOUCHER_NOT_COLLECTED",
+          "errorCode": "VOUCHER_NOT_COLLECTED",
+          "httpStatus": 400,
+          "message": "Bạn chưa lưu voucher này"
+        },
+        {
+          "name": "VOUCHER_ERRORS.USER_VOUCHER_LIMIT_EXCEEDED",
+          "errorCode": "USER_VOUCHER_LIMIT_EXCEEDED",
+          "httpStatus": 400,
+          "message": "Bạn đã sử dụng hết lượt voucher này"
+        },
+        {
+          "name": "VOUCHER_ERRORS.ORDER_VALUE_TOO_LOW",
+          "errorCode": "ORDER_VALUE_TOO_LOW",
+          "httpStatus": 400,
+          "message": "Giá trị đơn hàng chưa đủ điều kiện sử dụng voucher"
+        },
+        {
+          "name": "VOUCHER_ERRORS.PRODUCTS_NOT_APPLICABLE",
+          "errorCode": "PRODUCTS_NOT_APPLICABLE",
+          "httpStatus": 400,
+          "message": "Sản phẩm trong đơn hàng không áp dụng được voucher này"
+        },
+        {
+          "name": "VOUCHER_ERRORS.PRODUCTS_EXCLUDED",
+          "errorCode": "PRODUCTS_EXCLUDED",
+          "httpStatus": 400,
+          "message": "Đơn hàng chứa sản phẩm không được áp dụng voucher"
+        },
+        {
+          "name": "VOUCHER_ERRORS.INVALID_VOUCHER_TYPE",
+          "errorCode": "INVALID_VOUCHER_TYPE",
+          "httpStatus": 400,
+          "message": "Loại voucher không hợp lệ"
+        },
+        {
+          "name": "VOUCHER_ERRORS.INVALID_VOUCHER_VALUE",
+          "errorCode": "INVALID_VOUCHER_VALUE",
+          "httpStatus": 400,
+          "message": "Giá trị voucher không hợp lệ"
+        },
+        {
+          "name": "VOUCHER_ERRORS.INVALID_USAGE_LIMIT",
+          "errorCode": "INVALID_USAGE_LIMIT",
+          "httpStatus": 400,
+          "message": "Giới hạn sử dụng không hợp lệ"
+        },
+        {
+          "name": "VOUCHER_ERRORS.SELLER_CANNOT_USE_PLATFORM_VOUCHER",
+          "errorCode": "SELLER_CANNOT_USE_PLATFORM_VOUCHER",
+          "httpStatus": 400,
+          "message": "Seller không thể sử dụng voucher hệ thống"
+        },
+        {
+          "name": "VOUCHER_ERRORS.CANNOT_EDIT_USED_VOUCHER",
+          "errorCode": "CANNOT_EDIT_USED_VOUCHER",
+          "httpStatus": 400,
+          "message": "Không thể chỉnh sửa voucher đã được sử dụng"
+        },
+        {
+          "name": "VOUCHER_ERRORS.CANNOT_DELETE_USED_VOUCHER",
+          "errorCode": "CANNOT_DELETE_USED_VOUCHER",
+          "httpStatus": 400,
+          "message": "Không thể xóa voucher đã được sử dụng"
+        }
+      ]
+    },
+    {
+      "module": "wishlist",
+      "file": "src/routes/wishlist/wishlist.error.ts",
+      "errors": [
+        {
+          "name": "WishlistItemNotFoundException",
+          "errorCode": "WISHLIST_ITEM_NOT_FOUND",
+          "httpStatus": 404,
+          "message": "Wishlist item not found"
+        },
+        {
+          "name": "WishlistCollectionNotFoundException",
+          "errorCode": "WISHLIST_COLLECTION_NOT_FOUND",
+          "httpStatus": 404,
+          "message": "Wishlist collection not found"
+        },
+        {
+          "name": "WishlistItemAlreadyExistsException",
+          "errorCode": "WISHLIST_ITEM_ALREADY_EXISTS",
+          "httpStatus": 409,
+          "message": "Product already in wishlist"
+        },
+        {
+          "name": "NoSKUSelectedException",
+          "errorCode": "NO_SKU_SELECTED",
+          "httpStatus": 400,
+          "message": "Cannot add to cart: No SKU selected for this product"
+        },
+        {
+          "name": "UnauthorizedWishlistAccessException",
+          "errorCode": "UNAUTHORIZED_WISHLIST_ACCESS",
+          "httpStatus": 403,
+          "message": "You do not have permission to access this wishlist item"
+        }
+      ]
+    }
+  ]
+}
