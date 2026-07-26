@@ -35,7 +35,7 @@ MongoDB flexible schema là ưu điểm, nhưng cũng là rủi ro:
 ```
 Application A ghi: { "price": 29990000, "status": "active" }
 Application B ghi: { "price": "29990000", "status": 1 }
-Script import ghi: { "prce": 29990000 }  ← typo field name
+Script import ghi: { "price": 29990000 }  ← typo field name
 ```
 
 Không có validation → 3 dạng data khác nhau trong cùng collection → query sai, aggregation sai, application crash.
@@ -45,54 +45,54 @@ Không có validation → 3 dạng data khác nhau trong cùng collection → qu
 ### 1.2. Cú pháp cơ bản
 
 ```javascript
-db.createCollection("products", {
+db.createCollection('products', {
   validator: {
     $jsonSchema: {
-      bsonType: "object",
-      title: "Product Validation",
-      required: ["name", "price", "category_id", "status", "created_at"],
+      bsonType: 'object',
+      title: 'Product Validation',
+      required: ['name', 'price', 'category_id', 'status', 'created_at'],
       properties: {
         name: {
-          bsonType: "string",
+          bsonType: 'string',
           minLength: 1,
           maxLength: 500,
-          description: "Tên sản phẩm — bắt buộc, string, 1-500 ký tự"
+          description: 'Tên sản phẩm — bắt buộc, string, 1-500 ký tự',
         },
         price: {
-          bsonType: "number",
+          bsonType: 'number',
           minimum: 0,
-          description: "Giá sản phẩm — bắt buộc, số không âm"
+          description: 'Giá sản phẩm — bắt buộc, số không âm',
         },
         category_id: {
-          bsonType: "objectId",
-          description: "ID category — bắt buộc"
+          bsonType: 'objectId',
+          description: 'ID category — bắt buộc',
         },
         status: {
-          bsonType: "string",
-          enum: ["draft", "active", "inactive", "deleted"],
-          description: "Trạng thái — chỉ chấp nhận 4 giá trị"
+          bsonType: 'string',
+          enum: ['draft', 'active', 'inactive', 'deleted'],
+          description: 'Trạng thái — chỉ chấp nhận 4 giá trị',
         },
         tags: {
-          bsonType: "array",
-          items: { bsonType: "string" },
+          bsonType: 'array',
+          items: { bsonType: 'string' },
           maxItems: 50,
           uniqueItems: true,
-          description: "Tags — array of unique strings, tối đa 50"
+          description: 'Tags — array of unique strings, tối đa 50',
         },
         specifications: {
-          bsonType: "object",
-          description: "Thông số kỹ thuật — flexible object"
+          bsonType: 'object',
+          description: 'Thông số kỹ thuật — flexible object',
         },
         created_at: {
-          bsonType: "date",
-          description: "Ngày tạo — bắt buộc"
-        }
+          bsonType: 'date',
+          description: 'Ngày tạo — bắt buộc',
+        },
       },
-      additionalProperties: false  // Không cho phép fields ngoài danh sách
-    }
+      additionalProperties: false, // Không cho phép fields ngoài danh sách
+    },
   },
-  validationLevel: "strict",       // Áp dụng cho cả insert lẫn update
-  validationAction: "error"        // Reject document không hợp lệ (thay vì chỉ warning)
+  validationLevel: 'strict', // Áp dụng cho cả insert lẫn update
+  validationAction: 'error', // Reject document không hợp lệ (thay vì chỉ warning)
 })
 ```
 
@@ -106,7 +106,7 @@ db.createCollection("products", {
     required: ["name", "email"],
     properties: {
       name: { bsonType: "string" },
-      email: { 
+      email: {
         bsonType: "string",
         pattern: "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$"
       },
@@ -133,35 +133,43 @@ db.createCollection("products", {
 
 ### 1.4. validationLevel & validationAction
 
-| `validationLevel` | Hành vi |
-|---|---|
-| `"strict"` (mặc định) | Validate tất cả inserts VÀ updates |
-| `"moderate"` | Validate inserts + chỉ validate updates trên documents đã hợp lệ sẵn. Documents cũ không hợp lệ vẫn update được |
+| `validationLevel`     | Hành vi                                                                                                         |
+| --------------------- | --------------------------------------------------------------------------------------------------------------- |
+| `"strict"` (mặc định) | Validate tất cả inserts VÀ updates                                                                              |
+| `"moderate"`          | Validate inserts + chỉ validate updates trên documents đã hợp lệ sẵn. Documents cũ không hợp lệ vẫn update được |
 
-| `validationAction` | Hành vi |
-|---|---|
-| `"error"` (mặc định) | Reject document không hợp lệ |
-| `"warn"` | Cho phép insert/update nhưng ghi warning vào MongoDB log |
+| `validationAction`   | Hành vi                                                  |
+| -------------------- | -------------------------------------------------------- |
+| `"error"` (mặc định) | Reject document không hợp lệ                             |
+| `"warn"`             | Cho phép insert/update nhưng ghi warning vào MongoDB log |
 
 **Migration strategy**: Khi thêm validation vào collection có sẵn data cũ không hợp lệ:
 
 ```javascript
 // Bước 1: Dùng "moderate" + "warn" để phát hiện data cũ không hợp lệ
 db.runCommand({
-  collMod: "products",
-  validator: { $jsonSchema: { /* ... */ } },
-  validationLevel: "moderate",
-  validationAction: "warn"
+  collMod: 'products',
+  validator: {
+    $jsonSchema: {
+      /* ... */
+    },
+  },
+  validationLevel: 'moderate',
+  validationAction: 'warn',
 })
 
 // Bước 2: Fix data cũ dần dần (lazy hoặc batch migration)
 
 // Bước 3: Chuyển sang "strict" + "error" khi data đã clean
 db.runCommand({
-  collMod: "products",
-  validator: { $jsonSchema: { /* ... */ } },
-  validationLevel: "strict",
-  validationAction: "error"
+  collMod: 'products',
+  validator: {
+    $jsonSchema: {
+      /* ... */
+    },
+  },
+  validationLevel: 'strict',
+  validationAction: 'error',
 })
 ```
 
@@ -187,24 +195,24 @@ Từ MongoDB 5.0:
   → MongoDB tự động "bucket" bên trong engine (tối ưu hơn, zero-effort)
 ```
 
-| So sánh | Bucket Pattern (thủ công) | Time Series Collection (native) |
-|---|---|---|
-| Setup | Developer tự viết logic gom bucket | `db.createCollection({ timeseries: ... })` |
-| Compression | Không | Tự động columnar compression (tiết kiệm 90%+ storage) |
-| Insert logic | Developer phải check bucket → upsert | Insert bình thường, engine tự tối ưu |
-| Query optimization | Developer tự thêm summary fields | Engine tự optimize aggregation trên time-series |
-| Maintenance | Phải tự manage bucket lifecycle | Automatic |
+| So sánh            | Bucket Pattern (thủ công)            | Time Series Collection (native)                       |
+| ------------------ | ------------------------------------ | ----------------------------------------------------- |
+| Setup              | Developer tự viết logic gom bucket   | `db.createCollection({ timeseries: ... })`            |
+| Compression        | Không                                | Tự động columnar compression (tiết kiệm 90%+ storage) |
+| Insert logic       | Developer phải check bucket → upsert | Insert bình thường, engine tự tối ưu                  |
+| Query optimization | Developer tự thêm summary fields     | Engine tự optimize aggregation trên time-series       |
+| Maintenance        | Phải tự manage bucket lifecycle      | Automatic                                             |
 
 ### 2.2. Tạo Time Series Collection
 
 ```javascript
-db.createCollection("sensor_readings", {
+db.createCollection('sensor_readings', {
   timeseries: {
-    timeField: "timestamp",           // BẮT BUỘC: field chứa thời gian
-    metaField: "metadata",            // TÙY CHỌN: field chứa metadata (sensor_id, location...)
-    granularity: "seconds"            // TÙY CHỌN: "seconds" | "minutes" | "hours"
+    timeField: 'timestamp', // BẮT BUỘC: field chứa thời gian
+    metaField: 'metadata', // TÙY CHỌN: field chứa metadata (sensor_id, location...)
+    granularity: 'seconds', // TÙY CHỌN: "seconds" | "minutes" | "hours"
   },
-  expireAfterSeconds: 2592000         // TÙY CHỌN: auto-delete sau 30 ngày (TTL)
+  expireAfterSeconds: 2592000, // TÙY CHỌN: auto-delete sau 30 ngày (TTL)
 })
 ```
 
@@ -214,48 +222,54 @@ db.createCollection("sensor_readings", {
 // Insert — giống collection bình thường
 db.sensor_readings.insertMany([
   {
-    timestamp: ISODate("2025-01-15T10:30:00.123Z"),
-    metadata: { sensor_id: "temp_01", location: "warehouse_A", type: "temperature" },
+    timestamp: ISODate('2025-01-15T10:30:00.123Z'),
+    metadata: { sensor_id: 'temp_01', location: 'warehouse_A', type: 'temperature' },
     value: 22.5,
-    unit: "celsius"
+    unit: 'celsius',
   },
   {
-    timestamp: ISODate("2025-01-15T10:30:01.456Z"),
-    metadata: { sensor_id: "temp_01", location: "warehouse_A", type: "temperature" },
+    timestamp: ISODate('2025-01-15T10:30:01.456Z'),
+    metadata: { sensor_id: 'temp_01', location: 'warehouse_A', type: 'temperature' },
     value: 22.6,
-    unit: "celsius"
+    unit: 'celsius',
   },
   {
-    timestamp: ISODate("2025-01-15T10:30:00.789Z"),
-    metadata: { sensor_id: "humid_01", location: "warehouse_A", type: "humidity" },
+    timestamp: ISODate('2025-01-15T10:30:00.789Z'),
+    metadata: { sensor_id: 'humid_01', location: 'warehouse_A', type: 'humidity' },
     value: 65.2,
-    unit: "percent"
-  }
+    unit: 'percent',
+  },
 ])
 
 // Query — giống collection bình thường
-db.sensor_readings.find({
-  "metadata.sensor_id": "temp_01",
-  timestamp: { 
-    $gte: ISODate("2025-01-15T10:00:00Z"),
-    $lt: ISODate("2025-01-15T11:00:00Z")
-  }
-}).sort({ timestamp: 1 })
+db.sensor_readings
+  .find({
+    'metadata.sensor_id': 'temp_01',
+    timestamp: {
+      $gte: ISODate('2025-01-15T10:00:00Z'),
+      $lt: ISODate('2025-01-15T11:00:00Z'),
+    },
+  })
+  .sort({ timestamp: 1 })
 
 // Aggregation — MongoDB tự tối ưu cho time-series
 db.sensor_readings.aggregate([
-  { $match: { 
-    "metadata.sensor_id": "temp_01",
-    timestamp: { $gte: ISODate("2025-01-15"), $lt: ISODate("2025-01-16") }
-  }},
-  { $group: {
-    _id: { $dateTrunc: { date: "$timestamp", unit: "hour" } },
-    avg_value: { $avg: "$value" },
-    min_value: { $min: "$value" },
-    max_value: { $max: "$value" },
-    count: { $sum: 1 }
-  }},
-  { $sort: { _id: 1 } }
+  {
+    $match: {
+      'metadata.sensor_id': 'temp_01',
+      timestamp: { $gte: ISODate('2025-01-15'), $lt: ISODate('2025-01-16') },
+    },
+  },
+  {
+    $group: {
+      _id: { $dateTrunc: { date: '$timestamp', unit: 'hour' } },
+      avg_value: { $avg: '$value' },
+      min_value: { $min: '$value' },
+      max_value: { $max: '$value' },
+      count: { $sum: 1 },
+    },
+  },
+  { $sort: { _id: 1 } },
 ])
 ```
 
@@ -263,11 +277,11 @@ db.sensor_readings.aggregate([
 
 `granularity` ảnh hưởng đến cách MongoDB gom data vào internal buckets:
 
-| Granularity | Bucket time span | Phù hợp cho |
-|---|---|---|
-| `"seconds"` | 1 giờ | IoT sensor (data mỗi giây/mili-giây) |
-| `"minutes"` | 24 giờ | Application metrics, stock prices (data mỗi phút) |
-| `"hours"` | 30 ngày | Weather data, daily reports (data mỗi giờ/ngày) |
+| Granularity | Bucket time span | Phù hợp cho                                       |
+| ----------- | ---------------- | ------------------------------------------------- |
+| `"seconds"` | 1 giờ            | IoT sensor (data mỗi giây/mili-giây)              |
+| `"minutes"` | 24 giờ           | Application metrics, stock prices (data mỗi phút) |
+| `"hours"`   | 30 ngày          | Weather data, daily reports (data mỗi giờ/ngày)   |
 
 **Nguyên tắc**: Chọn granularity **bằng hoặc nhỏ hơn** khoảng cách thời gian giữa 2 data points liên tiếp từ **cùng 1 source** (cùng `metaField`).
 
@@ -307,18 +321,18 @@ File gốc không đề cập cách thiết kế schema sao cho **tối ưu cho 
 ```javascript
 // KHÔNG TỐI ƯU: $unwind trước → expand data → rồi mới filter
 db.orders.aggregate([
-  { $unwind: "$items" },           // 1 order 10 items → 10 documents
-  { $match: { "items.sku": "IPH15" } },
-  { $group: { _id: "$customer_id", total: { $sum: "$items.subtotal" } } }
+  { $unwind: '$items' }, // 1 order 10 items → 10 documents
+  { $match: { 'items.sku': 'IPH15' } },
+  { $group: { _id: '$customer_id', total: { $sum: '$items.subtotal' } } },
 ])
 // Nếu 1M orders × 10 items = 10M documents đi qua pipeline!
 
 // TỐI ƯU: $match trước → giảm data sớm
 db.orders.aggregate([
-  { $match: { "items.sku": "IPH15" } },   // Filter trước → chỉ orders chứa sku đó
-  { $unwind: "$items" },                    // Unwind ít documents hơn
-  { $match: { "items.sku": "IPH15" } },    // Filter lần 2 sau unwind
-  { $group: { _id: "$customer_id", total: { $sum: "$items.subtotal" } } }
+  { $match: { 'items.sku': 'IPH15' } }, // Filter trước → chỉ orders chứa sku đó
+  { $unwind: '$items' }, // Unwind ít documents hơn
+  { $match: { 'items.sku': 'IPH15' } }, // Filter lần 2 sau unwind
+  { $group: { _id: '$customer_id', total: { $sum: '$items.subtotal' } } },
 ])
 ```
 
@@ -340,30 +354,33 @@ db.orders.aggregate([
 ```
 
 **Khi nào cần $unwind:**
+
 - Cần group/sort theo element trong array
 - Cần join ($lookup) trên giá trị trong array
 
 **Khi nào TRÁNH $unwind:**
+
 - Chỉ cần filter array → dùng `$filter` trong `$project`
 - Chỉ cần 1 element → dùng `$arrayElemAt`
 - Chỉ cần aggregate array → dùng `$reduce`, `$sum`, `$avg` trực tiếp trên array
 
 ```javascript
 // THAY VÌ $unwind → $group để tính tổng:
-db.orders.aggregate([
-  { $unwind: "$items" },
-  { $group: { _id: "$_id", total: { $sum: "$items.subtotal" } } }
-])
+db.orders.aggregate([{ $unwind: '$items' }, { $group: { _id: '$_id', total: { $sum: '$items.subtotal' } } }])
 
 // DÙNG $reduce (không cần $unwind):
 db.orders.aggregate([
-  { $project: {
-    total: { $reduce: {
-      input: "$items",
-      initialValue: 0,
-      in: { $add: ["$$value", "$$this.subtotal"] }
-    }}
-  }}
+  {
+    $project: {
+      total: {
+        $reduce: {
+          input: '$items',
+          initialValue: 0,
+          in: { $add: ['$$value', '$$this.subtotal'] },
+        },
+      },
+    },
+  },
 ])
 ```
 
@@ -372,30 +389,35 @@ db.orders.aggregate([
 ```javascript
 // Basic $lookup
 db.orders.aggregate([
-  { $lookup: {
-    from: "users",
-    localField: "customer_id",
-    foreignField: "_id",
-    as: "customer"
-  }},
-  { $unwind: "$customer" }   // vì $lookup trả về array
+  {
+    $lookup: {
+      from: 'users',
+      localField: 'customer_id',
+      foreignField: '_id',
+      as: 'customer',
+    },
+  },
+  { $unwind: '$customer' }, // vì $lookup trả về array
 ])
 
 // Pipeline $lookup (mạnh hơn, cho phép filter/project trong lookup)
 db.orders.aggregate([
-  { $lookup: {
-    from: "products",
-    let: { productIds: "$items.product_id" },
-    pipeline: [
-      { $match: { $expr: { $in: ["$_id", "$$productIds"] } } },
-      { $project: { name: 1, price: 1, thumbnail: 1 } }  // chỉ lấy fields cần
-    ],
-    as: "product_details"
-  }}
+  {
+    $lookup: {
+      from: 'products',
+      let: { productIds: '$items.product_id' },
+      pipeline: [
+        { $match: { $expr: { $in: ['$_id', '$$productIds'] } } },
+        { $project: { name: 1, price: 1, thumbnail: 1 } }, // chỉ lấy fields cần
+      ],
+      as: 'product_details',
+    },
+  },
 ])
 ```
 
 **Best practices cho $lookup:**
+
 1. **$match trước $lookup** — giảm số documents cần join
 2. **Pipeline $lookup** — filter/project trong lookup để giảm data truyền
 3. **Index trên foreignField** — `$lookup` cần index trên `foreignField` của collection "from"
@@ -408,34 +430,32 @@ Khi cần tính nhiều kết quả khác nhau trên cùng input data:
 ```javascript
 // E-commerce: Product listing page cần đồng thời: results + total count + filters
 db.products.aggregate([
-  { $match: { category_id: ObjectId("cat_01"), status: "active" } },
-  { $facet: {
-    // Nhánh 1: Paginated results
-    results: [
-      { $sort: { created_at: -1 } },
-      { $skip: 0 },
-      { $limit: 20 },
-      { $project: { name: 1, price: 1, thumbnail: 1, rating_avg: 1 } }
-    ],
-    // Nhánh 2: Total count (cho pagination)
-    total_count: [
-      { $count: "count" }
-    ],
-    // Nhánh 3: Available filters
-    price_ranges: [
-      { $bucket: {
-        groupBy: "$price",
-        boundaries: [0, 1000000, 5000000, 10000000, 50000000],
-        default: "50M+",
-        output: { count: { $sum: 1 } }
-      }}
-    ],
-    brands: [
-      { $group: { _id: "$brand", count: { $sum: 1 } } },
-      { $sort: { count: -1 } },
-      { $limit: 20 }
-    ]
-  }}
+  { $match: { category_id: ObjectId('cat_01'), status: 'active' } },
+  {
+    $facet: {
+      // Nhánh 1: Paginated results
+      results: [
+        { $sort: { created_at: -1 } },
+        { $skip: 0 },
+        { $limit: 20 },
+        { $project: { name: 1, price: 1, thumbnail: 1, rating_avg: 1 } },
+      ],
+      // Nhánh 2: Total count (cho pagination)
+      total_count: [{ $count: 'count' }],
+      // Nhánh 3: Available filters
+      price_ranges: [
+        {
+          $bucket: {
+            groupBy: '$price',
+            boundaries: [0, 1000000, 5000000, 10000000, 50000000],
+            default: '50M+',
+            output: { count: { $sum: 1 } },
+          },
+        },
+      ],
+      brands: [{ $group: { _id: '$brand', count: { $sum: 1 } } }, { $sort: { count: -1 } }, { $limit: 20 }],
+    },
+  },
 ])
 ```
 
@@ -447,13 +467,13 @@ Mỗi stage trong pipeline có giới hạn **100MB RAM**. Vượt quá → erro
 
 ```javascript
 // Cho phép dùng disk cho stages tốn memory:
-db.orders.aggregate([
-  { $group: { _id: "$customer_id", total: { $sum: "$total_amount" } } },
-  { $sort: { total: -1 } }
-], { allowDiskUse: true })
+db.orders.aggregate([{ $group: { _id: '$customer_id', total: { $sum: '$total_amount' } } }, { $sort: { total: -1 } }], {
+  allowDiskUse: true,
+})
 ```
 
 **Cách giảm memory usage:**
+
 - `$project` sớm để loại bỏ fields không cần
 - `$match` sớm để giảm document count
 - Tránh `$unwind` trên large arrays khi không cần thiết
@@ -461,12 +481,12 @@ db.orders.aggregate([
 
 ### 3.6. Schema Design ảnh hưởng đến Aggregation
 
-| Schema choice | Aggregation impact |
-|---|---|
-| Embed array (items trong order) | Cần `$unwind` để aggregate trên individual items → tốn memory |
-| Reference (items tách collection) | Cần `$lookup` để join → tốn I/O |
-| Computed fields (pre-computed stats) | Không cần aggregate runtime → nhanh nhất |
-| Bucket pattern (time-series) | Aggregate trên summary fields → giảm documents processed |
+| Schema choice                        | Aggregation impact                                            |
+| ------------------------------------ | ------------------------------------------------------------- |
+| Embed array (items trong order)      | Cần `$unwind` để aggregate trên individual items → tốn memory |
+| Reference (items tách collection)    | Cần `$lookup` để join → tốn I/O                               |
+| Computed fields (pre-computed stats) | Không cần aggregate runtime → nhanh nhất                      |
+| Bucket pattern (time-series)         | Aggregate trên summary fields → giảm documents processed      |
 
 **Khuyến nghị**: Nếu aggregation query chạy **thường xuyên** (mỗi page load), hãy **pre-compute** kết quả vào document (Computed Pattern) thay vì aggregate mỗi lần.
 
@@ -480,10 +500,10 @@ Change Streams cho phép application **subscribe** vào thay đổi trên collec
 
 ```javascript
 // Watch tất cả thay đổi trên collection orders
-const changeStream = db.orders.watch();
+const changeStream = db.orders.watch()
 
-changeStream.on("change", (change) => {
-  console.log("Change detected:", change);
+changeStream.on('change', (change) => {
+  console.log('Change detected:', change)
   // {
   //   operationType: "insert" | "update" | "delete" | "replace",
   //   fullDocument: { ... },      // document sau thay đổi (nếu có)
@@ -494,7 +514,7 @@ changeStream.on("change", (change) => {
   //   },
   //   clusterTime: Timestamp(...)
   // }
-});
+})
 ```
 
 ### 4.2. Use cases thực tế
@@ -521,47 +541,54 @@ changeStream.on("change", (change) => {
 ```javascript
 // Chỉ watch order status changes
 const pipeline = [
-  { $match: { 
-    operationType: "update",
-    "updateDescription.updatedFields.status": { $exists: true }
-  }}
-];
+  {
+    $match: {
+      operationType: 'update',
+      'updateDescription.updatedFields.status': { $exists: true },
+    },
+  },
+]
 
-const changeStream = db.orders.watch(pipeline);
+const changeStream = db.orders.watch(pipeline)
 
 // Chỉ watch insert của orders có total > 10 triệu
-const bigOrderStream = db.orders.watch([
-  { $match: { 
-    operationType: "insert",
-    "fullDocument.total_amount": { $gte: 10000000 }
-  }}
-], { fullDocument: "updateLookup" });
+const bigOrderStream = db.orders.watch(
+  [
+    {
+      $match: {
+        operationType: 'insert',
+        'fullDocument.total_amount': { $gte: 10000000 },
+      },
+    },
+  ],
+  { fullDocument: 'updateLookup' },
+)
 ```
 
 ### 4.4. Resume Token — Xử lý disconnect
 
 ```javascript
-let resumeToken = null;
+let resumeToken = null
 
-const changeStream = db.orders.watch([], { 
-  fullDocument: "updateLookup",
+const changeStream = db.orders.watch([], {
+  fullDocument: 'updateLookup',
   // Resume từ điểm dừng nếu có
-  ...(resumeToken ? { resumeAfter: resumeToken } : {})
-});
+  ...(resumeToken ? { resumeAfter: resumeToken } : {}),
+})
 
-changeStream.on("change", (change) => {
+changeStream.on('change', (change) => {
   // Lưu resume token sau mỗi event
-  resumeToken = change._id;
-  saveResumeTokenToStorage(resumeToken);  // Lưu vào Redis/file/DB
-  
-  processChange(change);
-});
+  resumeToken = change._id
+  saveResumeTokenToStorage(resumeToken) // Lưu vào Redis/file/DB
 
-changeStream.on("error", (error) => {
+  processChange(change)
+})
+
+changeStream.on('error', (error) => {
   // Reconnect + resume từ token đã lưu
-  const savedToken = loadResumeTokenFromStorage();
-  reconnectWithToken(savedToken);
-});
+  const savedToken = loadResumeTokenFromStorage()
+  reconnectWithToken(savedToken)
+})
 ```
 
 ### 4.5. Schema Design cho Change Streams
@@ -583,7 +610,7 @@ changeStream.on("error", (error) => {
 // Collection: users
 { _id: ObjectId("user_001"), name: "Nguyễn A" }
 
-// Collection: activities  
+// Collection: activities
 { user_id: ObjectId("user_001"), action: "login", timestamp: ISODate("...") }
 ```
 
@@ -604,35 +631,35 @@ File gốc section 7.2 chỉ đề cập `text index` native — đây là giả
 
 ### 5.1. So sánh
 
-| Tiêu chí | Native Text Index | Atlas Search |
-|---|---|---|
-| Engine | MongoDB native | Apache Lucene |
-| Fuzzy search | Không | Có (autocomplete, typo tolerance) |
-| Faceted search | Không | Có |
-| Scoring/relevance | Basic (TF-IDF) | Advanced (BM25, custom scoring) |
-| Synonyms | Không | Có |
-| Highlighting | Không | Có (highlight matched text) |
-| Analyzers | 1 (per collection) | Nhiều (per field, custom analyzers) |
-| Compound queries | Hạn chế | Full boolean logic (must, should, mustNot, filter) |
-| Autocomplete | Không | Có (edge ngram, search-as-you-type) |
-| Availability | Tất cả deployments | Chỉ MongoDB Atlas |
-| Cost | Miễn phí | Tính theo search tier |
+| Tiêu chí          | Native Text Index  | Atlas Search                                       |
+| ----------------- | ------------------ | -------------------------------------------------- |
+| Engine            | MongoDB native     | Apache Lucene                                      |
+| Fuzzy search      | Không              | Có (autocomplete, typo tolerance)                  |
+| Faceted search    | Không              | Có                                                 |
+| Scoring/relevance | Basic (TF-IDF)     | Advanced (BM25, custom scoring)                    |
+| Synonyms          | Không              | Có                                                 |
+| Highlighting      | Không              | Có (highlight matched text)                        |
+| Analyzers         | 1 (per collection) | Nhiều (per field, custom analyzers)                |
+| Compound queries  | Hạn chế            | Full boolean logic (must, should, mustNot, filter) |
+| Autocomplete      | Không              | Có (edge ngram, search-as-you-type)                |
+| Availability      | Tất cả deployments | Chỉ MongoDB Atlas                                  |
+| Cost              | Miễn phí           | Tính theo search tier                              |
 
 ### 5.2. Native Text Index — Khi nào đủ dùng
 
 ```javascript
 // Tạo text index
 db.products.createIndex(
-  { name: "text", description: "text" },
-  { weights: { name: 10, description: 5 }, default_language: "none" }
+  { name: 'text', description: 'text' },
+  { weights: { name: 10, description: 5 }, default_language: 'none' },
 )
 
 // Search
-db.products.find({ $text: { $search: "iPhone Pro Max" } })
-  .sort({ score: { $meta: "textScore" } })
+db.products.find({ $text: { $search: 'iPhone Pro Max' } }).sort({ score: { $meta: 'textScore' } })
 ```
 
 **Đủ dùng khi:**
+
 - Search nội bộ (admin tool)
 - Search đơn giản (exact keywords)
 - Không cần fuzzy/autocomplete
@@ -762,21 +789,22 @@ Vấn đề: Muốn query `attributes.screen_size = "6.1 inch"` → cần wildca
 
 ```javascript
 // 1 compound index cho TẤT CẢ attributes!
-db.products.createIndex({ "attrs.k": 1, "attrs.v": 1 })
+db.products.createIndex({ 'attrs.k': 1, 'attrs.v': 1 })
 
 // Query: tìm tất cả phone có RAM >= 8GB
 db.products.find({
-  type: "phone",
-  attrs: { $elemMatch: { k: "ram", v: { $gte: "8" } } }
+  type: 'phone',
+  attrs: { $elemMatch: { k: 'ram', v: { $gte: '8' } } },
 })
 
 // Query: tìm sản phẩm có color = "Black"
 db.products.find({
-  attrs: { $elemMatch: { k: "color", v: "Black" } }
+  attrs: { $elemMatch: { k: 'color', v: 'Black' } },
 })
 ```
 
 **Lợi ích**:
+
 - Chỉ cần **1 compound index** thay vì wildcard index hoặc nhiều single-field indexes
 - Hỗ trợ range queries trên attributes
 - Dễ thêm attribute mới mà không cần thay đổi index
@@ -801,19 +829,21 @@ MongoDB không có native tree support. Có **4 patterns** chính:
 
 ```javascript
 // Tìm children trực tiếp
-db.categories.find({ parent_id: "electronics" })
+db.categories.find({ parent_id: 'electronics' })
 
 // Tìm toàn bộ descendants → cần $graphLookup
 db.categories.aggregate([
-  { $match: { _id: "electronics" } },
-  { $graphLookup: {
-    from: "categories",
-    startWith: "$_id",
-    connectFromField: "_id",
-    connectToField: "parent_id",
-    as: "descendants",
-    maxDepth: 10
-  }}
+  { $match: { _id: 'electronics' } },
+  {
+    $graphLookup: {
+      from: 'categories',
+      startWith: '$_id',
+      connectFromField: '_id',
+      connectToField: 'parent_id',
+      as: 'descendants',
+      maxDepth: 10,
+    },
+  },
 ])
 ```
 
@@ -840,7 +870,7 @@ db.categories.find({ path: /^,electronics,/ })
 // Tìm TẤT CẢ ancestors của iphone
 // Path = ",electronics,phones,smartphones,iphone,"
 // → Parse ra: ["electronics", "phones", "smartphones"]
-db.categories.find({ _id: { $in: ["electronics", "phones", "smartphones"] } })
+db.categories.find({ _id: { $in: ['electronics', 'phones', 'smartphones'] } })
 ```
 
 **Ưu điểm**: Tìm subtree rất nhanh (1 regex query). Tìm ancestors dễ (parse path string).
@@ -861,10 +891,10 @@ db.categories.find({ _id: { $in: ["electronics", "phones", "smartphones"] } })
 db.categories.createIndex({ ancestors: 1 })
 
 // Tìm tất cả descendants
-db.categories.find({ ancestors: "electronics" })
+db.categories.find({ ancestors: 'electronics' })
 
 // Tìm đường đi (breadcrumb) — ancestors đã có sẵn trong document!
-const cat = db.categories.findOne({ _id: "iphone" })
+const cat = db.categories.findOne({ _id: 'iphone' })
 // cat.ancestors = ["electronics", "phones", "smartphones"]
 ```
 
@@ -877,13 +907,13 @@ Phù hợp cho read-heavy, very rarely modified trees. Phức tạp trong MongoD
 
 #### Chọn pattern nào?
 
-| Nhu cầu | Pattern khuyến nghị |
-|---|---|
-| Tree thay đổi thường xuyên (thêm/xóa/di chuyển node) | Parent Reference |
-| Cần query subtree nhanh, tree ít thay đổi | Materialized Path hoặc Array of Ancestors |
-| Cần breadcrumb/path thường xuyên | Array of Ancestors |
-| Comment threads (tree + pagination) | Parent Reference + Materialized Path (hybrid) |
-| Category navigation (e-commerce) | Array of Ancestors |
+| Nhu cầu                                              | Pattern khuyến nghị                           |
+| ---------------------------------------------------- | --------------------------------------------- |
+| Tree thay đổi thường xuyên (thêm/xóa/di chuyển node) | Parent Reference                              |
+| Cần query subtree nhanh, tree ít thay đổi            | Materialized Path hoặc Array of Ancestors     |
+| Cần breadcrumb/path thường xuyên                     | Array of Ancestors                            |
+| Comment threads (tree + pagination)                  | Parent Reference + Materialized Path (hybrid) |
+| Category navigation (e-commerce)                     | Array of Ancestors                            |
 
 ### 6.3. Document Versioning Pattern
 
@@ -937,51 +967,55 @@ Phù hợp cho read-heavy, very rarely modified trees. Phức tạp trong MongoD
 ```javascript
 // Application logic: update product + lưu version cũ
 async function updateProduct(productId, updates, userId, reason) {
-  const session = client.startSession();
-  session.startTransaction();
-  
+  const session = client.startSession()
+  session.startTransaction()
+
   try {
-    const current = await db.products.findOne({ _id: productId }, { session });
-    
+    const current = await db.products.findOne({ _id: productId }, { session })
+
     // Lưu version hiện tại vào history
-    await db.products_history.insertOne({
-      document_id: productId,
-      version: current.version,
-      data: current,
-      changed_fields: Object.keys(updates),
-      changed_at: new Date(),
-      changed_by: userId,
-      change_reason: reason
-    }, { session });
-    
+    await db.products_history.insertOne(
+      {
+        document_id: productId,
+        version: current.version,
+        data: current,
+        changed_fields: Object.keys(updates),
+        changed_at: new Date(),
+        changed_by: userId,
+        change_reason: reason,
+      },
+      { session },
+    )
+
     // Update document sang version mới
     await db.products.updateOne(
       { _id: productId },
-      { 
+      {
         $set: { ...updates, updated_at: new Date(), updated_by: userId },
-        $inc: { version: 1 }
+        $inc: { version: 1 },
       },
-      { session }
-    );
-    
-    await session.commitTransaction();
+      { session },
+    )
+
+    await session.commitTransaction()
   } catch (error) {
-    await session.abortTransaction();
-    throw error;
+    await session.abortTransaction()
+    throw error
   }
 }
 
 // Query: xem lịch sử giá sản phẩm
-db.products_history.find({ document_id: ObjectId("prod_001") })
+db.products_history
+  .find({ document_id: ObjectId('prod_001') })
   .sort({ version: -1 })
-  .project({ version: 1, "data.price": 1, changed_at: 1, changed_by: 1 })
+  .project({ version: 1, 'data.price': 1, changed_at: 1, changed_by: 1 })
 ```
 
 **Index cho history collection:**
 
 ```javascript
 db.products_history.createIndex({ document_id: 1, version: -1 })
-db.products_history.createIndex({ changed_at: 1 })  // TTL nếu cần auto-delete history cũ
+db.products_history.createIndex({ changed_at: 1 }) // TTL nếu cần auto-delete history cũ
 ```
 
 ### 6.4. Approximation Pattern
@@ -993,10 +1027,7 @@ db.products_history.createIndex({ changed_at: 1 })  // TTL nếu cần auto-dele
 ```javascript
 // KHÔNG TỐI ƯU: Update count mỗi page view
 // → 10,000 views/giây = 10,000 writes/giây cho 1 document!
-db.articles.updateOne(
-  { _id: articleId },
-  { $inc: { view_count: 1 } }
-)
+db.articles.updateOne({ _id: articleId }, { $inc: { view_count: 1 } })
 
 // TỐI ƯU: Approximation — chỉ update mỗi ~100 views (random)
 function trackPageView(articleId) {
@@ -1004,7 +1035,7 @@ function trackPageView(articleId) {
   if (Math.random() < 0.01) {
     db.articles.updateOne(
       { _id: articleId },
-      { $inc: { view_count: 100 } }  // increment by batch size
+      { $inc: { view_count: 100 } }, // increment by batch size
     )
   }
 }
@@ -1034,7 +1065,7 @@ db.orders.createIndex({ status: 1 })
 db.orders.createIndex({ customer_id: 1 })
 
 // Query:
-db.orders.find({ status: "pending", customer_id: ObjectId("user_001") })
+db.orders.find({ status: 'pending', customer_id: ObjectId('user_001') })
 // MongoDB CÓ THỂ dùng index intersection để combine 2 indexes
 ```
 
@@ -1046,6 +1077,7 @@ db.orders.createIndex({ status: 1, customer_id: 1 })
 ```
 
 **Khi nào index intersection hữu ích:**
+
 - Queries có nhiều **combinations khác nhau** của filter fields → tạo compound index cho mọi combination thì quá nhiều indexes
 - Temporary solution khi chưa biết query pattern chính xác
 
@@ -1057,17 +1089,17 @@ Trước khi drop index, **ẩn** nó trước để test impact — nếu perfo
 
 ```javascript
 // Bước 1: Ẩn index — MongoDB sẽ KHÔNG dùng index này cho queries
-db.orders.hideIndex("status_1_created_at_-1")
+db.orders.hideIndex('status_1_created_at_-1')
 
 // Bước 2: Monitor performance vài giờ/ngày
 // → Nếu performance OK → drop index
 // → Nếu performance tệ → unhide lại
 
 // Bước 3a: Drop (nếu không cần)
-db.orders.dropIndex("status_1_created_at_-1")
+db.orders.dropIndex('status_1_created_at_-1')
 
 // Bước 3b: Unhide (nếu vẫn cần)
-db.orders.unhideIndex("status_1_created_at_-1")
+db.orders.unhideIndex('status_1_created_at_-1')
 ```
 
 **Rất hữu ích khi**: Nghi ngờ index không được dùng nhưng sợ drop sẽ ảnh hưởng performance. Hide trước → an toàn → quyết định sau.
@@ -1098,6 +1130,7 @@ db.orders.aggregate([{ $indexStats: {} }])
 ```
 
 **Monitoring checklist:**
+
 - Total index size nên < 50% RAM (để còn chỗ cho working set)
 - Indexes với `accesses.ops = 0` sau vài tuần → candidate for removal (ẩn trước, drop sau)
 - Index size tăng bất thường → kiểm tra xem có unbounded array nào đang grow không
@@ -1108,14 +1141,16 @@ Khi query optimizer chọn sai index (hiếm, nhưng xảy ra):
 
 ```javascript
 // Force MongoDB dùng index cụ thể
-db.orders.find({ status: "pending", created_at: { $gte: startDate } })
+db.orders
+  .find({ status: 'pending', created_at: { $gte: startDate } })
   .hint({ status: 1, created_at: -1 })
-  .explain("executionStats")
+  .explain('executionStats')
 
 // So sánh performance với index khác
-db.orders.find({ status: "pending", created_at: { $gte: startDate } })
+db.orders
+  .find({ status: 'pending', created_at: { $gte: startDate } })
   .hint({ created_at: -1 })
-  .explain("executionStats")
+  .explain('executionStats')
 ```
 
 **Lưu ý**: `hint()` nên là **biện pháp cuối cùng**. Nếu optimizer chọn sai, thường là do index design chưa tối ưu → sửa index thay vì dùng hint.
@@ -1132,36 +1167,22 @@ Phân data theo **vùng địa lý** — data của user Việt Nam lưu trên s
 
 ```javascript
 // Bước 1: Gán zones cho các shards
-sh.addShardTag("shard-sg01", "APAC")      // Shard ở Singapore
-sh.addShardTag("shard-sg02", "APAC")
-sh.addShardTag("shard-us01", "AMERICAS")   // Shard ở US
-sh.addShardTag("shard-eu01", "EMEA")       // Shard ở EU
+sh.addShardTag('shard-sg01', 'APAC') // Shard ở Singapore
+sh.addShardTag('shard-sg02', 'APAC')
+sh.addShardTag('shard-us01', 'AMERICAS') // Shard ở US
+sh.addShardTag('shard-eu01', 'EMEA') // Shard ở EU
 
 // Bước 2: Shard collection theo region
-sh.shardCollection("ecommerce.users", { region: 1, _id: 1 })
+sh.shardCollection('ecommerce.users', { region: 1, _id: 1 })
 
 // Bước 3: Define zone ranges
-sh.addTagRange(
-  "ecommerce.users",
-  { region: "APAC", _id: MinKey },
-  { region: "APAC", _id: MaxKey },
-  "APAC"
-)
-sh.addTagRange(
-  "ecommerce.users",
-  { region: "AMERICAS", _id: MinKey },
-  { region: "AMERICAS", _id: MaxKey },
-  "AMERICAS"
-)
-sh.addTagRange(
-  "ecommerce.users",
-  { region: "EMEA", _id: MinKey },
-  { region: "EMEA", _id: MaxKey },
-  "EMEA"
-)
+sh.addTagRange('ecommerce.users', { region: 'APAC', _id: MinKey }, { region: 'APAC', _id: MaxKey }, 'APAC')
+sh.addTagRange('ecommerce.users', { region: 'AMERICAS', _id: MinKey }, { region: 'AMERICAS', _id: MaxKey }, 'AMERICAS')
+sh.addTagRange('ecommerce.users', { region: 'EMEA', _id: MinKey }, { region: 'EMEA', _id: MaxKey }, 'EMEA')
 ```
 
 **Use cases:**
+
 - **Data residency compliance**: GDPR yêu cầu data EU citizens phải lưu trong EU
 - **Latency optimization**: User APAC read/write đến shard gần nhất
 - **Multi-geo e-commerce**: Mỗi region có warehouse riêng, inventory riêng
@@ -1176,18 +1197,20 @@ Trước MongoDB 5.0, **không thể thay đổi shard key** sau khi shard. Từ
 
 // Resharding sang compound shard key
 db.adminCommand({
-  reshardCollection: "ecommerce.orders",
-  key: { region: 1, user_id: 1 }
+  reshardCollection: 'ecommerce.orders',
+  key: { region: 1, user_id: 1 },
 })
 ```
 
 **Quy trình resharding nội bộ:**
+
 1. MongoDB tạo temporary collection mới với shard key mới
 2. Copy tất cả data sang collection mới (background)
 3. Đồng thời apply oplog entries (writes tiếp tục hoạt động)
 4. Cutover: swap collection names → zero downtime
 
 **Lưu ý quan trọng:**
+
 - Resharding **tốn thời gian** (tùy data size, có thể vài giờ đến vài ngày)
 - **Tốn I/O** — chạy off-peak hours
 - Từ **MongoDB 7.0**: Có thể reshard khi đang có **writes** mà không ảnh hưởng performance đáng kể
@@ -1206,14 +1229,26 @@ db.chunks.find({ jumbo: true })
 ```
 
 **Nguyên nhân phổ biến:**
+
 - Shard key `{ status: 1 }` → chỉ 5 giá trị → mỗi chunk chứa 20% data → 1 chunk có thể rất lớn
 - Shard key `{ created_at: 1 }` → hot spot ở chunk mới nhất
 
 **Giải pháp:**
+
 1. **Chọn shard key tốt hơn** (high cardinality) → prevention
 2. **clearJumboFlag** nếu chunk thực sự đủ nhỏ nhưng bị flag sai:
    ```javascript
-   db.adminCommand({ clearJumboFlag: "ecommerce.orders", bounds: [{ /* min key */ }, { /* max key */ }] })
+   db.adminCommand({
+     clearJumboFlag: 'ecommerce.orders',
+     bounds: [
+       {
+         /* min key */
+       },
+       {
+         /* max key */
+       },
+     ],
+   })
    ```
 3. **Resharding** (MongoDB 5.0+) nếu shard key design sai từ đầu
 
@@ -1255,13 +1290,14 @@ Bổ sung cho file gốc section 11.
 ### 9.1. Retryable Writes (MongoDB 3.6+)
 
 Khi network blip xảy ra giữa client và server, write operation có thể:
+
 - **Thực hiện thành công** nhưng client không nhận response → client retry → **duplicate write!**
 
 Retryable writes giải quyết bằng cách đảm bảo retry cùng operation → **idempotent** (không duplicate).
 
 ```javascript
 // Bật retryable writes (mặc định từ MongoDB 4.2)
-const client = new MongoClient(uri, { retryWrites: true });
+const client = new MongoClient(uri, { retryWrites: true })
 
 // Các operations được hỗ trợ retryable:
 // ✓ insertOne, insertMany
@@ -1279,7 +1315,7 @@ const client = new MongoClient(uri, { retryWrites: true });
 ### 9.2. Retryable Reads (MongoDB 4.2+)
 
 ```javascript
-const client = new MongoClient(uri, { retryReads: true });
+const client = new MongoClient(uri, { retryReads: true })
 
 // Tự động retry read operations khi gặp transient network error
 // ✓ find, findOne
@@ -1302,20 +1338,13 @@ Timeline:
 **Giải pháp — Causal Consistency Sessions**:
 
 ```javascript
-const session = client.startSession({ causalConsistency: true });
+const session = client.startSession({ causalConsistency: true })
 
 // Write 1: Update order status
-await db.orders.updateOne(
-  { _id: orderId },
-  { $set: { status: "shipped" } },
-  { session }
-);
+await db.orders.updateOne({ _id: orderId }, { $set: { status: 'shipped' } }, { session })
 
 // Read 1: Đọc lại order — GUARANTEED thấy write ở trên
-const order = await db.orders.findOne(
-  { _id: orderId },
-  { session, readPreference: "secondary" }
-);
+const order = await db.orders.findOne({ _id: orderId }, { session, readPreference: 'secondary' })
 // order.status === "shipped" ← GUARANTEED!
 ```
 
@@ -1327,16 +1356,16 @@ const order = await db.orders.findOne(
 
 ```javascript
 // ✓ DO: Keep transactions SHORT
-const session = client.startSession();
+const session = client.startSession()
 session.startTransaction({
-  readConcern: { level: "snapshot" },
-  writeConcern: { w: "majority" },
-  maxCommitTimeMS: 5000            // Timeout 5 giây — fail fast
-});
+  readConcern: { level: 'snapshot' },
+  writeConcern: { w: 'majority' },
+  maxCommitTimeMS: 5000, // Timeout 5 giây — fail fast
+})
 
 // ✗ DON'T: Transactions quá dài
 // → Lock contention tăng
-// → Oplog pressure tăng  
+// → Oplog pressure tăng
 // → Nếu transaction > 60 giây (default) → tự động abort
 
 // ✓ DO: Minimize round trips trong transaction
@@ -1347,24 +1376,24 @@ session.startTransaction({
 
 // ✓ DO: Handle TransientTransactionError
 async function runWithRetry(txnFunc) {
-  const session = client.startSession();
+  const session = client.startSession()
   try {
-    session.startTransaction();
-    await txnFunc(session);
-    await session.commitTransaction();
+    session.startTransaction()
+    await txnFunc(session)
+    await session.commitTransaction()
   } catch (error) {
-    await session.abortTransaction();
+    await session.abortTransaction()
     // TransientTransactionError → retry toàn bộ transaction
-    if (error.hasErrorLabel("TransientTransactionError")) {
-      return runWithRetry(txnFunc);
+    if (error.hasErrorLabel('TransientTransactionError')) {
+      return runWithRetry(txnFunc)
     }
     // UnknownTransactionCommitResult → retry commit
-    if (error.hasErrorLabel("UnknownTransactionCommitResult")) {
-      await session.commitTransaction();  // retry commit
+    if (error.hasErrorLabel('UnknownTransactionCommitResult')) {
+      await session.commitTransaction() // retry commit
     }
-    throw error;
+    throw error
   } finally {
-    session.endSession();
+    session.endSession()
   }
 }
 ```
@@ -1388,7 +1417,7 @@ Strategy A: Database per Tenant
   │ └──────────┘ │  │ └──────────┘ │  │ └──────────┘ │
   └──────────────┘  └──────────────┘  └──────────────┘
 
-Strategy B: Collection per Tenant  
+Strategy B: Collection per Tenant
   ┌──────────────────────────────────┐
   │ DB: saas_app                     │
   │ ┌────────────┐  ┌────────────┐  │
@@ -1411,16 +1440,16 @@ Strategy C: Shared Collection with tenant_id
 
 ### 10.2. So sánh chi tiết
 
-| Tiêu chí | Database/Tenant | Collection/Tenant | Shared Collection |
-|---|---|---|---|
-| **Data isolation** | Hoàn toàn (vật lý) | Trung bình | Thấp (logic) |
-| **Security** | Rất tốt | Trung bình | Cần cẩn thận (`tenant_id` filter) |
-| **Scalability** | Tệ (>1000 tenants) | Trung bình | Tốt (hàng triệu tenants) |
-| **Resource efficiency** | Thấp (mỗi DB có overhead) | Trung bình | Cao (shared indexes, connections) |
-| **Customization/schema** | Mỗi tenant có schema riêng | Mỗi tenant có schema riêng | Shared schema |
-| **Backup/restore** | Per tenant | Per tenant (phức tạp hơn) | All tenants cùng lúc |
-| **Monitoring** | Per tenant | Phức tạp | Tập trung |
-| **Ops complexity** | O(n) với n tenants | O(n) | O(1) |
+| Tiêu chí                 | Database/Tenant            | Collection/Tenant          | Shared Collection                 |
+| ------------------------ | -------------------------- | -------------------------- | --------------------------------- |
+| **Data isolation**       | Hoàn toàn (vật lý)         | Trung bình                 | Thấp (logic)                      |
+| **Security**             | Rất tốt                    | Trung bình                 | Cần cẩn thận (`tenant_id` filter) |
+| **Scalability**          | Tệ (>1000 tenants)         | Trung bình                 | Tốt (hàng triệu tenants)          |
+| **Resource efficiency**  | Thấp (mỗi DB có overhead)  | Trung bình                 | Cao (shared indexes, connections) |
+| **Customization/schema** | Mỗi tenant có schema riêng | Mỗi tenant có schema riêng | Shared schema                     |
+| **Backup/restore**       | Per tenant                 | Per tenant (phức tạp hơn)  | All tenants cùng lúc              |
+| **Monitoring**           | Per tenant                 | Phức tạp                   | Tập trung                         |
+| **Ops complexity**       | O(n) với n tenants         | O(n)                       | O(1)                              |
 
 ### 10.3. Chiến lược phổ biến nhất: Shared Collection + tenant_id
 
@@ -1441,7 +1470,7 @@ db.orders.createIndex({ tenant_id: 1, status: 1 })
 db.orders.createIndex({ tenant_id: 1, customer_id: 1 })
 
 // Query: LUÔN filter theo tenant_id
-db.orders.find({ 
+db.orders.find({
   tenant_id: ObjectId("tenant_shopA"),  // MANDATORY
   status: "pending"
 })
@@ -1452,19 +1481,19 @@ db.orders.find({
 ```javascript
 // Middleware: inject tenant_id vào mọi query
 function tenantMiddleware(req, res, next) {
-  const tenantId = req.user.tenant_id;
-  
+  const tenantId = req.user.tenant_id
+
   // Override MongoDB collection methods to always include tenant_id
   req.db = {
     find: (collection, query) => {
-      return db.collection(collection).find({ ...query, tenant_id: tenantId });
+      return db.collection(collection).find({ ...query, tenant_id: tenantId })
     },
     insertOne: (collection, doc) => {
-      return db.collection(collection).insertOne({ ...doc, tenant_id: tenantId });
-    }
-  };
-  
-  next();
+      return db.collection(collection).insertOne({ ...doc, tenant_id: tenantId })
+    },
+  }
+
+  next()
 }
 ```
 
@@ -1474,13 +1503,13 @@ function tenantMiddleware(req, res, next) {
 
 ```javascript
 // Shard key BẮT ĐẦU bằng tenant_id → đảm bảo targeted queries
-sh.shardCollection("saas.orders", { tenant_id: 1, _id: 1 })
+sh.shardCollection('saas.orders', { tenant_id: 1, _id: 1 })
 
 // Kết hợp Zone Sharding nếu cần:
 // Tenant enterprise → dedicated shard (performance isolation)
 // Tenant free tier → shared shard
-sh.addShardTag("shard-premium", "PREMIUM")
-sh.addShardTag("shard-shared01", "FREE")
+sh.addShardTag('shard-premium', 'PREMIUM')
+sh.addShardTag('shard-shared01', 'FREE')
 ```
 
 ---
@@ -1517,21 +1546,15 @@ File gốc checklist nhắc "archival cho historical data" nhưng không có hư
 
 ```javascript
 // Tự động xóa sessions sau 24h
-db.sessions.createIndex(
-  { created_at: 1 },
-  { expireAfterSeconds: 86400 }
-)
+db.sessions.createIndex({ created_at: 1 }, { expireAfterSeconds: 86400 })
 
 // Tự động xóa OTP/verification codes sau 5 phút
-db.verification_codes.createIndex(
-  { created_at: 1 },
-  { expireAfterSeconds: 300 }
-)
+db.verification_codes.createIndex({ created_at: 1 }, { expireAfterSeconds: 300 })
 
 // Tự động xóa logs sau 90 ngày
 db.application_logs.createIndex(
   { timestamp: 1 },
-  { expireAfterSeconds: 7776000 }  // 90 * 24 * 60 * 60
+  { expireAfterSeconds: 7776000 }, // 90 * 24 * 60 * 60
 )
 ```
 
@@ -1542,25 +1565,27 @@ db.application_logs.createIndex(
 ```javascript
 // Cron job: move completed orders older than 90 days to archive
 async function archiveOldOrders() {
-  const cutoffDate = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000);
-  
-  const cursor = db.orders.find({
-    status: { $in: ["delivered", "cancelled", "refunded"] },
-    updated_at: { $lt: cutoffDate }
-  }).batchSize(1000);
-  
+  const cutoffDate = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000)
+
+  const cursor = db.orders
+    .find({
+      status: { $in: ['delivered', 'cancelled', 'refunded'] },
+      updated_at: { $lt: cutoffDate },
+    })
+    .batchSize(1000)
+
   while (await cursor.hasNext()) {
-    const batch = [];
-    for (let i = 0; i < 1000 && await cursor.hasNext(); i++) {
-      batch.push(await cursor.next());
+    const batch = []
+    for (let i = 0; i < 1000 && (await cursor.hasNext()); i++) {
+      batch.push(await cursor.next())
     }
-    
+
     // Insert vào archive collection
-    await db.orders_archive.insertMany(batch, { ordered: false });
-    
+    await db.orders_archive.insertMany(batch, { ordered: false })
+
     // Delete từ main collection
-    const ids = batch.map(doc => doc._id);
-    await db.orders.deleteMany({ _id: { $in: ids } });
+    const ids = batch.map((doc) => doc._id)
+    await db.orders.deleteMany({ _id: { $in: ids } })
   }
 }
 
@@ -1600,11 +1625,11 @@ MongoDB Atlas cung cấp **Online Archive** — tự động move data cũ sang 
 
 ### 12.1. Document Size Guidelines
 
-| Metric | Guideline | Lý do |
-|---|---|---|
-| Average document size | 2-10 KB lý tưởng | Vừa đủ chứa data cần, không phình |
+| Metric                | Guideline        | Lý do                                                     |
+| --------------------- | ---------------- | --------------------------------------------------------- |
+| Average document size | 2-10 KB lý tưởng | Vừa đủ chứa data cần, không phình                         |
 | Maximum document size | Cố gắng < 100 KB | 16MB là hard limit nhưng > 100KB đã ảnh hưởng working set |
-| Embedded array items | < 500 elements | > 500 → tách collection. > 5000 → chắc chắn tách |
+| Embedded array items  | < 500 elements   | > 500 → tách collection. > 5000 → chắc chắn tách          |
 
 ### 12.2. Working Set & RAM
 
@@ -1648,15 +1673,16 @@ db.serverStatus().wiredTiger.cache
 
 ### 12.3. Khi nào cần Sharding?
 
-| Signal | Threshold | Action |
-|---|---|---|
-| Single collection size | > 500GB | Cân nhắc sharding |
-| Write throughput | > 5000 writes/s sustained | Cần sharding cho write scaling |
-| Working set > RAM | Không fit trong WiredTiger cache | Sharding hoặc upgrade RAM |
-| CPU utilization | > 80% sustained | Sharding hoặc read replicas |
-| Query latency | p99 > 100ms trên indexed queries | Investigate, then shard if needed |
+| Signal                 | Threshold                        | Action                            |
+| ---------------------- | -------------------------------- | --------------------------------- |
+| Single collection size | > 500GB                          | Cân nhắc sharding                 |
+| Write throughput       | > 5000 writes/s sustained        | Cần sharding cho write scaling    |
+| Working set > RAM      | Không fit trong WiredTiger cache | Sharding hoặc upgrade RAM         |
+| CPU utilization        | > 80% sustained                  | Sharding hoặc read replicas       |
+| Query latency          | p99 > 100ms trên indexed queries | Investigate, then shard if needed |
 
 **Trước khi shard, thử:**
+
 1. Optimize queries + indexes (explain analysis)
 2. Upgrade hardware (vertical scaling) — thường rẻ hơn
 3. Read preferences → secondary reads cho analytics queries
@@ -1669,17 +1695,17 @@ Sharding thêm **operational complexity** đáng kể — chỉ shard khi vertic
 ```javascript
 // Mặc định MongoDB driver: maxPoolSize = 100
 const client = new MongoClient(uri, {
-  maxPoolSize: 50,     // Connections per mongos/mongod
-  minPoolSize: 10,     // Keep minimum connections warm
+  maxPoolSize: 50, // Connections per mongos/mongod
+  minPoolSize: 10, // Keep minimum connections warm
   maxIdleTimeMS: 60000, // Close idle connections after 60s
-  waitQueueTimeoutMS: 5000  // Timeout nếu không có connection available
-});
+  waitQueueTimeoutMS: 5000, // Timeout nếu không có connection available
+})
 ```
 
 **Sizing formula:**
 
 ```
-maxPoolSize per app instance ≈ 
+maxPoolSize per app instance ≈
   (peak concurrent DB operations) / (number of app instances)
   + 10% buffer
 
@@ -1775,6 +1801,7 @@ Thiết kế schema cho hệ thống e-commerce hoàn chỉnh: dựa trên tất
 ```
 
 **Rationale:**
+
 - `addresses`: Embed (1-Few, luôn đọc cùng user, < 10 addresses)
 - `profile`: Embed (1-1, luôn đọc cùng)
 - `email_lower`: Pre-lowercase cho case-insensitive unique index
@@ -1801,7 +1828,7 @@ db.users.createIndex({ status: 1, created_at: -1 })
   "brand_slug": "apple",
   "category_id": ObjectId("cat_smartphones"),
   "category_path": ["electronics", "phones", "smartphones"],
-  
+
   "pricing": {
     "base_price": 28990000,
     "sale_price": 27490000,
@@ -1809,7 +1836,7 @@ db.users.createIndex({ status: 1, created_at: -1 })
     "sale_end": ISODate("2025-03-31"),
     "currency": "VND"
   },
-  
+
   "inventory_snapshot": {
     "total_quantity": 150,
     "is_in_stock": true,
@@ -1856,6 +1883,7 @@ db.users.createIndex({ status: 1, created_at: -1 })
 ```
 
 **Rationale — Kết hợp nhiều patterns:**
+
 - `review_stats`: **Computed Pattern** — pre-computed aggregation, tránh $lookup + $group mỗi request
 - `recent_reviews`: **Subset Pattern** — 5-10 reviews mới nhất, full reviews trong collection riêng
 - `attrs`: **Attribute Pattern** — flexible attributes, 1 compound index cho tất cả
@@ -1867,14 +1895,11 @@ db.users.createIndex({ status: 1, created_at: -1 })
 // Indexes
 db.products.createIndex({ sku: 1 }, { unique: true })
 db.products.createIndex({ slug: 1 }, { unique: true })
-db.products.createIndex({ category_id: 1, status: 1, "pricing.base_price": 1 })
-db.products.createIndex({ "attrs.k": 1, "attrs.v": 1 })
+db.products.createIndex({ category_id: 1, status: 1, 'pricing.base_price': 1 })
+db.products.createIndex({ 'attrs.k': 1, 'attrs.v': 1 })
 db.products.createIndex({ tags: 1 })
 db.products.createIndex({ brand_slug: 1, status: 1 })
-db.products.createIndex(
-  { name: "text", tags: "text" },
-  { weights: { name: 10, tags: 5 } }
-)
+db.products.createIndex({ name: 'text', tags: 'text' }, { weights: { name: 10, tags: 5 } })
 ```
 
 ### 13.4. Collection: orders
@@ -1890,7 +1915,7 @@ db.products.createIndex(
     "email": "nguyen.a@gmail.com",
     "phone": "+84901234567"
   },
-  
+
   "items": [
     {
       "product_id": ObjectId("prod_001"),
@@ -1905,7 +1930,7 @@ db.products.createIndex(
       "subtotal": 27490000
     }
   ],
-  
+
   "shipping_address": {
     "full_name": "Nguyễn Văn A",
     "phone": "+84901234567",
@@ -1915,7 +1940,7 @@ db.products.createIndex(
     "city": "TP.HCM",
     "postal_code": "700000"
   },
-  
+
   "pricing": {
     "subtotal": 27490000,
     "shipping_fee": 0,
@@ -1924,20 +1949,20 @@ db.products.createIndex(
     "total": 26990000,
     "currency": "VND"
   },
-  
+
   "coupon": {
     "code": "SALE500K",
     "discount_type": "fixed",
     "discount_value": 500000
   },
-  
+
   "payment": {
     "method": "credit_card",
     "status": "paid",
     "transaction_id": "txn_abc123",
     "paid_at": ISODate("2025-03-15T10:35:00Z")
   },
-  
+
   "shipping": {
     "method": "express",
     "carrier": "GHN",
@@ -1946,7 +1971,7 @@ db.products.createIndex(
     "shipped_at": ISODate("2025-03-15T14:00:00Z"),
     "delivered_at": null
   },
-  
+
   "status": "shipped",
   "status_history": [
     { "status": "pending",   "at": ISODate("2025-03-15T10:30:00Z"), "by": "system" },
@@ -1954,7 +1979,7 @@ db.products.createIndex(
     { "status": "shipping",  "at": ISODate("2025-03-15T14:00:00Z"), "by": "admin_01" },
     { "status": "shipped",   "at": ISODate("2025-03-15T14:05:00Z"), "by": "system" }
   ],
-  
+
   "notes": "Giao giờ hành chính",
   "created_at": ISODate("2025-03-15T10:30:00Z"),
   "updated_at": ISODate("2025-03-15T14:05:00Z")
@@ -1962,6 +1987,7 @@ db.products.createIndex(
 ```
 
 **Rationale:**
+
 - `items` + `product_snapshot`: **Extended Reference** — giữ snapshot giá + tên tại thời điểm mua
 - `customer_snapshot`: **Extended Reference** — hiển thị nhanh không cần $lookup
 - `shipping_address`: **Embed** copy từ user addresses — snapshot tại thời điểm đặt, không reference
@@ -1973,8 +1999,8 @@ db.products.createIndex(
 db.orders.createIndex({ order_number: 1 }, { unique: true })
 db.orders.createIndex({ customer_id: 1, created_at: -1 })
 db.orders.createIndex({ status: 1, created_at: -1 })
-db.orders.createIndex({ "payment.transaction_id": 1 }, { sparse: true })
-db.orders.createIndex({ "shipping.tracking_number": 1 }, { sparse: true })
+db.orders.createIndex({ 'payment.transaction_id': 1 }, { sparse: true })
+db.orders.createIndex({ 'shipping.tracking_number': 1 }, { sparse: true })
 ```
 
 ### 13.5. Collection: reviews (riêng biệt)
@@ -2029,6 +2055,7 @@ db.reviews.createIndex({ product_id: 1, rating: 1 })
 ```
 
 **Rationale**: Tách khỏi products vì:
+
 - **Write-heavy** (mỗi order update inventory)
 - Cần **real-time accuracy** (khác product info có thể cached)
 - Cần **atomicity** cho quantity updates (tránh overselling)
@@ -2041,17 +2068,17 @@ db.inventory.createIndex({ sku: 1 })
 
 // Atomic decrement — tránh overselling
 db.inventory.updateOne(
-  { 
-    product_id: productId, 
+  {
+    product_id: productId,
     warehouse_id: warehouseId,
-    available_quantity: { $gte: orderQty }  // CHECK trước khi trừ
+    available_quantity: { $gte: orderQty }, // CHECK trước khi trừ
   },
-  { 
-    $inc: { 
+  {
+    $inc: {
       available_quantity: -orderQty,
-      reserved_quantity: orderQty 
-    }
-  }
+      reserved_quantity: orderQty,
+    },
+  },
 )
 ```
 
@@ -2076,20 +2103,21 @@ db.inventory.updateOne(
 ```
 
 **Rationale**:
+
 - `ancestors`: **Array of Ancestors Pattern** — breadcrumb sẵn có
 - `product_count`: **Computed Pattern** — đếm sẵn, không cần count mỗi request
 - `parent_id`: Giữ lại cho tree operations (thêm/xóa/di chuyển node)
 
 ### 13.8. Tổng kết Case Study
 
-| Collection | Avg Doc Size | Growth | Access Pattern | Key Design Decisions |
-|---|---|---|---|---|
-| users | ~2 KB | Slow | Read-heavy | Embed addresses, profile |
-| products | ~5 KB | Slow | Read-heavy | Computed + Subset + Attribute patterns |
-| orders | ~3 KB | Fast | Write then read | Extended Reference snapshots |
-| reviews | ~1 KB | Fast | Read-heavy, independent | Separate collection, computed stats in products |
-| inventory | ~0.5 KB | Fast writes | Write-heavy | Separate for atomicity + real-time accuracy |
-| categories | ~0.5 KB | Very slow | Read-heavy | Array of Ancestors for breadcrumb |
+| Collection | Avg Doc Size | Growth      | Access Pattern          | Key Design Decisions                            |
+| ---------- | ------------ | ----------- | ----------------------- | ----------------------------------------------- |
+| users      | ~2 KB        | Slow        | Read-heavy              | Embed addresses, profile                        |
+| products   | ~5 KB        | Slow        | Read-heavy              | Computed + Subset + Attribute patterns          |
+| orders     | ~3 KB        | Fast        | Write then read         | Extended Reference snapshots                    |
+| reviews    | ~1 KB        | Fast        | Read-heavy, independent | Separate collection, computed stats in products |
+| inventory  | ~0.5 KB      | Fast writes | Write-heavy             | Separate for atomicity + real-time accuracy     |
+| categories | ~0.5 KB      | Very slow   | Read-heavy              | Array of Ancestors for breadcrumb               |
 
 ---
 
